@@ -44,6 +44,8 @@ GetPeak <- function(loess.fit.list) {
     quit()
   }
   
+  return(peak.df)
+  
 #   #puts position and height of each peak into dataframe
 #   for(i in 1:nrow(peak.df)){
 #     peak.df$peakmax[i] <- comb$pos[comb$fitted==max(comb$fitted[comb$pos > peak.df$starts[i] & comb$pos < peak.df$stops[i]], na.rm=T) & comb$pos > peak.df$starts[i] & comb$pos < peak.df$stops[i]]
@@ -107,7 +109,8 @@ GetPeak <- function(loess.fit.list) {
     alleler <- rbind(alleler, tempalleler[c('chr', 'pos', 'pos.1', 'call','notes')])
   }
 
+  # should get rid of 1 NA row created because of rbind with empty dataframe
+  alleler <- alleler[!is.na(alleler$chr), ]
   return(alleler)
 }
-alleler <- alleler[!is.na(alleler$chr), ]
 

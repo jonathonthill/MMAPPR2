@@ -12,11 +12,6 @@ na_cutoff <- 0 # the most NAs we'll accept, that is, the number of files without
 #careful, na_cutoff of 1 doesn't work if we only have one replicate
 homozygoteCutoff <- 0.8 #the maximum WT allele frequency we'll accept for candidates
 
-library(dplyr)
-library(tidyr)
-library(Rsamtools)
-
-
 
 pf <- PileupFiles(wt_list)
 pf_mut <- PileupFiles(mut_list)
@@ -43,6 +38,9 @@ calcInfo <-
 
 GetDistanceDf <- function(myChrRange, peak.version = F){
   start_gdf <- proc.time()
+  library(dplyr)
+  library(tidyr)
+  library(Rsamtools)
   tryCatch(
     {
     message('chromosome name: ', toString(seqnames(myChrRange)))
@@ -106,7 +104,6 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
       chrDf[,3:ncol(chrDf)][filter_mat] <- NA
       
      
-
       message("after depth_filter size is ", nrow(chrDf))
       return(chrDf)      
     }
