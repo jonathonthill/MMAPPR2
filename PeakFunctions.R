@@ -39,3 +39,27 @@ peak_function <- function(raw_data, start, stop, max, actual, loess_span){
   return (density_data)
 }
 
+PrePeak <- function(mmapprData) {
+  #need to calculate standard dev of all chromosomes for cutoff
+  combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
+    var(chr$loess$fitted)/length(chr$loess$fitted)})
+  combinedStDev <- sum(combinedStDev)^(1/2)
+  distanceMedian <- sapply(mmapprData@distance, function(chr) {
+    median(chr$loess$fitted)})
+  distanceMedian <- median(distanceMedian) #median of list of chr medians
+  cutoff <- 3*combinedStDev + distanceMedian
+  
+  cat("Using", round(cutoff, digits=4), "as cutoff.\n")
+  
+  #get which peaks have values above cutoff, initialize them in mmapprData
+  for(i in seq_along(mmapprData@distance)){
+    loessForChr <- mmapprData@distance[[i]]$loess
+    containsPeak <- any(loessForChr$fitted > cutoff)
+    chrName <- names(mmapprData@distance)
+    if (containsPeak) {
+      mmapprData@peaks[[chrName]] <- list(seqname = chrName)
+    }	
+  }
+  
+  return(mmapprData)
+}
