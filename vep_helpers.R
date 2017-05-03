@@ -49,18 +49,31 @@ WritePeakPileupFile <- function(peak_region_df, output_file = "peak_region_pileu
 GenerateCandidates <- function(mmapprRun) {
   #for each peak region
   for (peak in mmapprRun@peaks){
-    #call variants in peak
+    #get GRanges representation of peak
     i_ranges <- IRanges(start = as.numeric(peak$start),
                         end = as.numeric(peak$stop),
                         names = peak$chr)
     
-    g_ranges <- trim(GRanges(seqnames = names(i_ranges), 
-                             ranges = i_ranges))
-    region <- GRanges(seqnames = peak$chr, )
+    g_ranges <- GRanges(seqnames = names(i_ranges), 
+                             ranges = i_ranges)
+    
+    #call variants in peak
+    variants <- GetPeakVariants(g_ranges)
     
     #run VEP
+    variants <- RunVEPForVCF(variants)
     
+    #filter out low impact variants
+    variants <- FilterVariants(variants)
+    
+    #density score and order variants
+    variants <- DensityScoreAndOrderVariants(variants)
+    
+    #add peak variants to result object
+    mmapprRun@candidates <- append(mmapprRun@candidates, variants)
   }
+  
+  return(mmapprRun)
 }
 
 GetReferenceGenome <- function(genome_name) {
@@ -72,7 +85,7 @@ GetReferenceGenome <- function(genome_name) {
   return(result)
 }
 
-GetPeakVariants <- function(peak_region_df, genome_name = "danRer10"){
+GetPeakVariants <- function(peak_granges, genome_name = "danRer10"){
   require(tidyr)
   require(dplyr)
   require(Rsamtools)
@@ -82,62 +95,38 @@ GetPeakVariants <- function(peak_region_df, genome_name = "danRer10"){
   
   result_vranges <- NULL
   
-  #TODO refactor so function is just for one region at a time
-  # for each region, merge bam files for wt and control
-  for (i in 1:nrow(peak_region_df)) {
-    # get desired region
-    i_ranges <- IRanges(start = as.numeric(peak_region_df$starts[i]),
-                        end = as.numeric(peak_region_df$stops[i]),
-                        names = peak_region_df$chr[i])
-    
-    g_ranges <- trim(GRanges(seqnames = names(i_ranges), 
-                        ranges = i_ranges))
-    
-    # merge mutant bam files in desired regions
-    if (length(mut_list) < 2) mut_bam <- mut_list[[1]]
-    else{
-      mut_bam <- mergeBam(mut_list, destination = "tmp_m.bam", region = g_ranges)
-    }
-    #merge wt files
-    if (length(wt_list) < 2) wt_bam <- wt_list[[1]]
-    else{
-      wt_bam <- mergeBam(wt_list, destination = "tmp_wt.bam", region = g_ranges)
-    }
-    
-    # create param for variant calling 
-    tally_param <- TallyVariantsParam(genome = reference_genome, 
-                                      which = g_ranges,
-                                      indels = TRUE,
-                                      minimum_mapq = 1L
-                                      )
-    
-    # calling filters
-    # calling_filters <- VariantCallingFilters(p.lower = 0.5)
-    
-    vcf_for_region <- (callSampleSpecificVariants(mut_bam, wt_bam, 
-                                               tally.param = tally_param))
-    
-    if (is.null(result_vranges)) {
-      result_vranges <- vcf_for_region
-    }
-    else if (length(vcf_for_region) > 0) {
-      result_vranges <- c(result_vranges, vcf_for_region)
-    }
+  # merge mutant bam files in desired regions
+  if (length(mut_list) < 2) mut_bam <- mut_list[[1]]
+  else{
+    mut_bam <- mergeBam(mut_list, destination = "tmp_m.bam", region = g_ranges)
+  }
+  #merge wt files
+  if (length(wt_list) < 2) wt_bam <- wt_list[[1]]
+  else{
+    wt_bam <- mergeBam(wt_list, destination = "tmp_wt.bam", region = g_ranges)
   }
   
+  # create param for variant calling 
+  tally_param <- TallyVariantsParam(genome = reference_genome, 
+                                    which = peak_granges,
+                                    indels = TRUE,
+                                    minimum_mapq = 1L
+  )
+  
+  # calling filters
+  # calling_filters <- VariantCallingFilters(p.lower = 0.5)
+  
+  result_vranges <- (callSampleSpecificVariants(mut_bam, wt_bam, 
+                                                tally.param = tally_param))
   
   if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
   if (file.exists("tmp_m.bm")) file.remove("tmp_m.bam")
+  
   if (length(result_vranges) > 0){
     # need sampleNames to convert to VCF; using mutant file names
     sampleNames(result_vranges) <- paste0(sapply(mut_list, path), collapse = " -- ")
     mcols(result_vranges) <- NULL
     return(result_vranges)
-    
-    # result_vcf <- asVCF(result_vranges)
-    # write.table(result_vcf, file = output_file, sep = "\t", quote = FALSE,
-    #             row.names = FALSE, col.names = FALSE)
-    # return(result_vcf)
   } 
   else return(NULL)
 }
@@ -172,8 +161,14 @@ FilterVariants <- function(candidate_granges) {
 }
 
 DensityScoreAndOrderVariants <- function(candidate_granges, density_function) {
+  #density calculation
   positions <- start(candidate_granges) + ((width(candidate_granges) - 1) / 2)
   density_col <- sapply(positions, density_function)
   mcols(candidate_granges)$density <- density_col
+  
+  #re-order
+  order_vec <- order(density_col, decreasing = TRUE)
+  candidate_granges <- candidate_granges[order_vec]
+  
   return(candidate_granges)
 }
