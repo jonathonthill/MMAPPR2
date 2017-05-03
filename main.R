@@ -3,7 +3,10 @@ require(doParallel)
 require(foreach)
 
 GetBamFileForFilename <- function(filename) {
-  return(BamFile(filename, index = paste0(filename, ".bai")))
+  index_filename <- paste0(filename, ".bai")
+  if (!file.exists(index_filename)) indexBam(filename)
+  result <- BamFile(filename, index = index_filename)
+  return(result)
 }
 
 ## load bam file using the which argument to ScanBamParam
@@ -14,8 +17,8 @@ bamfilem1 <- "STAR/11647X2_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord
 bamfilem2 <- "STAR/11647X4_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 bamfilem3 <- "STAR/11647X6_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 
-bamfile1 <- GetBamFileForFilename("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned.sortedByCoord.out.bam")
-bamfilem1 <- GetBamFileForFilename("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned.sortedByCoord.out.bam")
+bamfile1 <- BamFile("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
+bamfilem1 <- GetBamFileForFilename("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
 
 
 #resolution at which AICc will be calculated to find optimum Loess fit span
@@ -30,8 +33,7 @@ bf_list <- BamFileList(c(wt_list, mut_list))
 source('~/MMAPPR2/read_bam.r')
 
 myrange <- as(seqinfo(bf_list), "GRanges")
-# myrange <- GRanges(seqnames = 'chr4:1-77000000')
-#cut to chromosomes and make short for testing
+#cut to standardchromosomes
 myrange <- GenomeInfoDb::keepStandardChromosomes(myrange)
 # shorten range for faster testing (shortens each chromosome to just 20000 bp)
 # width(ranges(myrange)) <- 100000
