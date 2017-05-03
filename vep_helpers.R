@@ -46,22 +46,23 @@ WritePeakPileupFile <- function(peak_region_df, output_file = "peak_region_pileu
   str(result)
 }
 
-GenerateCandidates <- function(mmappr_run) {
+GenerateCandidates <- function(mmapprData) {
+  
   #for each peak region
-  for (peak in mmappr_run@peaks){
+  mmapprData@candidates <- lapply(mmapprData@peaks, function(peak) {
     #get GRanges representation of peak
     i_ranges <- IRanges(start = as.numeric(peak$start),
                         end = as.numeric(peak$end),
-                        names = peak$chr)
+                        names = peak$seqname)
     
     g_ranges <- GRanges(seqnames = names(i_ranges), 
-                             ranges = i_ranges)
+                        ranges = i_ranges)
     
     #call variants in peak
-    variants <- GetPeakVariants(g_ranges)
+    variants <- GetPeakVariants(g_ranges, mmapprData@input$refGenome)
     
     #run VEP
-    variants <- RunVEPForVCF(variants)
+    variants <- RunVEPForVariants(variants)
     
     #filter out low impact variants
     variants <- FilterVariants(variants)
@@ -69,29 +70,17 @@ GenerateCandidates <- function(mmappr_run) {
     #density score and order variants
     variants <- DensityScoreAndOrderVariants(variants, peak$density_function)
     
-    #add peak variants to result object
-    mmappr_run@candidates <- append(mmappr_run@candidates, variants)
-  }
+    return(variants)
+  })
   
-  return(mmappr_run)
+  return(mmapprData)
 }
 
-GetReferenceGenome <- function(genome_name) {
-  require(gmapR)
-  # require(genome_package_name, character.only = TRUE)
-  
-  #TODO fix calling right genome based on name
-  result <- GmapGenome(genome_name, create = TRUE)
-  return(result)
-}
-
-GetPeakVariants <- function(peak_granges, genome_name = "danRer10"){
+GetPeakVariants <- function(peak_granges, refGenome){
   require(tidyr)
   require(dplyr)
   require(Rsamtools)
   require(VariantTools)
-  
-  reference_genome <- GetReferenceGenome(genome_name)
   
   result_vranges <- NULL
   
@@ -107,14 +96,11 @@ GetPeakVariants <- function(peak_granges, genome_name = "danRer10"){
   }
   
   # create param for variant calling 
-  tally_param <- TallyVariantsParam(genome = reference_genome, 
+  tally_param <- TallyVariantsParam(genome = refGenome, 
                                     which = peak_granges,
                                     indels = TRUE,
                                     minimum_mapq = 1L
   )
-  
-  # calling filters
-  # calling_filters <- VariantCallingFilters(p.lower = 0.5)
   
   result_vranges <- (callSampleSpecificVariants(mut_bam, wt_bam, 
                                                 tally.param = tally_param))
@@ -131,14 +117,13 @@ GetPeakVariants <- function(peak_granges, genome_name = "danRer10"){
   else return(NULL)
 }
 
-RunVEPForVCF <- function(inputVCF){
-  #TODO put package in filename thing
-  peak_vcf_file <- "peak.vcf"
+RunVEPForVariants <- function(inputVariants){
+  require(ensemblVEP)
+  
+  peakVcfFile <- "peak.vcf"
   
   #write file
-  writeVcf(inputVCF, peak_vcf_file)
-  
-  require(ensemblVEP)
+  writeVcf(inputVariants, peakVcfFile)
   
   param <- VEPParam(scriptPath =
                       "ensembl-tools-release-86/scripts/variant_effect_predictor/variant_effect_predictor.pl",
@@ -147,9 +132,9 @@ RunVEPForVCF <- function(inputVCF){
                     database = c(database = FALSE))
                     # dataformat = c(vcf = TRUE),
   
-  gr <- ensemblVEP(peak_vcf_file, param)
+  gr <- ensemblVEP(peakVcfFile, param)
   
-  if (file.exists(peak_vcf_file)) file.remove(peak_vcf_file)
+  if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
   
   #output granges
   return(gr)

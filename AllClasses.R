@@ -1,4 +1,4 @@
-setClass("MmapprRun",
+setClass("MmapprData",
          representation(
            input="list",
            distance="list",

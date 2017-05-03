@@ -2,13 +2,6 @@
 require(doParallel)
 require(foreach)
 
-GetBamFileForFilename <- function(filename) {
-  index_filename <- paste0(filename, ".bai")
-  if (!file.exists(index_filename)) indexBam(filename)
-  result <- BamFile(filename, index = index_filename)
-  return(result)
-}
-
 ## load bam file using the which argument to ScanBamParam
 bamfile3 <- "STAR/11647X5_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 bamfile2 <- "STAR/11647X3_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
