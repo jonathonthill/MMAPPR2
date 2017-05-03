@@ -55,9 +55,10 @@ PrePeak <- function(mmapprData) {
   for(i in seq_along(mmapprData@distance)){
     loessForChr <- mmapprData@distance[[i]]$loess
     containsPeak <- any(loessForChr$fitted > cutoff)
-    chrName <- names(mmapprData@distance)
+    chrName <- names(mmapprData@distance)[[i]]
     if (containsPeak) {
       mmapprData@peaks[[chrName]] <- list(seqname = chrName)
+      cat("Sequence", chrName, "contains peak.\n")
     }	
   }
   
