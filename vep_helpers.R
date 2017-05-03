@@ -46,12 +46,12 @@ WritePeakPileupFile <- function(peak_region_df, output_file = "peak_region_pileu
   str(result)
 }
 
-GenerateCandidates <- function(mmapprRun) {
+GenerateCandidates <- function(mmappr_run) {
   #for each peak region
-  for (peak in mmapprRun@peaks){
+  for (peak in mmappr_run@peaks){
     #get GRanges representation of peak
     i_ranges <- IRanges(start = as.numeric(peak$start),
-                        end = as.numeric(peak$stop),
+                        end = as.numeric(peak$end),
                         names = peak$chr)
     
     g_ranges <- GRanges(seqnames = names(i_ranges), 
@@ -67,13 +67,13 @@ GenerateCandidates <- function(mmapprRun) {
     variants <- FilterVariants(variants)
     
     #density score and order variants
-    variants <- DensityScoreAndOrderVariants(variants)
+    variants <- DensityScoreAndOrderVariants(variants, peak$density_function)
     
     #add peak variants to result object
-    mmapprRun@candidates <- append(mmapprRun@candidates, variants)
+    mmappr_run@candidates <- append(mmappr_run@candidates, variants)
   }
   
-  return(mmapprRun)
+  return(mmappr_run)
 }
 
 GetReferenceGenome <- function(genome_name) {
