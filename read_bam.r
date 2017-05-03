@@ -13,8 +13,6 @@ na_cutoff <- 0 # the most NAs we'll accept, that is, the number of files without
 homozygoteCutoff <- 0.8 #the maximum WT allele frequency we'll accept for candidates
 
 
-pf <- PileupFiles(wt_list)
-pf_mut <- PileupFiles(mut_list)
 
 #Function for use in applyPileups: gets list for each pileup position
 calcInfo <-
@@ -46,6 +44,8 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
     message('chromosome name: ', toString(seqnames(myChrRange)))
       gc()
     
+    pf <- PileupFiles(wt_list)
+    pf_mut <- PileupFiles(mut_list)
     
     param <- ApplyPileupsParam(which = myChrRange, what="seq", 
                                minBaseQuality = my_minBaseQuality,
@@ -77,7 +77,7 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
     
     ###depth filter
     #takes df with columns pos, nuc (ACGTcvg), file1, file2 ...
-    #returns df with columns pos, nuc (without cvg!!), file1, file2...
+    #returns df with columns pos, nuc (ACGTcvg), file1, file2...
     #assumption: for each file, take out positions with reads under cutoff
     #accomplished by replacing position's data with NAs for each column(file)
     #NAs will then be dealt with appropriately by NA filter
@@ -158,6 +158,7 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
     #removes rows where major allele frequency exceeds cutoff
     #takes df with cols pos, A, C, G, T; returns same
     homozygote_filter <- function(chrDf){
+      #TODO get to work with coverage
       rows_to_keep <- apply((chrDf[, -which(names(chrDf) %in% c("pos", "cvg"))] <= homozygoteCutoff), MARGIN = 1, all)
       chrDf <- chrDf[rows_to_keep,]
       message("after hz_filter size is ", nrow(chrDf))
@@ -179,7 +180,10 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
         
       error = function(e) {stop('empty dataframe')}
     )
-    colnames(wt_df)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
+    if (peak.version){
+      colnames(wt_df)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
+    }
+    else colnames(wt_df)[2:5] <- c('A.wt', 'C.wt', 'G.wt', 'T.wt')
     rm(apply_pileup)
     
     #apply functions to mutant pool
@@ -194,7 +198,11 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
       
       error = function(e) {stop('empty dataframe')}
     )
-    colnames(mut_df)[2:6] <- c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
+    if (peak.version) {
+      colnames(mut_df)[2:6] <-
+        c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
+    }
+    else colnames(mut_df)[2:5] <- c('A.mut', 'C.mut', 'G.mut', 'T.mut')
     rm(apply_pileup_mut)
     
     #inner_join already removes rows without a match
@@ -226,8 +234,9 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
   },
     
     error = function(e) {
-      msg <- paste0(toString(seqnames(myChrRange))," had an error: ",e)
-      return(msg)
+      msg <- paste0(toString(seqnames(myChrRange)),": ",e)
+      message(msg)
+      return(e)
     }
   )
 }
