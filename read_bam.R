@@ -1,9 +1,3 @@
-###this whole script should return a list with two dataframes
-# one of the Euclidian distance for a chromosome
-# and another of the original proportions and distance
-# arguments: GRanges object with desired chromosome, (cutoffs?, )
-
-
 my_minMapQuality <- 30
 my_minBaseQuality <- 20
 my_minDepth <- 10
@@ -12,7 +6,56 @@ na_cutoff <- 0 # the most NAs we'll accept, that is, the number of files without
 #careful, na_cutoff of 1 doesn't work if we only have one replicate
 homozygoteCutoff <- 0.8 #the maximum WT allele frequency we'll accept for candidates
 
-
+ReadInFiles <- function(mmapprData) {
+  require(doParallel)
+  
+  myrange <- as(seqinfo(BamFileList(mmapprData@input$mutList, mmapprData@input$wtList)), "GRanges")
+  #cut to standardchromosomes
+  myrange <- GenomeInfoDb::keepStandardChromosomes(myrange)
+  # shorten range for faster testing (shortens each chromosome to just 20000 bp)
+  # width(ranges(myrange)) <- 100000
+  
+  chrList <- list()
+  for (i in 1:length(myrange)){
+    chrList[[toString(seqnames(myrange[i]))]] <- myrange[i]
+  }
+  
+  #TODO extract parallel and chr list functions
+  
+  #cluster generation
+  cl <- makeCluster(core_calc(), type = "SOCK", outfile = "")
+  
+  # register the cluster
+  registerDoParallel(cl)
+  
+  # insert parallel computation here
+  try({
+    resultList <- foreach(i = chrList,
+                        .packages = c("Rsamtools", "tidyr", "dplyr")) %dopar% ReadFilesForChr(i)
+    names(resultList) <- names(chrList)
+  }
+  )
+  
+  stopCluster(cl)
+  # insert serial backend, otherwise error in repetetive tasks
+  registerDoSEQ()
+  
+  # clean up a bit.
+  invisible(gc)
+  
+  mmapprData@distance <- resultList
+  
+  return(mmapprData)
+  
+  # for (i in seq_along(resultList)) {
+  #   #chr is list with mutCounts, wtCounts, and distanceDf
+  #   chr <- resultList[[i]]
+  #   chrName <- names(resultList)[i]
+  #   mmapprData@distance[[chrName]]$wtCounts <- chr$wtCounts
+  #   mmapprData@distance[[chrName]]$mutCounts <- chr$mutCounts
+  #   mmapprData@distance[[chrName]]$distanceDf <- chr$distanceDf
+  # }
+}
 
 #Function for use in applyPileups: gets list for each pileup position
 calcInfo <-
@@ -34,16 +77,15 @@ calcInfo <-
     list(pos=x[["pos"]], info=info) 
   }
 
-GetDistanceDf <- function(myChrRange, peak.version = F){
-  start_gdf <- proc.time()
+ReadFilesForChr <- function(myChrRange){
+  startGDFTime <- proc.time()
   library(dplyr)
   library(tidyr)
   library(Rsamtools)
   tryCatch(
     {
-    message('chromosome name: ', toString(seqnames(myChrRange)))
-      gc()
-    
+    message('Sequence name: ', toString(seqnames(myChrRange)))
+
     pf <- PileupFiles(wt_list)
     pf_mut <- PileupFiles(mut_list)
     
@@ -52,8 +94,7 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
                                minMapQuality = my_minMapQuality,
                                minDepth = my_minDepth)
     
-    gc()
-    apply_pileup <- applyPileups(pf, FUN = calcInfo, param = param)
+    applyPileupWT <- applyPileups(pf, FUN = calcInfo, param = param)
 
     #debug: option to return pileup (memory / base pairs / reps) in order to predict memory
     # return(object.size(x = apply_pileup)/length(apply_pileup[[1]]$pos)/length(pf))
@@ -140,14 +181,6 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
       chrDf[-seq(5, nrow(chrDf), by=5), "avg_count"] <- 
         chrDf[-seq(5, nrow(chrDf), by=5), "avg_count"] / chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), "avg_count"]
       
-      #remove coverage rows to make compatible with future functions
-      #unless used for PeakCaller version
-      if (!peak.version){
-        chrDf <- chrDf[-seq(5, to=nrow(chrDf), by=5),]
-        #remove cvg factor
-        chrDf <- droplevels(chrDf)
-      }
-      
       #throw away non-mean columns and return
       message("after avg_files size is ", nrow(chrDf))
       return(chrDf[,c("pos", "nucleotide", "avg_count")])
@@ -156,11 +189,11 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
     #filter homozygotes wt pool, so when later inner_joined,
     #rows will be taken out of both pools
     #removes rows where major allele frequency exceeds cutoff
-    #takes df with cols pos, A, C, G, T; returns same
+    #takes df with cols pos, A, C, cvg, G, T; returns same
     homozygote_filter <- function(chrDf){
       #TODO get to work with coverage
       rows_to_keep <- apply((chrDf[, -which(names(chrDf) %in% c("pos", "cvg"))] <= homozygoteCutoff), MARGIN = 1, all)
-      chrDf <- chrDf[rows_to_keep,]
+      chrDf <- chrDf[rows_to_keep, ]
       message("after hz_filter size is ", nrow(chrDf))
       return(chrDf)
     }
@@ -168,8 +201,9 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
     
     #apply functions to wild type pool
     #CAUTION: functions must be applied in this order to work right
+    message("Reading wild-type file(s):")
     tryCatch(
-      wt_df <- apply_pileup[[1]] %>%
+      wtCounts <- applyPileupWT[[1]] %>%
         make_df_for_chromosome() %>%
         depth_filter %>%
         na_filter() %>%
@@ -180,16 +214,14 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
         
       error = function(e) {stop('empty dataframe')}
     )
-    if (peak.version){
-      colnames(wt_df)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
-    }
-    else colnames(wt_df)[2:5] <- c('A.wt', 'C.wt', 'G.wt', 'T.wt')
-    rm(apply_pileup)
+    colnames(wtCounts)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
+    rm(applyPileupWT)
     
     #apply functions to mutant pool
-    apply_pileup_mut <- applyPileups(pf_mut, FUN = calcInfo, param = param)
+    message("Reading mutant file(s):")
+    applyPileupMut <- applyPileups(pf_mut, FUN = calcInfo, param = param)
     tryCatch(
-      mut_df <- apply_pileup_mut[[1]] %>%
+      mutCounts <- applyPileupMut[[1]] %>%
         make_df_for_chromosome() %>%
         depth_filter %>%
         na_filter() %>%
@@ -198,39 +230,30 @@ GetDistanceDf <- function(myChrRange, peak.version = F){
       
       error = function(e) {stop('empty dataframe')}
     )
-    if (peak.version) {
-      colnames(mut_df)[2:6] <-
-        c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
-    }
-    else colnames(mut_df)[2:5] <- c('A.mut', 'C.mut', 'G.mut', 'T.mut')
-    rm(apply_pileup_mut)
+    
+    colnames(mutCounts)[2:6] <- c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
+    rm(applyPileupMut)
     
     #inner_join already removes rows without a match
-    distance_df <- inner_join(wt_df, mut_df, by=c('pos'))
-    if (length(distance_df) == 0) stop('empty dataframe')
-    rm(wt_df)
-    rm(mut_df)
+    distanceDf <- inner_join(wtCounts, mutCounts, by=c('pos'))
+    if (length(distanceDf) == 0) stop('empty dataframe')
     
     #calculate Euclidian distance
-    distance_df$A.wt <- (distance_df$A.wt - distance_df$A.mut)^2
-    distance_df$C.wt <- (distance_df$C.wt - distance_df$C.mut)^2
-    distance_df$G.wt <- (distance_df$G.wt - distance_df$G.mut)^2
-    distance_df$T.wt <- (distance_df$T.wt - distance_df$T.mut)^2
-    #TODO change depending on peak.version
-    distance_df <- transmute(distance_df, 
-                             pos = pos,
-                             distance = (A.wt + C.wt + G.wt + T.wt)^(1/2),
-                             cvg.mut = cvg.mut,
-                             A.mut = A.mut,
-                             C.mut = C.mut,
-                             G.mut = G.mut,
-                             T.mut = T.mut
-    )
-    distance_df$distance <- distance_df$distance ^ my_power
+    distanceDf$A.wt <- (distanceDf$A.wt - distanceDf$A.mut)^2
+    distanceDf$C.wt <- (distanceDf$C.wt - distanceDf$C.mut)^2
+    distanceDf$G.wt <- (distanceDf$G.wt - distanceDf$G.mut)^2
+    distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
     
-    stopifnot(nrow(distance_df) > 0)
-    print(proc.time() - start_gdf)
-    return(distance_df)
+    distanceDf <- transmute(distanceDf, 
+                             pos = pos,
+                             distance = (A.wt + C.wt + G.wt + T.wt)^(1/2))
+    distanceDf$distance <- distanceDf$distance ^ my_power
+    
+    stopifnot(nrow(distanceDf) > 0)
+    print(proc.time() - startGDFTime)
+    
+    return(list(wtCounts = wtCounts, mutCounts = mutCounts, 
+                distanceDf = distanceDf))
   },
     
     error = function(e) {

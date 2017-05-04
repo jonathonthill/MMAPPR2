@@ -25,17 +25,7 @@ bf_list <- BamFileList(c(wt_list, mut_list))
 
 source('~/MMAPPR2/read_bam.r')
 
-myrange <- as(seqinfo(bf_list), "GRanges")
-#cut to standardchromosomes
-myrange <- GenomeInfoDb::keepStandardChromosomes(myrange)
-# shorten range for faster testing (shortens each chromosome to just 20000 bp)
-# width(ranges(myrange)) <- 100000
 
-
-chr_list <- list()
-for (i in 1:length(myrange)){
-  chr_list[[toString(seqnames(myrange[i]))]] <- myrange[i]
-}
 
 
 start <- proc.time()

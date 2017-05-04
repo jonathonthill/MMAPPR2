@@ -3,54 +3,57 @@
 #takes chromosome range (in class GRanges)
 #returns list of 1: Loess fit object (with optimum span) and 2: dataframe of AICc calculations
 LoessFit <- function(chrRange){
-  lf.start <- proc.time()
-  dist_df = GetDistanceDf(chrRange)
-  if(class(dist_df) == 'try-error') stop('Error: empty dataframe')
+  loessFitStartTime <- proc.time()
+  resultList = GetDistanceDf(chrRange)
+  if(class(resultList$distanceDf) == 'try-error') stop('Error: empty distance dataframe')
   
-  aicc_start <- proc.time()
-  aicc_df <- aicc_opt(dist_df) #returns dataframe with spans and aicc values for each loess
-  message("aicc for chr ", names(chrRange), " took: ", proc.time() - aicc_start)
+  aiccStartTime <- proc.time()
+  aiccDf <- AiccOpt(resultList$distanceDf) #returns dataframe with spans and aicc values for each loess
+  message("AICc for chr ", names(chrRange), " took: ", proc.time() - aiccStartTime)
+  
+  resultList$aicc <- aiccDf
   
   #now get loess for best aicc
-  best_span <- aicc_df[aicc_df$aicc_v == min(aicc_df$aicc_v, na.rm = T),'spans']
-  chr.loess.fit <- get.loess(best_span, dist_df$distance, dist_df$pos)
+  bestSpan <- aiccDf[aiccDf$aiccValues == min(aiccDf$aiccValues, na.rm = T), 'spans']
+  loessFit <- GetLoess(bestSpan, resultList$distanceDf$distance, 
+                             resultList$distanceDf$pos)
 
   
   #loess fit(df, aiccParam) #keep all and pick best of list? or takes too much memory
   #  recursive: (min, max, interval parameters)
   # each chromosome has list: $fit(loess object WITH ACGTcvg FOR MUTANT), $aicc(vector of aicc data)
-  message("whole LoessFit for chr ", names(chrRange), " took: ", proc.time() - aicc_start)
-  return(list(fit = chr.loess.fit, aicc = aicc_df)) #actually return list of fit and aicc
+  message("whole LoessFit for chr ", names(chrRange), " took: ", proc.time() - aiccStartTime)
+  return(list(fit = loessFit, aicc = aiccDf)) #actually return list of fit and aicc
 }
 
 #returns a list of aicc and span values as well as the time it took
-aicc_opt <- function(in_df, spans = (0.01 + 0.1*(0:9)), resolution = loess.opt.resolution, cut.factor = loess.opt.cut.factor){
-  aicc_v <- sapply(spans, aicc, euc_dist = in_df$distance, pos = in_df$pos)
-  df <- data.frame(spans, aicc_v)
-  current_resolution <- round(min(abs(diff(spans))), digits = num.decimals(resolution))
-  if (abs(current_resolution) > resolution){
+AiccOpt <- function(distanceDf, spans = (0.01 + 0.1*(0:9)), 
+                    resolution = loess.opt.resolution, cutFactor = loess.opt.cut.factor){
+  aiccValues <- sapply(spans, Aicc, euc_dist = distanceDf$distance, pos = distanceDf$pos)
+  aiccDf <- data.frame(spans, aiccValues)
+  currentResolution <- round(min(abs(diff(spans))), digits = NumDecimals(resolution))
+  if (abs(currentResolution) > resolution){
     #finds two lowest local minima for finer attempt
-    min_vals <- minTwo(localMin(df$aicc_v))
+    minVals <- MinTwo(LocalMin(aiccDf$aiccValues))
     #gets first column of dataframe after selecting for rows that match the two lowest localMins
-    min_spans <- df[df$aicc_v %in% min_vals, 1]
-    add_vector <- ((current_resolution * cut.factor) * 1:9)
-    new_spans <- c()
-    for (x in min_spans){
-      new_spans <- append(new_spans, x - add_vector)
-      new_spans <- append(new_spans, x + add_vector)
+    minSpans <- aiccDf[aiccDf$aiccValues %in% minVals, 1]
+    addVector <- ((currentResolution * cutFactor) * 1:9)
+    newSpans <- c()
+    for (x in minSpans){
+      newSpans <- append(newSpans, x - addVector)
+      newSpans <- append(newSpans, x + addVector)
     }
-    new_spans <- new_spans[new_spans > 0]
-    new_spans <- new_spans[new_spans <= 1]
-    new_spans <- round(new_spans, digits = num.decimals(resolution))
-    new_spans <- unique(new_spans)
-    message("# new spans = ", length(new_spans))
-    return(rbind(df,aicc_opt(in_df, spans = new_spans, resolution = resolution, cut.factor = cut.factor)))
+    newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
+    newSpans <- round(newSpans, digits = NumDecimals(resolution))
+    newSpans <- unique(newSpans)
+    message("# new spans = ", length(newSpans))
+    return(rbind(aiccDf,AiccOpt(distanceDf, spans = newSpans, resolution = resolution, cutFactor = cutFactor)))
   }
-  else return(df)
+  else return(aiccDf)
 }
 
 #returns minimum two elements (useful for aicc_opt)
-minTwo <- function(x){
+MinTwo <- function(x){
   len <- length(x)
   if(len<2){
     warning('len < 2; returning x')
@@ -60,26 +63,26 @@ minTwo <- function(x){
 }
 
 #returns all local minima (problem if repeated local maxima on end)
-localMin <- function(x){
+LocalMin <- function(x){
   indices <- which(diff(c(FALSE,diff(x)>0,TRUE))>0)
   return(x[indices])
 }
 
-num.decimals <- function(x) {
+NumDecimals <- function(x) {
   stopifnot(class(x)=="numeric")
   x <- sub("0+$","",x)
   x <- sub("^.+[.]","",x)
   nchar(x)
 }
 
-get.loess <- function(s, euc_dist, pos){
+GetLoess <- function(s, euc_dist, pos){
   x <- try(loess(euc_dist ~ pos, span=s, degree=1, family="symmetric", surface='direct'), silent=T)
   return(x)
 }
 
-aicc <- function (s, euc_dist, pos) {
+Aicc <- function (s, euc_dist, pos) {
   # extract values from loess object
-  x <- get.loess(s, euc_dist, pos)
+  x <- GetLoess(s, euc_dist, pos)
   if(class(x)=="try-error"){return(NA)}
   span <- x$pars$span
   n <- x$n
