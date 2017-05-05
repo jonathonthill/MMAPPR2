@@ -13,20 +13,10 @@ bamfilem3 <- "STAR/11647X6_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord
 bamfile1 <- BamFile("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
 bamfilem1 <- BamFile("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
 
-
-#resolution at which AICc will be calculated to find optimum Loess fit span
-loess.opt.resolution <- 0.01
-#factor between rounds of Loess fit optimization (e.g., factor of 0.1 results in spans of 0.1 apart, then 0.01 apart, etc.)
-loess.opt.cut.factor <- 0.1
-
 wt_list <- BamFileList(bamfile1)#, bamfile2, bamfile3))
 mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
-bf_list <- BamFileList(c(wt_list, mut_list))
 
 source('~/MMAPPR2/read_bam.r')
-
-
-
 
 start <- proc.time()
 
@@ -55,31 +45,28 @@ core_calc <- function(mem_req = 33.3){
   )
 }
 
-#cluster generation
-cl <- makeCluster(core_calc(), type = "SOCK", outfile = "")
-
-# register the cluster
-registerDoParallel(cl)
-
-# insert parallel computation here
-try({
+RunFunctionInParallel <- function(inputList, functionToRun, packages = c()) {
+  #cluster generation
+  cl <- makeCluster(core_calc(), type = "SOCK", outfile = "")
   
-  test.all <- foreach(i = chr_list,
-                            .packages = c("Rsamtools", "tidyr", "dplyr")) %dopar% LoessFit(i)
-  names(test.all) <- names(chr_list)
+  # register the cluster
+  registerDoParallel(cl)
+  
+  #perform calculation
+  message("Beginning parallel calculation")
+  resultList <- foreach(i = inputList,
+                        .packages = packages) %dopar% functionToRun(i)
+  names(resultList) <- names(inputList)
+  
+  stopCluster(cl)
+  # insert serial backend, otherwise error in repetetive tasks
+  registerDoSEQ()
+  
+  # clean up a bit.
+  invisible(gc)
+  
+  return(resultList)
 }
-)
-# loess_fit_list <- lapply(chr_list, LoessFit)
-
-time <- proc.time() - start
-print(time)
-
-stopCluster(cl)
-# insert serial backend, otherwise error in repetetive tasks
-registerDoSEQ()
-
-# clean up a bit.
-invisible(gc)
 
 
 
