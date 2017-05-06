@@ -3,7 +3,8 @@ LoessFit <- function(mmapprData) {
   loessOptCutFactor <- mmapprData@input$loessOptCutFactor
   
   #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
-  mmapprData@distance <- RunFunctionInParallel(mmapprData@distance, LoessFitForChr)
+  mmapprData@distance <- RunFunctionInParallel(mmapprData@distance, functionToRun = LoessFitForChr, 
+                                               secondInput = loessOptResolution, thirdInput = loessOptCutFactor)
   #LoessFitForChr returns list with mutCounts, wtCounts, loess, aicc
   
   return(mmapprData)
@@ -13,7 +14,7 @@ LoessFit <- function(mmapprData) {
 #the function that gets run for each chromosome
 #takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
 #outputs complete element of mmapprData@distance (mutcounts, wtCounts, loess, aicc)
-LoessFitForChr <- function(resultList){
+LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
   #returns a list of aicc and span values as well as the time it took
   #define needed functions
   AiccOpt <- function(distanceDf, spans = (0.01 + 0.1*(0:9)), 
@@ -86,6 +87,9 @@ LoessFitForChr <- function(resultList){
     #return(n * log(sigma2) + 2*traceL + 2*traceL*(traceL + 1) / (n - traceL - 1))
   }
   
+  
+  ### here's where code actually gets run
+  
   startTime <- proc.time()
   tryCatch({
     if(class(resultList) != 'list') stop('Unable to perform loess fit for sequence--distance data missing.')
@@ -94,12 +98,15 @@ LoessFitForChr <- function(resultList){
     
     #now get loess for best aicc
     bestSpan <- resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans']
+    bestSpan <- mean(bestSpan, na.rm = TRUE)
+    message(paste0("best span = ", bestSpan, '\n'))
     resultList$loess <- GetLoess(bestSpan, resultList$distanceDf$distance, 
                                  resultList$distanceDf$pos)
     
-    resultList$distanceDf <- NULL #no longer needed
+    #no longer needed
+    resultList$distanceDf <- NULL
     
-    message("LoessFit for chr ", names(chrRange), " took: ", proc.time() - startTime)
+    resultList$loessTime <- proc.time() - startTime
     return(resultList)
   },
   error = function(e) {

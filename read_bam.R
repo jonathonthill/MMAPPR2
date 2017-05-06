@@ -38,7 +38,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     mutFiles <- params$mutFiles
     
     #DEBUG
-    width(chrRange) <- 10000
+    # width(chrRange) <- 10000
 
     pf <- PileupFiles(wtFiles)
     pf_mut <- PileupFiles(mutFiles)
@@ -166,7 +166,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     
     #apply functions to wild type pool
     #CAUTION: functions must be applied in this order to work right
-    message(cat(toString(seqnames(chrRange)), ": Reading wild-type file(s)"))
+    message(paste0(toString(seqnames(chrRange)), ": Reading wild-type file(s)"))
     tryCatch(
       wtCounts <- applyPileupWT[[1]] %>%
         make_df_for_chromosome() %>%
@@ -186,7 +186,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     rm(applyPileupWT)
     
     #apply functions to mutant pool
-    message(cat(toString(seqnames(chrRange)), ": Reading mutant file(s)"))
+    message(paste0(toString(seqnames(chrRange)), ": Reading mutant file(s)"))
     applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = param)
     tryCatch(
       mutCounts <- applyPileupMut[[1]] %>%

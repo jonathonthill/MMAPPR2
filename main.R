@@ -82,7 +82,24 @@ RunFunctionInParallel <- function(inputList, functionToRun, packages = c(), seco
   return(resultList)
 }
 
-
+Mmappr <- function(mmapprData = NULL, wtFiles = NULL, mutFiles = NULL) {
+  startTime <- proc.time()
+  
+  if (is.null(mmapprData)) mmapprData = new("MmapprData")
+  if (!is.null(wtFiles)) mmapprData@input$wtFiles <- wtFiles
+  if (!is.null(mutFiles)) mmapprData@input$mutFiles <- mutFiles
+  
+  mmapprData <- ReadInFiles(mmapprData)
+  mmapprData <- LoessFit(mmapprData)
+  # mmapprData <- PrePeak(mmapprData)
+  # # mmapprData <- PeakDensity(mmapprData)
+  # # mmapprData <- PeakRefinement(mmapprData)
+  # mmapprData <- GenerateCandidates(mmapprData)
+  # 
+  # OutputMmapprData(mmapprData)
+  print(proc.time() - startTime)
+  return(mmapprData)
+}
 
 
 
