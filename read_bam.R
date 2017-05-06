@@ -1,6 +1,6 @@
 
 
-ReadInFiles <- function(mmapprData) {
+ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   require(doParallel)
   message("Reading in files")
   
@@ -18,13 +18,14 @@ ReadInFiles <- function(mmapprData) {
                                                         parameters = mmapprData@input)
   }
   
-  mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, packages = c('tidyr', 'dplyr'))
+  mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, packages = c('tidyr', 'dplyr'),
+                                               secondInput = showDebug)
   
   return(mmapprData)
 }
 
 
-ReadFilesForChr <- function(inputList){
+ReadFilesForChr <- function(inputList, showDebug = FALSE){
   startTime <- proc.time()
   library(dplyr)
   library(tidyr)
@@ -36,8 +37,6 @@ ReadFilesForChr <- function(inputList){
     wtFiles <- params$wtFiles
     mutFiles <- params$mutFiles
     
-    message('Sequence name: ', toString(seqnames(chrRange)))
-      
     #DEBUG
     width(chrRange) <- 10000
 
@@ -82,7 +81,7 @@ ReadFilesForChr <- function(inputList){
         #because $info is info by file, and info, which was originally
         #a matrix, gets simplified into a vector which matches
         x <- cbind(x, infoList$info)
-        message("after make_df_for_chr size is ", nrow(x))
+        if (showDebug) message("after make_df_for_chr size is ", nrow(x))
         return(x)
     }
     
@@ -115,7 +114,7 @@ ReadFilesForChr <- function(inputList){
       #apply filter to dataframe
       chrDf[,3:ncol(chrDf)][filter_mat] <- NA
       
-      message("after depth_filter size is ", nrow(chrDf))
+      if (showDebug) message("after depth_filter size is ", nrow(chrDf))
       return(chrDf)      
     }
     
@@ -133,7 +132,7 @@ ReadFilesForChr <- function(inputList){
       #need drop=F so it works if only 1 column is passed to rowSums
       filter_vec <- (rowSums(is.na(chrDf[,3:length(chrDf), drop = FALSE])) <= params$naCutoff)
       chrDf <- chrDf[filter_vec,]
-      message("after na_filter size is ", nrow(chrDf))
+      if (showDebug) message("after na_filter size is ", nrow(chrDf))
       return(chrDf)
     }
     
@@ -148,7 +147,7 @@ ReadFilesForChr <- function(inputList){
         chrDf[-seq(5, nrow(chrDf), by=5), "avg_count"] / chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), "avg_count"]
       
       #throw away non-mean columns and return
-      message("after avg_files size is ", nrow(chrDf))
+      if (showDebug) message("after avg_files size is ", nrow(chrDf))
       return(chrDf[, c("pos", "nucleotide", "avg_count")])
     }
     
@@ -160,14 +159,14 @@ ReadFilesForChr <- function(inputList){
       rows_to_keep <- apply((chrDf[, -which(names(chrDf) %in% c("pos", "cvg"))] 
                              <= params$homozygoteCutoff), MARGIN = 1, all)
       chrDf <- chrDf[rows_to_keep, ]
-      message("after hz_filter size is ", nrow(chrDf))
+      if (showDebug) message("after hz_filter size is ", nrow(chrDf))
       return(chrDf)
     }
     
     
     #apply functions to wild type pool
     #CAUTION: functions must be applied in this order to work right
-    message("Reading wild-type file(s):")
+    message(cat(toString(seqnames(chrRange)), ": Reading wild-type file(s)"))
     tryCatch(
       wtCounts <- applyPileupWT[[1]] %>%
         make_df_for_chromosome() %>%
@@ -187,7 +186,7 @@ ReadFilesForChr <- function(inputList){
     rm(applyPileupWT)
     
     #apply functions to mutant pool
-    message("Reading mutant file(s):")
+    message(cat(toString(seqnames(chrRange)), ": Reading mutant file(s)"))
     applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = param)
     tryCatch(
       mutCounts <- applyPileupMut[[1]] %>%

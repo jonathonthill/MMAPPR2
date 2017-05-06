@@ -16,10 +16,6 @@ bamfilem1 <- BamFile("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99
 wt_list <- BamFileList(bamfile1)#, bamfile2, bamfile3))
 mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
-source('~/MMAPPR2/read_bam.r')
-
-start <- proc.time()
-
 
 #automatic core number generation (only on Linux)
 #mem_req is memory required per base per replicate (per two files) in MB
@@ -45,17 +41,35 @@ core_calc <- function(mem_req = 33.3){
   )
 }
 
-RunFunctionInParallel <- function(inputList, functionToRun, packages = c()) {
+RunFunctionInParallel <- function(inputList, functionToRun, packages = c(), secondInput = NULL, thirdInput = NULL) {
   #cluster generation
   cl <- makeCluster(core_calc(), type = "SOCK", outfile = "")
   
   # register the cluster
   registerDoParallel(cl)
   
-  #perform calculation
+  # find number of parameters and perform calculation
   message("Beginning parallel calculation")
-  resultList <- foreach(i = inputList,
-                        .packages = packages) %dopar% functionToRun(i)
+  if (!is.null(thirdInput)) {
+    numParams <- 3
+    thirdInput <- rep(thirdInput, length(inputList))
+    secondInput <- rep(secondInput, length(inputList))
+    resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
+                          .packages = packages) %dopar% functionToRun(a, b, c)
+  }
+  else if (!is.null(secondInput)) {
+    numParams <- 2
+    secondInput <- rep(secondInput, length(inputList))
+    resultList <- foreach(a = inputList, b = secondInput,
+                          .packages = packages) %dopar% functionToRun(a, b)
+  }
+  else {
+    numParams <- 1
+    resultList <- foreach(a = inputList,
+                          .packages = packages) %dopar% functionToRun(a)
+  }
+  
+  
   names(resultList) <- names(inputList)
   
   stopCluster(cl)
