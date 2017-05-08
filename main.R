@@ -18,19 +18,15 @@ mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
 
 #automatic core number generation (only on Linux)
-#mem_req is memory required per base per replicate (per two files) in MB
-#I calculated it myself in a test using only the memory taken up by 
-#the apply_pileup and dividing it by reps and sequence length
-#in other words, it doesn't take into account all the memory used by 
-#each core as the LoessFit (hence the getChrDf) function is run
-core_calc <- function(mem_req = 33.3){
+#mem_req is memory required per base for distance list item, as returned in ReadInFiles
+CoreCalc <- function(mem_req = 33.3){
   tryCatch({
     #this gets free RAM (on Linux)
     free_ram <- system("awk '/MemFree/ {print $2}' /proc/meminfo", intern = TRUE) #gets mem info in MB
     #get numeric, in bytes (not MB)
     free_ram <- 1000 * as.numeric(free_ram)
     #get longest chromosome, calculate needed memory, and divide into free RAM
-    num_cores <- ceiling(free_ram / (max(seqlengths(myrange)) * mem_req * length(wt_list)))
+    num_cores <- ceiling(free_ram / (max(seqlengths(myrange)) * mem_req))
     message("num_cores = ", num_cores)
     return(num_cores)
     },
@@ -43,7 +39,7 @@ core_calc <- function(mem_req = 33.3){
 
 RunFunctionInParallel <- function(inputList, functionToRun, packages = c(), secondInput = NULL, thirdInput = NULL) {
   #cluster generation
-  cl <- makeCluster(core_calc(), type = "SOCK", outfile = "")
+  cl <- makeCluster(CoreCalc(), type = "SOCK", outfile = "")
   
   # register the cluster
   registerDoParallel(cl)
@@ -73,10 +69,8 @@ RunFunctionInParallel <- function(inputList, functionToRun, packages = c(), seco
   names(resultList) <- names(inputList)
   
   stopCluster(cl)
-  # insert serial backend, otherwise error in repetetive tasks
   registerDoSEQ()
   
-  # clean up a bit.
   invisible(gc)
   
   return(resultList)

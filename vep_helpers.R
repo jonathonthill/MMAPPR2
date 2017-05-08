@@ -14,7 +14,7 @@ GenerateCandidates <- function(mmapprData) {
                         ranges = i_ranges)
     
     #call variants in peak
-    variants <- GetPeakVariants(g_ranges, mmapprData@input$refGenome)
+    variants <- GetPeakVariants(g_ranges, mmapprData@input)
     
     #run VEP
     variants <- RunVEPForVariants(variants)
@@ -31,7 +31,7 @@ GenerateCandidates <- function(mmapprData) {
   return(mmapprData)
 }
 
-GetPeakVariants <- function(peak_granges, refGenome){
+GetPeakVariants <- function(peak_granges, params){
   require(tidyr)
   require(dplyr)
   require(Rsamtools)
@@ -40,14 +40,14 @@ GetPeakVariants <- function(peak_granges, refGenome){
   result_vranges <- NULL
   
   # merge mutant bam files in desired regions
-  if (length(mut_list) < 2) mut_bam <- mut_list[[1]]
+  if (length(params$mutFiles) < 2) mutBam <- params$mutFiles[[1]]
   else{
-    mut_bam <- mergeBam(mut_list, destination = "tmp_m.bam", region = g_ranges)
+    mutBam <- mergeBam(params$mutFiles, destination = "tmp_m.bam", region = g_ranges)
   }
   #merge wt files
-  if (length(wt_list) < 2) wt_bam <- wt_list[[1]]
+  if (length(params$wtFiles) < 2) wtBam <- params$wtFiles[[1]]
   else{
-    wt_bam <- mergeBam(wt_list, destination = "tmp_wt.bam", region = g_ranges)
+    wtBam <- mergeBam(params$wtFiles, destination = "tmp_wt.bam", region = g_ranges)
   }
   
   # create param for variant calling 
@@ -57,7 +57,7 @@ GetPeakVariants <- function(peak_granges, refGenome){
                                     minimum_mapq = 1L
   )
   
-  result_vranges <- (callSampleSpecificVariants(mut_bam, wt_bam, 
+  result_vranges <- (callSampleSpecificVariants(mutBam, wtBam, 
                                                 tally.param = tally_param))
   
   if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
@@ -65,7 +65,7 @@ GetPeakVariants <- function(peak_granges, refGenome){
   
   if (length(result_vranges) > 0){
     # need sampleNames to convert to VCF; using mutant file names
-    sampleNames(result_vranges) <- paste0(sapply(mut_list, path), collapse = " -- ")
+    sampleNames(result_vranges) <- paste0(sapply(params$mutFiles, path), collapse = " -- ")
     mcols(result_vranges) <- NULL
     return(result_vranges)
   } 

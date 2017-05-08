@@ -103,8 +103,11 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
     resultList$loess <- GetLoess(bestSpan, resultList$distanceDf$distance, 
                                  resultList$distanceDf$pos)
     
+    message(paste0(resultList$seqname, ": LoessFit complete"))
+    
     #no longer needed
     resultList$distanceDf <- NULL
+    resultList$seqname <- NULL
     
     resultList$loessTime <- proc.time() - startTime
     return(resultList)

@@ -13,10 +13,12 @@ ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   
   chrList <- list()
   # store both range for each chromosome and the parameters the function will need
-  for (i in 1:length(chrRanges)){
+  for (i in orderSeqlevels(names(chrRanges))) {
     chrList[[toString(seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
                                                         parameters = mmapprData@input)
   }
+  
+  chrList <- chrList$chr7
   
   mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, packages = c('tidyr', 'dplyr'),
                                                secondInput = showDebug)
@@ -226,14 +228,16 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     #debug: option to return pileup (memory / base pairs / reps) in order to predict memory
     resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts, 
                        distanceDf = distanceDf)
-    readMemReqPerBP <- object.size(resultList) / nrow(distanceDf)
-    resultList$readMemReqPerBP <- readMemReqPerBP    
+    readMemReqPerBP <- object.size(resultList) / nrow(wtCounts)
+    resultList$readMemReqPerBP <- readMemReqPerBP  
+    
+    resultList$seqname <- seqnames(chrRange)
     
     return(resultList)
   },
   
   error = function(e) {
-    msg <- paste0(toString(seqnames(chrRange)), "--", e$message)
+    msg <- paste0(toString(seqnames(chrRange)), ": ", e$message)
     message(msg)
     return(msg)
   }
