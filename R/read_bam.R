@@ -2,10 +2,13 @@
 
 ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   require(doParallel)
+  require(GenomeInfoDb)
+  require(Rsamtools)
+  
   message("Reading in files")
   
-  wtFiles <- mmapprData@input$wtFiles
-  mutFiles <- mmapprData@input$mutFiles
+  wtFiles <- mmapprData@param@wtFiles
+  mutFiles <- mmapprData@param@mutFiles
   
   chrRanges <- as(seqinfo(BamFileList(c(wtFiles, mutFiles))), "GRanges")
   #cut to standard chromosomes
@@ -15,13 +18,14 @@ ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   # store both range for each chromosome and the parameters the function will need
   for (i in orderSeqlevels(names(chrRanges))) {
     chrList[[toString(seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
-                                                        parameters = mmapprData@input)
+                                                        parameters = mmapprData@param)
   }
   
   chrList <- chrList$chr7
   
-  mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, packages = c('tidyr', 'dplyr'),
-                                               secondInput = showDebug)
+  mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, 
+                                               packages = c('tidyr', 'dplyr', 'Rsamtools', "GenomeInfoDB"),
+                                               secondInput = showDebug, numCores = mmapprData@param@numCores)
   
   return(mmapprData)
 }
@@ -35,9 +39,9 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
   tryCatch({
     #unpack inputList
     chrRange <- inputList$range
-    params <- inputList$parameters
-    wtFiles <- params$wtFiles
-    mutFiles <- params$mutFiles
+    param <- inputList$parameters
+    wtFiles <- param@wtFiles
+    mutFiles <- param@mutFiles
     
     #DEBUG
     # width(chrRange) <- 10000
@@ -66,9 +70,9 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
       }
     
     param <- ApplyPileupsParam(which = chrRange, what="seq", 
-                               minBaseQuality = params$minBaseQuality,
-                               minMapQuality = params$minMapQuality,
-                               minDepth = params$minDepth)
+                               minBaseQuality = param@minBaseQuality,
+                               minMapQuality = param@minMapQuality,
+                               minDepth = param@minDepth)
     
     applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = param)
 
@@ -103,7 +107,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
       #gets only cvg rows (every 5th), then only info cols
       #returns true for undercovered rows
       #can only subset 2 dimensions with a matrix, not a df. Don't know why.
-      filter_mat <- as.matrix(chrDf[seq(5, to=nrow(chrDf), by=5), 3:ncol(chrDf)] < params$minDepth)
+      filter_mat <- as.matrix(chrDf[seq(5, to=nrow(chrDf), by=5), 3:ncol(chrDf)] < param@minDepth)
       
       #expand filter_mat to cover all 5 rows for each position
       new_mat <- c()
@@ -126,13 +130,13 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     #format for df (input and output) should be pos (5 for each), nuc (ACGTcvg), file1, file2...
     na_filter <- function(chrDf){
       #if only one file and na_cutoff isn't 0
-      if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 & params$naCutoff != 0){
+      if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 & param@naCutoff != 0){
         warning('naCutoff for a single-file pool must be 0. Continuing with cutoff of 0.')
-        params$naCutoff = 0
+        param@naCutoff = 0
       }
       #vector returns true on rows with cutoff or less NaNs or NAs (is.na accounts for both)
       #need drop=F so it works if only 1 column is passed to rowSums
-      filter_vec <- (rowSums(is.na(chrDf[,3:length(chrDf), drop = FALSE])) <= params$naCutoff)
+      filter_vec <- (rowSums(is.na(chrDf[,3:length(chrDf), drop = FALSE])) <= param@naCutoff)
       chrDf <- chrDf[filter_vec,]
       if (showDebug) message("after na_filter size is ", nrow(chrDf))
       return(chrDf)
@@ -159,7 +163,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     #takes df with cols pos, A, C, cvg, G, T; returns same
     homozygote_filter <- function(chrDf){
       rows_to_keep <- apply((chrDf[, -which(names(chrDf) %in% c("pos", "cvg"))] 
-                             <= params$homozygoteCutoff), MARGIN = 1, all)
+                             <= param@homozygoteCutoff), MARGIN = 1, all)
       chrDf <- chrDf[rows_to_keep, ]
       if (showDebug) message("after hz_filter size is ", nrow(chrDf))
       return(chrDf)
@@ -220,7 +224,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     distanceDf <- transmute(distanceDf, 
                              pos = pos,
                              distance = (A.wt + C.wt + G.wt + T.wt)^(1/2))
-    distanceDf$distance <- distanceDf$distance ^ params$distancePower
+    distanceDf$distance <- distanceDf$distance ^ param@distancePower
     
     stopifnot(nrow(distanceDf) > 0)
     print(proc.time() - startTime)

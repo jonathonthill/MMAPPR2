@@ -14,10 +14,10 @@ GenerateCandidates <- function(mmapprData) {
                         ranges = i_ranges)
     
     #call variants in peak
-    variants <- GetPeakVariants(g_ranges, mmapprData@input)
+    variants <- GetPeakVariants(g_ranges, mmapprData@param)
     
     #run VEP
-    variants <- RunVEPForVariants(variants)
+    variants <- RunVEPForVariants(variants, mmapprData@param@vepParam)
     
     #filter out low impact variants
     variants <- FilterVariants(variants)
@@ -72,7 +72,7 @@ GetPeakVariants <- function(peak_granges, params){
   else return(NULL)
 }
 
-RunVEPForVariants <- function(inputVariants){
+RunVEPForVariants <- function(inputVariants, vepParam){
   require(ensemblVEP)
   
   peakVcfFile <- "peak.vcf"
@@ -80,12 +80,7 @@ RunVEPForVariants <- function(inputVariants){
   #write file
   writeVcf(inputVariants, peakVcfFile)
   
-  param <- VEPParam(scriptPath =
-                      "ensembl-tools-release-86/scripts/variant_effect_predictor/variant_effect_predictor.pl",
-                    input = c(species = 'danio_rerio_merged', format = "vcf"),
-                    cache = c(cache = TRUE, offline = TRUE),
-                    database = c(database = FALSE))
-                    # dataformat = c(vcf = TRUE),
+  param <- vepParam
   
   gr <- ensemblVEP(peakVcfFile, param)
   
