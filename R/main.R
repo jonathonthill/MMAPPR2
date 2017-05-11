@@ -39,6 +39,16 @@ CoreCalc <- function(mem_req = 33.3){
   )
 }
 
+RepList <- function(object, times) {
+  stopifnot(times >= 0)
+  result <- list()
+  if (times == 0) return(result)
+  for (i in 1:times) {
+    result <- append(result, object)
+  }
+  return(result)
+}
+
 RunFunctionInParallel <- function(inputList, functionToRun, numCores,
                                   packages = c(), secondInput = NULL, thirdInput = NULL) {
   if (length(inputList) < numCores) numCores <- length(inputList)
@@ -49,34 +59,35 @@ RunFunctionInParallel <- function(inputList, functionToRun, numCores,
   # register the cluster
   registerDoParallel(cl)
   
-  # find number of parameters and perform calculation
-  message(sprintf("Beginning parallel calculation with %i cores", numCores))
-  if (!is.null(thirdInput)) {
-    numParams <- 3
-    thirdInput <- rep(thirdInput, length(inputList))
-    secondInput <- rep(secondInput, length(inputList))
-    resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
-                          .packages = packages) %dopar% functionToRun(a, b, c)
-  }
-  else if (!is.null(secondInput)) {
-    numParams <- 2
-    secondInput <- rep(secondInput, length(inputList))
-    resultList <- foreach(a = inputList, b = secondInput,
-                          .packages = packages) %dopar% functionToRun(a, b)
-  }
-  else {
-    numParams <- 1
-    resultList <- foreach(a = inputList,
-                          .packages = packages) %dopar% functionToRun(a)
-  }
-  
-  
-  names(resultList) <- names(inputList)
-  
-  stopCluster(cl)
-  registerDoSEQ()
-  
-  invisible(gc)
+  tryCatch({
+    # find number of parameters and perform calculation
+    message(sprintf("Beginning parallel calculation with %i core(s)", numCores))
+    if (!is.null(thirdInput)) {
+      numParams <- 3
+      thirdInput <- RepList(thirdInput, length(inputList))
+      secondInput <- RepList(secondInput, length(inputList))
+      resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
+                            .packages = packages) %dopar% functionToRun(a, b, c)
+    }
+    else if (!is.null(secondInput)) {
+      numParams <- 2
+      secondInput <- RepList(secondInput, length(inputList))
+      resultList <- foreach(a = inputList, b = secondInput,
+                            .packages = packages) %do% functionToRun(a, b)
+    }
+    else {
+      numParams <- 1
+      resultList <- foreach(a = inputList,
+                            .packages = packages) %dopar% functionToRun(a)
+    }
+    
+    names(resultList) <- names(inputList)
+    
+  }, finally = {
+    stopCluster(cl)
+    registerDoSEQ()
+    invisible(gc)
+  })
   
   return(resultList)
 }
@@ -86,14 +97,30 @@ Mmappr <- function(mmapprParam) {
   
   if (is.null(mmapprData)) mmapprData = new("MmapprData", param = mmapprParam)
   
-  mmapprData <- ReadInFiles(mmapprData)
-  mmapprData <- LoessFit(mmapprData)
-  # mmapprData <- PrePeak(mmapprData)
-  # # mmapprData <- PeakDensity(mmapprData)
-  # # mmapprData <- PeakRefinement(mmapprData)
-  # mmapprData <- GenerateCandidates(mmapprData)
-  # 
-  # OutputMmapprData(mmapprData)
+  tryCatch({
+    mmapprData <- ReadInFiles(mmapprData)
+    message("File reading successfully completed and Euclidian distance data generated")
+    mmapprData <- LoessFit(mmapprData)
+    message("Loess regression successfully completed")
+    mmapprData <- PrePeak(mmapprData)
+    mmapprData <- refinement_function(mmapprData)
+    message("Peak regions succesfully identified")
+    mmapprData <- GenerateCandidates(mmapprData)
+    message("Candidate variants generated, analyzed, and ranked")
+  }, 
+  error = function(e) {
+    message(e$message)
+    message("MmapprData object is returned up until the failing step")
+    message("You can also recover the object after the latest successful step from 'mmappr_recovery.RDS'")
+    saveRDS(mmapprData, "mmappr_recovery.RDS")
+    return(mmapprData)
+  })
+
+  OutputMmapprData(mmapprData)
+  message("Output PDF files generated")
+  
+  
+  message("Mmappr runtime:")
   print(proc.time() - startTime)
   return(mmapprData)
 }

@@ -1,4 +1,3 @@
-library(MMAPPR2)
 library(gmapR)
 library(Rsamtools)
 library(rtracklayer)
@@ -6,13 +5,42 @@ library(rtracklayer)
 context("BAM file reading")
 
 
-param <- MmapprParam(new("GmapGenome"), "test_data/bam_files/zy14_wt_cut.bam", "test_data/bam_files/zy14_mut_cut.bam",
+param <- MmapprParam(new("GmapGenome"), "test_data/bam_files/zy14_wt_chr5_cut_small.bam", 
+                     "test_data/bam_files/zy14_mut_chr5_cut_small.bam",
                     vepParam = VEPParam())
 mmapprData <- new("MmapprData", param = param)
-mmapprData <- ReadInFiles(mmapprData)
 
-test_that("correct data was produced", {
-  expect_equal(nrow(mmapprData@distance$wtCounts) > 0, TRUE)
-  expect_equal(nrow(mmapprData@distance$mutCounts) > 0, TRUE)
-  expect_equal(nrow(mmapprData@distance$distanceDf) > 0, TRUE)
+test_that("correct ranges are being read", {
+  chrList <- GetFileReadChrList(mmapprData)
+  expect_equal(length(chrList), 26)
+  expect_type(chrList, "list")
+  expect_type(chrList[[1]], "list")
+
+  expect_equal(names(chrList[[1]]), c("range", "param"))
+  expect_s4_class(chrList[[1]]$range, "GRanges")
+  expect_s4_class(chrList[[1]]$param, "MmapprParam")
+})
+
+test_that("single chromosome is read correctly", {
+  inputList <- GetFileReadChrList(mmapprData)[['chr5']]
+  expect_type(inputList, "list")
+  
+  result <- ReadFilesForChr(inputList)
+  expect_true(all(c("wtCounts", "mutCounts", "distanceDf", "seqname")) %in% names(result))
+  expect_gt(nrow(result$wtCounts), 0)
+  expect_gt(nrow(result$mutCounts), 0)
+  expect_gt(nrow(result$distanceDf), 0)
+  expect_named(result$distanceDf, c("pos", "distance"))
+})
+
+test_that("whole genome is read correctly", {
+  mmapprData <- ReadInFiles(mmapprData)
+  expect_equal(length(mmapprData@distance), 26)
+  
+  classes <- lapply(mmapprData@distance, class)
+  expect_equal(sum(classes == "character"), 25)
+  expect_type(mmapprData@distance$chr5, "list")
+  expect_true(all(c("wtCounts", "mutCounts", "distanceDf", "seqname")) %in% names(mmapprData@distance$chr5))
+  
+  saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })

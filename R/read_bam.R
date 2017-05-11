@@ -1,12 +1,4 @@
-
-
-ReadInFiles <- function(mmapprData, showDebug = FALSE) {
-  require(doParallel)
-  require(GenomeInfoDb)
-  require(Rsamtools)
-  
-  message("Reading in files")
-  
+GetFileReadChrList <- function(mmapprData) {
   wtFiles <- mmapprData@param@wtFiles
   mutFiles <- mmapprData@param@mutFiles
   
@@ -15,17 +7,28 @@ ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges)
   
   chrList <- list()
-  # store both range for each chromosome and the parameters the function will need
+  # store range for each chromosome as list item
   for (i in orderSeqlevels(names(chrRanges))) {
     chrList[[toString(seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
-                                                        parameters = mmapprData@param)
+                                                        param = mmapprData@param)
   }
   
-  chrList <- chrList$chr7
+  return(chrList)
+}
+
+ReadInFiles <- function(mmapprData, showDebug = FALSE) {
+  require(doParallel)
+  require(GenomeInfoDb)
+  require(Rsamtools)
   
-  mmapprData@distance <- RunFunctionInParallel(chrList, ReadFilesForChr, 
-                                               packages = c('tidyr', 'dplyr', 'Rsamtools', "GenomeInfoDB"),
-                                               secondInput = showDebug, numCores = mmapprData@param@numCores)
+  message("Reading in files")
+  
+  chrList <- suppressWarnings(GetFileReadChrList(mmapprData))
+  
+  mmapprData@distance <- RunFunctionInParallel(chrList, functionToRun = ReadFilesForChr, 
+                                               packages = c('tidyr', 'dplyr', 'Rsamtools'),
+                                               secondInput = showDebug,
+                                               numCores = mmapprData@param@numCores)
   
   return(mmapprData)
 }
@@ -37,9 +40,13 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
   library(tidyr)
   library(Rsamtools)
   tryCatch({
-    #unpack inputList
+    #parameter check
+    stopifnot(length(seqnames(inputList$range)) == 1)
+    stopifnot(class(inputList$param) == "MmapprParam")
+    
     chrRange <- inputList$range
-    param <- inputList$parameters
+    stopifnot(!is.null(chrRange))
+    param <- inputList$param
     wtFiles <- param@wtFiles
     mutFiles <- param@mutFiles
     
@@ -69,12 +76,12 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
         list(pos=x[["pos"]], info=info) 
       }
     
-    param <- ApplyPileupsParam(which = chrRange, what="seq", 
+    apParam <- ApplyPileupsParam(which = chrRange, what="seq", 
                                minBaseQuality = param@minBaseQuality,
                                minMapQuality = param@minMapQuality,
                                minDepth = param@minDepth)
     
-    applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = param)
+    applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = apParam)
 
     
     #make_df_for_chromsome: makes a function that turns each info list (from pileup) into dataframe
@@ -99,11 +106,6 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     #accomplished by replacing position's data with NAs for each column(file)
     #NAs will then be dealt with appropriately by NA filter
     depth_filter <- function(chrDf){
-      #DEBUG: for bypassing depth_filter
-      # chrDf <- chrDf[-seq(5, to=nrow(chrDf), by=5),]
-      # chrDf <- droplevels(chrDf)
-      # return(chrDf)
-
       #gets only cvg rows (every 5th), then only info cols
       #returns true for undercovered rows
       #can only subset 2 dimensions with a matrix, not a df. Don't know why.
@@ -132,12 +134,12 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
       #if only one file and na_cutoff isn't 0
       if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 & param@naCutoff != 0){
         warning('naCutoff for a single-file pool must be 0. Continuing with cutoff of 0.')
-        param@naCutoff = 0
+        param@naCutoff <- 0
       }
       #vector returns true on rows with cutoff or less NaNs or NAs (is.na accounts for both)
       #need drop=F so it works if only 1 column is passed to rowSums
-      filter_vec <- (rowSums(is.na(chrDf[,3:length(chrDf), drop = FALSE])) <= param@naCutoff)
-      chrDf <- chrDf[filter_vec,]
+      filter_vec <- (rowSums(is.na(chrDf[, 3:length(chrDf), drop = FALSE])) <= param@naCutoff)
+      chrDf <- chrDf[filter_vec, ]
       if (showDebug) message("after na_filter size is ", nrow(chrDf))
       return(chrDf)
     }
@@ -193,7 +195,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     
     #apply functions to mutant pool
     message(paste0(toString(seqnames(chrRange)), ": Reading mutant file(s)"))
-    applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = param)
+    applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
     tryCatch(
       mutCounts <- applyPileupMut[[1]] %>%
         make_df_for_chromosome() %>%
@@ -229,9 +231,9 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     stopifnot(nrow(distanceDf) > 0)
     print(proc.time() - startTime)
     
-    #debug: option to return pileup (memory / base pairs / reps) in order to predict memory
     resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts, 
                        distanceDf = distanceDf)
+    #debug: option to return pileup (memory / base pairs / reps) in order to predict memory
     readMemReqPerBP <- object.size(resultList) / nrow(wtCounts)
     resultList$readMemReqPerBP <- readMemReqPerBP  
     
