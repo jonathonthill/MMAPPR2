@@ -1,4 +1,4 @@
-GetFileReadChrList <- function(mmapprData) {
+GetFileReadChrList <- function(mmapprData) {suppressWarnings({
   wtFiles <- mmapprData@param@wtFiles
   mutFiles <- mmapprData@param@mutFiles
   
@@ -8,13 +8,13 @@ GetFileReadChrList <- function(mmapprData) {
   
   chrList <- list()
   # store range for each chromosome as list item
-  for (i in orderSeqlevels(names(chrRanges))) {
+  for (i in suppressWarnings(orderSeqlevels(names(chrRanges)))) {
     chrList[[toString(seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
                                                         param = mmapprData@param)
   }
   
   return(chrList)
-}
+})}
 
 ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   require(doParallel)

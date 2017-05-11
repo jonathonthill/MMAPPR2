@@ -1,4 +1,5 @@
 library(ensemblVEP)
+library(gmapR)
 
 setClass("MmapprParam",
          representation(

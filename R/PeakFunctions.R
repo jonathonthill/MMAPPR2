@@ -72,6 +72,7 @@ PrePeak <- function(mmapprData) {
   #get which peaks have values above cutoff, initialize them in mmapprData
   for(i in seq_along(mmapprData@distance)){
     loessForChr <- mmapprData@distance[[i]]$loess
+    if (length(loessForChr) < 50) next
     containsPeak <- any(loessForChr$fitted > cutoff)
     chrName <- names(mmapprData@distance)[[i]]
     if (containsPeak) {
