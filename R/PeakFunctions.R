@@ -17,7 +17,7 @@ refinement_function <- function(mmapprData){
     max_values[i] <- loess_dat$x[which.max(loess_dat$fitted)]
   }
   
-  density_data <- density(max_values)
+  density_data <- density.default(max_values)
 
   plot(density_data)
 
@@ -51,6 +51,8 @@ refinement_function <- function(mmapprData){
 
 
 PrePeak <- function(mmapprData) {
+  mmapprData@peaks <- list()
+  
   #need to calculate standard dev of all chromosomes for cutoff
   combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
     var(chr$loess$fitted)/length(chr$loess$fitted)})
@@ -65,7 +67,7 @@ PrePeak <- function(mmapprData) {
   #get which peaks have values above cutoff, initialize them in mmapprData
   for(i in seq_along(mmapprData@distance)){
     loessForChr <- mmapprData@distance[[i]]$loess
-    if (length(loessForChr) < 50) next
+    if (length(loessForChr$x) < 50) next
     containsPeak <- any(loessForChr$fitted > cutoff)
     chrName <- names(mmapprData@distance)[[i]]
     if (containsPeak) {
