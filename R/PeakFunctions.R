@@ -38,10 +38,13 @@ PeakRefinement <- function(mmapprData){
     
     plot(densityData)
     abline(v = c(min,max))
+    
+    peakPosition <- densityRank$pos[which.max(densityRank$densityValue)]
 
     mmapprData@peaks[[chr]]$start <- min
     mmapprData@peaks[[chr]]$end <- max
     mmapprData@peaks[[chr]]$densityFunction <- densityFunction
+    mmapprData@peaks[[chr]]$peakPosition <- peakPosition
     
     options(warn = 0)
   } 
