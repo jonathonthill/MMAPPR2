@@ -7,45 +7,44 @@ PeakRefinement <- function(mmapprData){
     loessSpan <- mmapprData@distance[[chr]]$loess$pars$span
     pos <- mmapprData@distance[[chr]]$loess$x
     euclideanDistance <- mmapprData@distance[[chr]]$loess$fitted
-    rawData <- data.frame(pos, euc)
-  
-  maxValues <- rep(NA, 1000)
-  for (i in 1:1000){
-    tempData <- rawData[sample(1:nrow(rawData), size = nrow(rawData)/2),]
-    tempData <- tempData[order(tempData$pos),]
-    loessData <- loess(euclideanDistance~pos,data=tempData,span = loessSpan, family = c("symmetric"))
-    maxValues[i] <- loessData$x[which.max(loessData$fitted)]
-  }
-  
-  densityData <- density.default(maxValues)
+    rawData <- data.frame(pos, euclideanDistance)
+    
+    maxValues <- rep(NA, 1000)
+    for (i in 1:1000){
+      tempData <- rawData[sample(1:nrow(rawData), size = nrow(rawData)/2),]
+      tempData <- tempData[order(tempData$pos),]
+      loessData <- loess(euclideanDistance~pos,data=tempData,span = loessSpan, family = c("symmetric"))
+      maxValues[i] <- loessData$x[which.max(loessData$fitted)]
+    }
+    
+    densityData <- density.default(maxValues)
+    
+    densityFunction <- approxfun(x=densityData$x,y=densityData$y)
+    xMin <- min(densityData$x)
+    xMax <- max(densityData$x)
+    
+    densityRank <- data.frame(seq(xMin,xMax))
+    names(densityRank) <- "pos"
+    densityRank <- mutate(densityRank, densityValue = densityFunction(seq(xMin,xMax))) %>% arrange(desc(densityValue))
+    
+    rollingSum <- cumsum(densityRank$densityValue)
+    cutoffPosition <- which(rollingSum > 0.95)[1]
+    cutoffValue <- densityRank$densityValue[cutoffPosition]
+    
+    densityRank <- filter(densityRank,densityValue >= cutoffValue)
+    
+    min = min(densityRank$pos)
+    max = max(densityRank$pos)
+    
+    plot(densityData)
+    abline(v = c(min,max))
 
-  plot(densityData)
-
-  densityFunction <- approxfun(x=density_data$x,y=density_data$y)
-  x_min <- min(densityData$x)
-  x_max <- max(densityData$x)
-  
-  densityRank <- data.frame(seq(x_min,x_max))
-  names(densityRank) <- "pos"
-  densityRank <- mutate(densityRank, densityValue = density_function(seq(x_min,x_max))) %>% arrange(desc(densityValue))
-
-  rollingSum <- cumsum(data$densityValue)
-  cutoffPosition <- which(rollingSum > 0.95)[1]
-  cutoffValue <- data$densityValue[cutoffPosition]
-  
-  densityRank <- filter(densityRank,densityValue >= cutoffValue)
-  
-  min = min(densityRank$pos)
-  max = max(densityRank$pos)
-  abline(v = c(min,max))
-  #set these equal to mapprrdata
-  
-  mmapprData@peaks[[chr]]$start <- min
-  mmapprData@peaks[[chr]]$end <- max
-  mmapprData@peaks[[chr]]$densityFunction <- density_function
-  
-  options(warn = 0)
-  } #end of for loop
+    mmapprData@peaks[[chr]]$start <- min
+    mmapprData@peaks[[chr]]$end <- max
+    mmapprData@peaks[[chr]]$densityFunction <- densityFunction
+    
+    options(warn = 0)
+  } 
   return (mmapprData)
 }
 
