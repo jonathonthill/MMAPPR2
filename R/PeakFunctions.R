@@ -1,29 +1,26 @@
 library(dplyr)
 
-#actual program will not need start, stop, max, or actual. 
-#Raw_Data: Data frame with raw loess_data in it
-#loess_span: optimized loess span value found previously
-
 refinement_function <- function(mmapprData){
-  
   options(warn=-1)
   
-  #for each chromosome get raw data. need position, euclidean distance, loess_span
   for(chr in names(mmapprData@peaks)){
-    loess_span_value <- mmappprData@distance[chr]$pars$span
-    pos <- mmappprData@distance[chr]$x
-    euc <- mmapprData@distance[chr]$loess$fitted
+    loess_span_value <- mmapprData@distance[[chr]]$loess$pars$span
+    pos <- mmapprData@distance[[chr]]$loess$x
+    euc <- mmapprData@distance[[chr]]$loess$fitted
     raw_data <- data.frame(pos, euc)
-  #simulation running loess 1000 times on all data keeping track of the peak
-  max_values <- rep(NA, 1000) #container vector variable to hold all max values
+  
+  max_values <- rep(NA, 1000)
   for (i in 1:1000){
     temp_data <- raw_data[sample(1:nrow(raw_data), size = nrow(raw_data)/2),]
     temp_data <- temp_data[order(temp_data$pos),]
-    loess_dat <- loess(euc^4~pos,data=temp_data,span = loess_span, family = c("symmetric"))
+    loess_dat <- loess(euc~pos,data=temp_data,span = loess_span_value, family = c("symmetric"))
     max_values[i] <- loess_dat$x[which.max(loess_dat$fitted)]
   }
   
   density_data <- density(max_values)
+
+  plot(density_data)
+
   density_function <- approxfun(x=density_data$x,y=density_data$y)
   x_min <- min(density_data$x)
   x_max <- max(density_data$x)
@@ -32,27 +29,23 @@ refinement_function <- function(mmapprData){
   names(data) <- "pos"
   data <- mutate(data, density_value = density_function(seq(x_min,x_max))) %>% arrange(desc(density_value))
 
-  sum <- 0 
-  pos <- 1
-  while(sum < .95 ){
-    sum = sum + data$density_value[pos]
-    pos = pos + 1
-  }
+  rolling_sum <- cumsum(data$density_value)
+  cutoff_pos <- which(rolling_sum > 0.95)[1]
+  cutoff_val <- data$density_value[cutoff_pos]
   
-  cutoff_val <- data$density_value[pos]
   data <- filter(data,density_value >= cutoff_val)
   
   min = min(data$pos)
   max = max(data$pos)
+  abline(v = c(min,max))
   #set these equal to mapprrdata
   
-  mmapprData@peaks[chr]$start <- min
-  mmapprData@peaks[chr]$end <- max
-  mmapprData@peaks[chr]$densityfunction <- density_function
+  mmapprData@peaks[[chr]]$start <- min
+  mmapprData@peaks[[chr]]$end <- max
+  mmapprData@peaks[[chr]]$densityFunction <- density_function
   
   options(warn = 0)
   } #end of for loop
-  
   return (mmapprData)
 }
 
