@@ -17,7 +17,7 @@ refinement_function <- function(mmapprData){
     max_values[i] <- loess_dat$x[which.max(loess_dat$fitted)]
   }
   
-  density_data <- density(max_values)
+  density_data <- density.default(max_values)
 
   plot(density_data)
 
