@@ -1,10 +1,11 @@
 LoessFit <- function(mmapprData) {
-  loessOptResolution <- mmapprData@input$loessOptResolution
-  loessOptCutFactor <- mmapprData@input$loessOptCutFactor
+  loessOptResolution <- mmapprData@param@loessOptResolution
+  loessOptCutFactor <- mmapprData@param@loessOptCutFactor
   
   #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
   mmapprData@distance <- RunFunctionInParallel(mmapprData@distance, functionToRun = LoessFitForChr, 
-                                               secondInput = loessOptResolution, thirdInput = loessOptCutFactor)
+                                               secondInput = loessOptResolution, thirdInput = loessOptCutFactor,
+                                               numCores = mmapprData@param@numCores)
   #LoessFitForChr returns list with mutCounts, wtCounts, loess, aicc
   
   return(mmapprData)
@@ -66,14 +67,15 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
   }
   
   GetLoess <- function(s, euc_dist, pos){
-    x <- try(loess(euc_dist ~ pos, span=s, degree=1, family="symmetric", surface='direct'), silent=T)
+    x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
+                   family="symmetric", surface='direct'), silent=T)
     return(x)
   }
   
   Aicc <- function (s, euc_dist, pos) {
     # extract values from loess object
     x <- GetLoess(s, euc_dist, pos)
-    if(class(x)=="try-error"){return(NA)}
+    if(class(x)=="try-error") return(NA)
     span <- x$pars$span
     n <- x$n
     traceL <- x$trace.hat

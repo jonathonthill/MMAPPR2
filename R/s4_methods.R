@@ -54,11 +54,11 @@ setMethod("show", "MmapprData", function(object) {
   
   cat("distance:\n")
   classes <- sapply(object@distance, class)
-  successes <- sum(classes == "list")
+  successes <- classes == "list"
   cat(margin, sprintf(
     "Contains Euclidian distance data for %i sequences\n", 
-      successes), sep="")
-  loessFits <- sum(sapply(object@distance, function(seq) {
+      sum(successes)), sep="")
+  loessFits <- sum(sapply(object@distance[successes], function(seq) {
     if (!is.null(seq$loess)) return(TRUE)
     else return(FALSE)
   }))

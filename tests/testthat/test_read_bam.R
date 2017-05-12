@@ -5,7 +5,7 @@ library(rtracklayer)
 context("BAM file reading")
 
 DebugSkip <- function() { 
-  if (F) skip() 
+  if (F) skip("Skipping file reading tests to save time") 
 }
 
 

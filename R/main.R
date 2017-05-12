@@ -30,7 +30,7 @@ CoreCalc <- function(mem_req = 33.3){
     # message("num_cores = ", num_cores)
     # return(num_cores)
     
-    return(4)
+    return(detectCores() - 2)
     },
   warning = function(w) {
     message('Warning: arbitrary number of clusters used (are you not on Linux?)')
