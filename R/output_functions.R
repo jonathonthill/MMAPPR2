@@ -93,7 +93,7 @@ WriteCandidateVCFs <- function(mmapprData) {
 }
 
 
-WriteTextFiles(variantsList){
+WriteTextFiles <- function(variantsList){
   
   for(chr in names(variantsList)){
     output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
