@@ -39,6 +39,8 @@ setClass("MmapprParam",
          )
 )
 
+
+
 setClass("MmapprData",
          representation(
            param="MmapprParam",
@@ -48,30 +50,3 @@ setClass("MmapprData",
          )
 )
 
-MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
-                          distancePower = 4, peakIntervalWidth = 0.95, minDepth = 10,
-                          homozygoteCutoff = 0.8, numCores = 4, minBaseQuality = 20,
-                          minMapQuality = 30, loessOptResolution = 0.01,
-                          loessOptCutFactor = 0.1, naCutoff = 0) {
-  
-  if (class(wtFiles) == "character") wtFiles <- BamFileList(wtFiles)
-  if (class(mutFiles) == "character") mutFiles <- BamFileList(mutFiles)
-  
-  new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, mutFiles = mutFiles,
-      vepParam = vepParam, distancePower = distancePower, minDepth = minDepth,
-      homozygoteCutoff = homozygoteCutoff, numCores = numCores, minBaseQuality = minBaseQuality,
-      minMapQuality = minMapQuality, loessOptResolution = loessOptResolution,
-      loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff)
-  
-}
-
-CheckMmapprParam <- function(mmapprParam) {
-  errors <- character()
-  
-  if (input(mmapprParam@vepParam)$format != "vcf") {
-    msg <- "VEP param input format must be 'vcf'"
-    errors <- c(errors, msg)
-  }
-  
-  if (length(errors) == 0) TRUE else 0
-}
