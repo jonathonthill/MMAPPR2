@@ -92,23 +92,8 @@ WriteCandidateVCFs <- function(mmapprData) {
   }
 }
 
-write_text_files(variants){
-  
-  for(chr in names(variants)){
-    output <- data.frame("Position" = variants[[chr]]@ranges@start, 
-                        "Feature" = variants[[chr]]@elementMetadata@listData$Feature,
-                        "Symbol" = variants[[chr]]@elementMetadata@listData$SYMBOL, 
-                        "Allele" = variants[[chr]]@elementMetadata@listData$Allele, 
-                        "Consequence" = variants[[chr]]@elementMetadata@listData$Consequence,
-                        "AminoAcid" = variants[[chr]]@elementMetadata@listData$Amino_acids,
-                        "Impact" = variants[[chr]]@elementMetadata@listData$IMPACT,
-                        "DensityScore" = variants[[chr]]@elementMetadata@listData$density)
-    write.table(output,file= paste("mmappr_results/",chr, sep =""), sep="\t",row.names = FALSE, quote=FALSE)
-  }
-}
 
-
-write_text_files(variantsList){
+WriteTextFiles(variantsList){
   
   for(chr in names(variantsList)){
     output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
