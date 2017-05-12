@@ -57,17 +57,28 @@ PrePeak <- function(mmapprData) {
   
   #need to calculate standard dev of all chromosomes for cutoff
   combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
-    var(chr$loess$fitted)/length(chr$loess$fitted)})
+    if(class(chr) == "list"){
+    var(chr$loess$fitted)/length(chr$loess$fitted)
+      }else{
+      return(0)
+      }
+    })
   combinedStDev <- sum(combinedStDev)^(1/2)
   distanceMedian <- sapply(mmapprData@distance, function(chr) {
-    median(chr$loess$fitted)})
-  distanceMedian <- median(distanceMedian) #median of list of chr medians
+    if(class(chr)=="list"){
+    median(chr$loess$fitted)}else{
+      return(NA)
+    }})
+  distanceMedian <- median(distanceMedian,na.rm=TRUE) #median of list of chr medians
   cutoff <- 3*combinedStDev + distanceMedian
   
   cat("Using", round(cutoff, digits=4), "as cutoff.\n")
   
   #get which peaks have values above cutoff, initialize them in mmapprData
   for(i in seq_along(mmapprData@distance)){
+    if(class(mmapprData@distance[[i]]) != "list"){
+      next
+    }
     loessForChr <- mmapprData@distance[[i]]$loess
     if (length(loessForChr$x) < 50) next
     containsPeak <- any(loessForChr$fitted > cutoff)
@@ -75,7 +86,7 @@ PrePeak <- function(mmapprData) {
     if (containsPeak) {
       mmapprData@peaks[[chrName]] <- list(seqname = chrName)
       cat("Sequence", chrName, "contains peak.\n")
-    }	
+      }
   }
   
   return(mmapprData)
