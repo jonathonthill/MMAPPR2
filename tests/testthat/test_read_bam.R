@@ -48,5 +48,5 @@ test_that("whole genome is read correctly", {
   expect_equal(sum(classes == "character"), 25)
   expect_type(mmapprData@distance$chr5, "list")
   
-  saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
+  # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })

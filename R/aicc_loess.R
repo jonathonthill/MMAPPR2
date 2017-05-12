@@ -94,7 +94,7 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
   
   startTime <- proc.time()
   tryCatch({
-    if(class(resultList) != 'list') stop('Unable to perform loess fit for sequence--distance data missing.')
+    if(class(resultList) == 'chr') stop('--Loess fit failed')
     
     resultList$aicc <- AiccOpt(resultList$distanceDf) #returns dataframe with spans and aicc values for each loess
     
@@ -115,7 +115,8 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
     return(resultList)
   },
   error = function(e) {
-    return(e$message)
+    if (class(resultList) == "chr")
+      return(paste0(resultList, e$message))
   }
   )
 }

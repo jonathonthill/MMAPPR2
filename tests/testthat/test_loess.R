@@ -10,11 +10,19 @@ test_that("normal chromosome performs fit correctly", {
 })
 
 test_that("error chromosome is skipped", {
-  
+  chr4error <- LoessFitForChr(md@distance$chr4,
+                              loessOptResolution = md@param@loessOptResolution,
+                              loessOptCutFactor = md@param@loessOptCutFactor))
+
 })
 
-test_that("whole mmapprData is properly processed", {
+test_that("LoessFit runs properly for whole mmapprData", {
   md2 <- LoessFit(md)
+  successes <- sapply(md2@distance, function(seq) class(seq) == "list")
+  expect_equal(length(successes), 26)
+  expect_equal(sum(successes), 1)
+  
+  
   saveRDS(md2, "test_data/intermediate_MDs/post_loess.RDS")
 })
 
