@@ -10,11 +10,11 @@ md <- PrePeak(md)
 md <- PeakRefinement(md)
 
 test_that("PrePeakTest", {
-  expect_equal(length(names(md@peaks)), 2)
+  expect_equal(length(names(md@peaks)), 1)
 })
 
 test_that("PeakRefinementTest", {
-  expect_true(md@peaks$chr7$)
+  expect_true(md@peaks$chr5$peakPosition>35200000)
   
 })
 
