@@ -58,17 +58,17 @@ PrePeak <- function(mmapprData) {
   #need to calculate standard dev of all chromosomes for cutoff
   combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
     if(class(chr) == "list"){
-    var(chr$loess$fitted)/length(chr$loess$fitted)
-      }else{
+      var(chr$loess$fitted)/length(chr$loess$fitted)
+    }else{
       return(0)
-      }
-    })
+    }
+  })
   combinedStDev <- sum(combinedStDev)^(1/2)
   distanceMedian <- sapply(mmapprData@distance, function(chr) {
     if(class(chr)=="list"){
-    median(chr$loess$fitted)}else{
-      return(NA)
-    }})
+      median(chr$loess$fitted)}else{
+        return(NA)
+      }})
   distanceMedian <- median(distanceMedian,na.rm=TRUE) #median of list of chr medians
   cutoff <- 3*combinedStDev + distanceMedian
   

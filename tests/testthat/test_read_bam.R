@@ -5,12 +5,12 @@ library(rtracklayer)
 context("BAM file reading")
 
 DebugSkip <- function() { 
-  if (F) skip("Skipping file reading tests to save time") 
+  if (T) skip("Skipping file reading tests to save time") 
 }
 
 
-param <- MmapprParam(new("GmapGenome"), "test_data/bam_files/zy14_wt_chr5_cut_small.bam", 
-                     "test_data/bam_files/zy14_mut_chr5_cut_small.bam",
+param <- MmapprParam(new("GmapGenome"), "test_data/bam_files/zy14_wt_chr5_qual_filter.bam", 
+                     "test_data/bam_files/zy14_mut_chr5_qual_filter.bam",
                     vepParam = VEPParam())
 mmapprData <- new("MmapprData", param = param)
 
@@ -48,5 +48,5 @@ test_that("whole genome is read correctly", {
   expect_equal(sum(classes == "character"), 25)
   expect_type(mmapprData@distance$chr5, "list")
   
-  # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
+  saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })

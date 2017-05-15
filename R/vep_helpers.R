@@ -14,7 +14,7 @@ GenerateCandidates <- function(mmapprData) {
                         ranges = i_ranges)
     
     #call variants in peak
-    variants <- GetPeakVariants(g_ranges, mmapprData@param)
+    variants <- AddVariantsForPeak(g_ranges, mmapprData@param)
     
     #run VEP
     variants <- RunVEPForVariants(variants, mmapprData@param@vepParam)
@@ -31,11 +31,11 @@ GenerateCandidates <- function(mmapprData) {
   return(mmapprData)
 }
 
-GetPeakRange <- function(peakList) {
+AddPeakRange <- function(peakList) {
   
 }
 
-GetPeakVariants <- function(peak_granges, param){
+AddVariantsForPeak <- function(peakList, param){
   require(tidyr)
   require(dplyr)
   require(Rsamtools)
@@ -56,9 +56,8 @@ GetPeakVariants <- function(peak_granges, param){
   
   # create param for variant calling 
   tally_param <- TallyVariantsParam(genome = param@refGenome, 
-                                    which = peak_granges,
-                                    indels = TRUE,
-                                    minimum_mapq = 1L
+                                    which = peakList$range,
+                                    indels = TRUE
   )
   
   result_vranges <- (callSampleSpecificVariants(mutBam, wtBam, 
@@ -76,10 +75,11 @@ GetPeakVariants <- function(peak_granges, param){
   else return(NULL)
 }
 
-RunVEPForVariants <- function(inputVariants, vepParam){
+RunVEPForPeak <- function(peakList, vepParam){
   require(ensemblVEP)
   stopifnot(is(vepParam, "VEPParam"))
   
+  inputVariants <- peakList$variants
   peakVcfFile <- "peak.vcf"
   
   #write file
@@ -87,17 +87,17 @@ RunVEPForVariants <- function(inputVariants, vepParam){
   
   param <- vepParam
   
-  gr <- ensemblVEP(peakVcfFile, param)
+  resultGRanges <- ensemblVEP(peakVcfFile, param)
   
   if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
   
   #output granges
-  return(gr)
+  return(resultGRanges)
 }
 
 FilterVariants <- function(candidate_granges) {
   filter <- elementMetadata(candidate_granges)$IMPACT != 'LOW'
-  filter[filter == NA] <- TRUE
+  filter[is.na(filter)] <- TRUE
   return(candidate_granges[filter])
 }
 

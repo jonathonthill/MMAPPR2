@@ -15,7 +15,8 @@ LoessFit <- function(mmapprData) {
 #the function that gets run for each chromosome
 #takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
 #outputs complete element of mmapprData@distance (mutcounts, wtCounts, loess, aicc)
-LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
+LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor,
+                           showDebug = FALSE){
   #returns a list of aicc and span values as well as the time it took
   #define needed functions
   AiccOpt <- function(distanceDf, spans = (0.01 + 0.1*(0:9)), 
@@ -37,7 +38,7 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
       newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
       newSpans <- round(newSpans, digits = NumDecimals(resolution))
       newSpans <- unique(newSpans)
-      message("# new spans = ", length(newSpans))
+      if (showDebug) message("# new spans = ", length(newSpans))
       return(rbind(aiccDf,AiccOpt(distanceDf, spans = newSpans, resolution = resolution, cutFactor = cutFactor)))
     }
     else return(aiccDf)
@@ -94,14 +95,14 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
   
   startTime <- proc.time()
   tryCatch({
-    if(class(resultList) == 'chr') stop('--Loess fit failed')
+    if(class(resultList) == 'character') stop('--Loess fit failed')
     
     resultList$aicc <- AiccOpt(resultList$distanceDf) #returns dataframe with spans and aicc values for each loess
     
     #now get loess for best aicc
     bestSpan <- resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans']
     bestSpan <- mean(bestSpan, na.rm = TRUE)
-    message(paste0("best span = ", bestSpan, '\n'))
+    message(sprintf("Best loess span for %s = %f", resultList$seqname, bestSpan))
     resultList$loess <- GetLoess(bestSpan, resultList$distanceDf$distance, 
                                  resultList$distanceDf$pos)
     
@@ -115,8 +116,9 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
     return(resultList)
   },
   error = function(e) {
-    if (class(resultList) == "chr")
+    if (class(resultList) == "character")
       return(paste0(resultList, e$message))
+    else return(e$message)
   }
   )
 }

@@ -237,7 +237,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
     readMemReqPerBP <- object.size(resultList) / nrow(wtCounts)
     resultList$readMemReqPerBP <- readMemReqPerBP  
     
-    resultList$seqname <- seqnames(chrRange)
+    resultList$seqname <- as.character(seqnames(chrRange))
     
     return(resultList)
   },

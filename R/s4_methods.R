@@ -74,7 +74,7 @@ setMethod("show", "MmapprData", function(object) {
     cat(margin, sprintf("%s: start = %.0f, end = %.0f\n", 
                        peak$seqname, peak$start, peak$end),sep="")
     if (!is.null(peak$densityFunction))
-      cat(margin, margin, "Contains density function\n", sep="")
+      cat(margin, margin, "Density function calculated\n", sep="")
   }
   
   cat("candidates:\n")

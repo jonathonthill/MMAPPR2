@@ -5,11 +5,11 @@ OutputMmapprData <- function(mmapprData, plotAicc = FALSE) {
   
   if (!dir.exists('mmappr_results')) dir.create("mmappr_results")
   
-  PlotGenomeDistance(mmapprData@distance)
+  PlotGenomeDistance(mmapprData)
   PlotPeaks(mmapprData)
   if (plotAicc) PlotAicc(mmapprData@distance)
   
-  candidateVCF <- asVCF(mmapprData)
+  # WriteCandidateVCFs(mmapprData)
 }
 
 PlotGenomeDistance <- function(mmapprData) {
@@ -19,6 +19,11 @@ PlotGenomeDistance <- function(mmapprData) {
   breaks <- tailPos
   labelpos <- NULL
   for (i in orderSeqlevels(names(mmapprData@distance))) {
+    if (class(mmapprData@distance[[i]]) != "list")
+      next
+    else if (!("loess" %in% names(mmapprData@distance[[i]])))
+      stop("Distance list for sequence %s missing loess fit data", names(mmapprData@distance)[i])
+    
     chrLoess <- mmapprData@distance[[i]]$loess
     chrDf <- data.frame(pos = chrLoess$x + tailPos, seqname = names(mmapprData@distance)[i], 
                         fitted = chrLoess$fitted, unfitted = chrLoess$y)
@@ -33,7 +38,7 @@ PlotGenomeDistance <- function(mmapprData) {
   plot(x = plotDf$pos, y = plotDf$fitted, type='l', 
        ylim=c(min(plotDf$fitted, na.rm=T),
               1.1*max(plotDf$fitted, na.rm=T)), 
-       ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@input$distancePower)), 
+       ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
        xaxt='n', xaxs='i', xlab="Chromosome" )
   abline(v=(breaks[1:length(breaks)-1]+2), col="grey")
   mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])), 
@@ -42,7 +47,7 @@ PlotGenomeDistance <- function(mmapprData) {
   plot(x = plotDf$pos, y = plotDf$unfitted, pch=16, cex=.8, col="#999999AA", 
        ylim=c(min(plotDf$unfitted, na.rm=T), 
               1.1*max(plotDf$unfitted, na.rm=T)), 
-       ylab=substitute("ED"^p, list(p=mmapprData@input$distancePower)), 
+       ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)), 
        xaxt='n', xaxs='i', xlab="Chromosome" )
   abline(v=(breaks), col="grey")
   mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])), 
@@ -63,7 +68,7 @@ PlotPeaks <- function(mmapprData) {
     plot(chrLoess$x/1000000, chrLoess$fitted, type='l', 
          ylim=c(min(chrLoess$fitted, na.rm=T),
                 1.1*max(chrLoess$fitted, na.rm=T)), 
-         ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@input$distancePower)), 
+         ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
          xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
     shadeX <- c(start, 
                  chrLoess$x[chrLoess$x >= start & chrLoess$x <= end & 
@@ -78,11 +83,15 @@ PlotPeaks <- function(mmapprData) {
     plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
          ylim=c(min(chrLoess$y, na.rm=T),
                 1.1*max(chrLoess$y, na.rm=T)),
-         ylab=substitute("ED"^p, list(p=mmapprData@input$distancePower)),
+         ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)),
          xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
   }
   
     dev.off()
+}
+
+PlotAicc <- function(mmapprDataDistance) {
+  
 }
 
 WriteCandidateVCFs <- function(mmapprData) {

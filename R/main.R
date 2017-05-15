@@ -73,7 +73,7 @@ RunFunctionInParallel <- function(inputList, functionToRun, numCores,
       numParams <- 2
       secondInput <- RepList(secondInput, length(inputList))
       resultList <- foreach(a = inputList, b = secondInput,
-                            .packages = packages) %do% functionToRun(a, b)
+                            .packages = packages) %dopar% functionToRun(a, b)
     }
     else {
       numParams <- 1
@@ -95,20 +95,29 @@ RunFunctionInParallel <- function(inputList, functionToRun, numCores,
 Mmappr <- function(mmapprParam) {
   startTime <- proc.time()
   
-  if (is.null(mmapprData)) mmapprData = new("MmapprData", param = mmapprParam)
+  mmapprData = new("MmapprData", param = mmapprParam)
   
-  tryCatch({
+  mmapprData <- tryCatch({
     mmapprData <- ReadInFiles(mmapprData)
     message("File reading successfully completed and Euclidian distance data generated")
+    
     mmapprData <- LoessFit(mmapprData)
     message("Loess regression successfully completed")
+    
     mmapprData <- PrePeak(mmapprData)
-    mmapprData <- refinement_function(mmapprData)
+    mmapprData <- PeakRefinement(mmapprData)
     message("Peak regions succesfully identified")
+    
     mmapprData <- GenerateCandidates(mmapprData)
     message("Candidate variants generated, analyzed, and ranked")
+    
+    OutputMmapprData(mmapprData)
+    message("Output PDF files generated")
+    
+    return(mmapprData)
   }, 
   error = function(e) {
+    traceback()
     message(e$message)
     message("MmapprData object is returned up until the failing step")
     message("You can also recover the object after the latest successful step from 'mmappr_recovery.RDS'")
@@ -116,8 +125,6 @@ Mmappr <- function(mmapprParam) {
     return(mmapprData)
   })
 
-  OutputMmapprData(mmapprData)
-  message("Output PDF files generated")
   
   
   message("Mmappr runtime:")
