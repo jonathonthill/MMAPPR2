@@ -15,7 +15,7 @@ test_that("PrePeakTest", {
 
 test_that("PeakRefinementTest", {
   expect_true(md@peaks$chr5$peakPosition>35200000)
-  
+  expect_true(md@peaks$chr5$peakPosition<36000000)
 })
 
 
