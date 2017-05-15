@@ -100,3 +100,19 @@ WriteCandidateVCFs <- function(mmapprData) {
     writeVcf(candidateVCF, paste0("mmappr_results", seqname, ".vcf"))
   }
 }
+
+
+WriteTextFiles <- function(variantsList){
+  
+  for(chr in names(variantsList)){
+    output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
+                        "Feature" = variantsList[[chr]]@elementMetadata@listData$Feature,
+                        "Symbol" = variantsList[[chr]]@elementMetadata@listData$SYMBOL, 
+                        "Allele" = variantsList[[chr]]@elementMetadata@listData$Allele, 
+                        "Consequence" = variantsList[[chr]]@elementMetadata@listData$Consequence,
+                        "AminoAcid" = variantsList[[chr]]@elementMetadata@listData$Amino_acids,
+                        "Impact" = variantsList[[chr]]@elementMetadata@listData$IMPACT,
+                        "DensityScore" = variantsList[[chr]]@elementMetadata@listData$density)
+    write.table(output,file= paste("mmappr_results/",chr, sep =""), sep="\t",row.names = FALSE, quote=FALSE)
+  }
+}
