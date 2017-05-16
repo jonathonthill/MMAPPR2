@@ -1,7 +1,3 @@
-library(gmapR)
-library(Rsamtools)
-library(rtracklayer)
-
 context("BAM file reading")
 
 DebugSkip <- function() { 
@@ -37,16 +33,17 @@ test_that("single chromosome is read correctly", {
   expect_gt(nrow(result$mutCounts), 0)
   expect_gt(nrow(result$distanceDf), 0)
   expect_named(result$distanceDf, c("pos", "distance"))
+  expect_equal_to_reference(result$distanceDf, "test_data/reference/read_bam_distance.RDS")
 })
 
 test_that("whole genome is read correctly", {
   DebugSkip()
-  mmapprData <- ReadInFiles(mmapprData)
+  mmapprData <- ReadInFiles(mmapprData, silent = TRUE)
   expect_equal(length(mmapprData@distance), 26)
   
   classes <- lapply(mmapprData@distance, class)
   expect_equal(sum(classes == "character"), 25)
   expect_type(mmapprData@distance$chr5, "list")
   
-  saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
+  # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })

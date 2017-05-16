@@ -1,4 +1,7 @@
 context("Variant calling")
+library(gmapR)
+library(VariantTools)
+library(rtracklayer)
 
 refGenFasta <- FastaFile(normalizePath("./test_data/ref_genome_fastas/chr5.fa"))
 testGenome <- GmapGenome(refGenFasta, name = "dan_rerio_chr5", create = TRUE)

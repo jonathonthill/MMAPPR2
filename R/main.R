@@ -49,12 +49,13 @@ RepList <- function(object, times) {
   return(result)
 }
 
-RunFunctionInParallel <- function(inputList, functionToRun, numCores,
+RunFunctionInParallel <- function(inputList, functionToRun, numCores, silent = FALSE,
                                   packages = c(), secondInput = NULL, thirdInput = NULL) {
   if (length(inputList) < numCores) numCores <- length(inputList)
   
   #cluster generation
-  cl <- makeCluster(numCores, type = "SOCK", outfile = "")
+  outfile <- if (silent) "/dev/null" else ""
+  cl <- makeCluster(numCores, type = "SOCK", outfile = outfile)
   
   # register the cluster
   registerDoParallel(cl)

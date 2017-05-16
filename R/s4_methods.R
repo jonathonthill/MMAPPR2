@@ -1,7 +1,7 @@
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
                         distancePower = 4, peakIntervalWidth = 0.95, minDepth = 10,
                         homozygoteCutoff = 0.8, numCores = 4, minBaseQuality = 20,
-                        minMapQuality = 30, loessOptResolution = 0.01,
+                        minMapQuality = 30, loessOptResolution = 0.001,
                         loessOptCutFactor = 0.1, naCutoff = 0, outputFolder = "DEFAULT") {
   
   if (class(wtFiles) == "character") wtFiles <- BamFileList(wtFiles)
@@ -59,10 +59,13 @@ setMethod("show", "MmapprData", function(object) {
   cat(margin, sprintf(
     "Contains Euclidian distance data for %i sequences\n", 
       sum(successes)), sep="")
-  loessFits <- sum(sapply(object@distance[successes], function(seq) {
-    if (!is.null(seq$loess)) return(TRUE)
-    else return(FALSE)
-  }))
+  loessFits <- 0
+  try(
+    loessFits <- sum(sapply(object@distance[successes], function(seq) {
+      if (!is.null(seq$loess)) return(TRUE)
+      else return(FALSE)
+    })), silent = TRUE
+  )
   cat(margin, sprintf(
     "and Loess regression data for %i of those\n", loessFits
   ), sep="")
