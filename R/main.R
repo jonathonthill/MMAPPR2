@@ -121,7 +121,7 @@ Mmappr <- function(mmapprParam) {
     message(e$message)
     message("MmapprData object is returned up until the failing step")
     message("You can also recover the object after the latest successful step from 'mmappr_recovery.RDS'")
-    saveRDS(mmapprData, "mmappr_recovery.RDS")
+    saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_recovery.RDS"))
     return(mmapprData)
   })
 

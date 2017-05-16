@@ -69,7 +69,7 @@ LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor,
   
   GetLoess <- function(s, euc_dist, pos){
     x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
-                   family="symmetric", surface='direct'), silent=T)
+                   family="symmetric"), silent=T)
     return(x)
   }
   

@@ -6,7 +6,7 @@ PeakRefinement <- function(mmapprData){
   for(chr in names(mmapprData@peaks)){
     loessSpan <- mmapprData@distance[[chr]]$loess$pars$span
     pos <- mmapprData@distance[[chr]]$loess$x
-    euclideanDistance <- mmapprData@distance[[chr]]$loess$fitted
+    euclideanDistance <- mmapprData@distance[[chr]]$loess$y
     rawData <- data.frame(pos, euclideanDistance)
     
     maxValues <- rep(NA, 1000)

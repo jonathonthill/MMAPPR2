@@ -3,13 +3,13 @@ OutputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     stop("Input object not of 'MmapprData' type")
   }
   
-  if (!dir.exists('mmappr_results')) dir.create("mmappr_results")
+  if (!dir.exists(mmapprData@param@outputFolder)) dir.create(mmapprData@param@outputFolder)
   
   PlotGenomeDistance(mmapprData)
   PlotPeaks(mmapprData)
   if (plotAicc) PlotAicc(mmapprData@distance)
-  
-  # WriteCandidateVCFs(mmapprData)
+
+  WriteTextFiles(mmapprData@candidates)  
 }
 
 PlotGenomeDistance <- function(mmapprData) {
@@ -33,7 +33,7 @@ PlotGenomeDistance <- function(mmapprData) {
     labelpos <- c(labelpos, (breaks[length(breaks)] + breaks[length(breaks) - 1]) / 2)
   }
   
-  pdf("mmappr_results/genome_plots.pdf", width=11, height=8.5)
+  pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
   par(mfrow=c(2,1))
   plot(x = plotDf$pos, y = plotDf$fitted, type='l', 
        ylim=c(min(plotDf$fitted, na.rm=T),
@@ -57,7 +57,7 @@ PlotGenomeDistance <- function(mmapprData) {
 }
 
 PlotPeaks <- function(mmapprData) {
-  pdf("mmappr_results/peak_plots.pdf", width=11, height=8.5)
+  pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
   par(mfrow=c(2,1))
   
   for (seqname in names(mmapprData@peaks)){
@@ -102,7 +102,7 @@ WriteCandidateVCFs <- function(mmapprData) {
 }
 
 
-WriteTextFiles <- function(variantsList){
+WriteTextFiles <- function(variantsList, outputFolder){
   
   for(chr in names(variantsList)){
     output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
@@ -112,7 +112,7 @@ WriteTextFiles <- function(variantsList){
                         "Consequence" = variantsList[[chr]]@elementMetadata@listData$Consequence,
                         "AminoAcid" = variantsList[[chr]]@elementMetadata@listData$Amino_acids,
                         "Impact" = variantsList[[chr]]@elementMetadata@listData$IMPACT,
-                        "DensityScore" = variantsList[[chr]]@elementMetadata@listData$density)
-    write.table(output,file= paste("mmappr_results/",chr, sep =""), sep="\t",row.names = FALSE, quote=FALSE)
+                        "DensityScore" = variantsList[[chr]]@elementMetadata@listData$peakDensity)
+    write.table(output,file = file.path(outputFolder, paste0(chr, ".txt")), sep="\t",row.names = FALSE, quote=FALSE)
   }
 }
