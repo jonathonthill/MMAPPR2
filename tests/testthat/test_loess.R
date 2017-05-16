@@ -4,6 +4,7 @@ md <- readRDS("test_data/intermediate_MDs/post_file_read.RDS")
 SkipDebug <- function() if(T) skip("skipping to save time")
 
 test_that("normal chromosome performs fit correctly", {
+  SkipDebug()
   chr5List <- LoessFitForChr(md@distance$chr5, 
                              loessOptResolution = md@param@loessOptResolution,
                              loessOptCutFactor = md@param@loessOptCutFactor)
@@ -27,6 +28,6 @@ test_that("LoessFit runs properly for whole mmapprData", {
   expect_equal(sum(successes), 1)
   
   
-  saveRDS(md2, "test_data/intermediate_MDs/post_loess.RDS")
+  # saveRDS(md2, "test_data/intermediate_MDs/post_loess.RDS")
 })
 
