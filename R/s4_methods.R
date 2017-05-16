@@ -87,3 +87,6 @@ PrintWithMargin<- function(obj, margin = "  ") {
   lines <- sapply(lines, function(x) paste0(margin, x))
   cat(lines, sep="\n")
 }
+
+
+
