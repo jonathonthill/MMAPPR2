@@ -49,12 +49,13 @@ RepList <- function(object, times) {
   return(result)
 }
 
-RunFunctionInParallel <- function(inputList, functionToRun, numCores,
+RunFunctionInParallel <- function(inputList, functionToRun, numCores, silent = FALSE,
                                   packages = c(), secondInput = NULL, thirdInput = NULL) {
   if (length(inputList) < numCores) numCores <- length(inputList)
   
   #cluster generation
-  cl <- makeCluster(numCores, type = "SOCK", outfile = "")
+  outfile <- if (silent) "/dev/null" else ""
+  cl <- makeCluster(numCores, type = "SOCK", outfile = outfile)
   
   # register the cluster
   registerDoParallel(cl)
@@ -121,7 +122,7 @@ Mmappr <- function(mmapprParam) {
     message(e$message)
     message("MmapprData object is returned up until the failing step")
     message("You can also recover the object after the latest successful step from 'mmappr_recovery.RDS'")
-    saveRDS(mmapprData, "mmappr_recovery.RDS")
+    saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_recovery.RDS"))
     return(mmapprData)
   })
 

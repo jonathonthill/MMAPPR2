@@ -3,45 +3,47 @@
 
 GenerateCandidates <- function(mmapprData) {
   
-  #for each peak region
-  mmapprData@candidates <- lapply(mmapprData@peaks, function(peak) {
-    #get GRanges representation of peak
-    i_ranges <- IRanges(start = as.numeric(peak$start),
-                        end = as.numeric(peak$end),
-                        names = peak$seqname)
-    
-    g_ranges <- GRanges(seqnames = names(i_ranges), 
-                        ranges = i_ranges)
-    
-    #call variants in peak
-    variants <- AddVariantsForPeak(g_ranges, mmapprData@param)
-    
-    #run VEP
-    variants <- RunVEPForVariants(variants, mmapprData@param@vepParam)
-    
-    #filter out low impact variants
-    variants <- FilterVariants(variants)
-    
-    #density score and order variants
-    variants <- DensityScoreAndOrderVariants(variants, peak$densityFunction)
-    
+  #get GRanges representation of peak
+  mmapprData@candidates <- lapply(mmapprData@peaks, GetPeakRange)
+  
+  #call variants in peak
+  mmapprData@candidates <- lapply(mmapprData@candidates, FUN = GetVariantsForRange, 
+                                  param = mmapprData@param)
+  
+  #run VEP
+  mmapprData@candidates <- lapply(mmapprData@candidates, FUN = RunVEPForVariants,
+                                  vepParam = mmapprData@param@vepParam)
+  
+  #filter out low impact variants
+  mmapprData@candidates <- lapply(mmapprData@candidates, FilterVariants)
+                                  
+  #density score and order variants
+  mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
+    densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
+    variants <- mmapprData@candidates[[seqname]]
+    variants <- DensityScoreAndOrderVariants(variants, densityFunction)
     return(variants)
   })
-  
+
+    
   return(mmapprData)
 }
 
-AddPeakRange <- function(peakList) {
+GetPeakRange <- function(peakList) {
+  ir <- IRanges(start = as.numeric(peakList$start),
+                      end = as.numeric(peakList$end),
+                      names = peakList$seqname)
   
+  gr <- GRanges(seqnames = names(ir), 
+                      ranges = ir)
+  return(gr)
 }
 
-AddVariantsForPeak <- function(peakList, param){
+GetVariantsForRange <- function(inputRange, param){
   require(tidyr)
   require(dplyr)
   require(Rsamtools)
   require(VariantTools)
-  
-  result_vranges <- NULL
   
   # merge mutant bam files in desired regions
   if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
@@ -56,30 +58,29 @@ AddVariantsForPeak <- function(peakList, param){
   
   # create param for variant calling 
   tally_param <- TallyVariantsParam(genome = param@refGenome, 
-                                    which = peakList$range,
+                                    which = inputRange,
                                     indels = TRUE
   )
   
-  result_vranges <- (callSampleSpecificVariants(mutBam, wtBam, 
+  resultVr <- (callSampleSpecificVariants(mutBam, wtBam, 
                                                 tally.param = tally_param))
   
   if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
   if (file.exists("tmp_m.bm")) file.remove("tmp_m.bam")
   
-  if (length(result_vranges) > 0){
+  if (length(resultVr) > 0){
     # need sampleNames to convert to VCF; using mutant file names
-    sampleNames(result_vranges) <- paste0(sapply(param@mutFiles, path), collapse = " -- ")
-    mcols(result_vranges) <- NULL
-    return(result_vranges)
+    sampleNames(resultVr) <- paste0(sapply(param@mutFiles, path), collapse = " -- ")
+    mcols(resultVr) <- NULL
+    return(resultVr)
   } 
   else return(NULL)
 }
 
-RunVEPForPeak <- function(peakList, vepParam){
+RunVEPForPeak <- function(inputVariants, vepParam){
   require(ensemblVEP)
   stopifnot(is(vepParam, "VEPParam"))
   
-  inputVariants <- peakList$variants
   peakVcfFile <- "peak.vcf"
   
   #write file

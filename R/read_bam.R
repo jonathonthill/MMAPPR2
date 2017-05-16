@@ -16,7 +16,7 @@ GetFileReadChrList <- function(mmapprData) {suppressWarnings({
   return(chrList)
 })}
 
-ReadInFiles <- function(mmapprData, showDebug = FALSE) {
+ReadInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
   require(doParallel)
   require(GenomeInfoDb)
   require(Rsamtools)
@@ -28,7 +28,8 @@ ReadInFiles <- function(mmapprData, showDebug = FALSE) {
   mmapprData@distance <- RunFunctionInParallel(chrList, functionToRun = ReadFilesForChr, 
                                                packages = c('tidyr', 'dplyr', 'Rsamtools'),
                                                secondInput = showDebug,
-                                               numCores = mmapprData@param@numCores)
+                                               numCores = mmapprData@param@numCores,
+                                               silent = silent)
   
   return(mmapprData)
 }
