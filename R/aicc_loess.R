@@ -3,7 +3,7 @@ LoessFit <- function(mmapprData, silent = FALSE) {
   loessOptCutFactor <- mmapprData@param@loessOptCutFactor
   
   #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
-  mmapprData@distance <- RunFunctionInParallel(mmapprData@distance, functionToRun = .LoessFitForChr, silent = silent,
+  mmapprData@distance <- RunFunctionInParallel(mmapprData@distance, functionToRun = .loessFitForChr, silent = silent,
                                                secondInput = loessOptResolution, thirdInput = loessOptCutFactor,
                                                numCores = mmapprData@param@numCores, packages = c("MMAPPR2"))
   #LoessFitForChr returns list with mutCounts, wtCounts, loess, aicc
@@ -18,6 +18,20 @@ LoessFit <- function(mmapprData, silent = FALSE) {
   return(x)
 }
 
+#gets greater of the two differences to either side of a span in a vector of spans
+.localResolution <- function(spans, span) {
+  stopifnot(is.numeric(spans))
+  stopifnot(all(spans >= 0 & spans <= 1))
+  
+  spans <- unique(sort(spans))
+  index <- which(spans %in% span)
+  stopifnot(length(index) == 1)
+  
+  result <- max(c(diff(spans)[index-1], diff(spans)[index]), na.rm = T)
+  stopifnot(is.numeric(result))
+  return(result)
+}
+
 #returns a list of aicc and span values as well as the time it took
 #define needed functions
 .AiccOpt <- function(distanceDf, spans, resolution, cutFactor, showDebug = FALSE){
@@ -25,25 +39,29 @@ LoessFit <- function(mmapprData, silent = FALSE) {
   if (length(spans) != length(aiccValues)) stop("AICc values and spans don't match")
   aiccDf <- data.frame(spans, aiccValues)
   
-  currentResolution <- round(min(abs(diff(spans))), digits = .NumDecimals(resolution))
-  if (abs(currentResolution) > resolution){
-    #finds two lowest local minima for finer attempt
-    minVals <- .MinTwo(.LocalMin(aiccDf$aiccValues))
-    #gets first column of dataframe after selecting for rows that match the two lowest localMins
-    minSpans <- aiccDf[aiccDf$aiccValues %in% minVals, 1]
-    addVector <- ((currentResolution * cutFactor) * 1:9)
-    newSpans <- c()
-    for (x in minSpans){
-      newSpans <- append(newSpans, x - addVector)
-      newSpans <- append(newSpans, x + addVector)
+  #finds two lowest local minima for finer attempt
+  minVals <- .MinTwo(.LocalMin(aiccDf$aiccValues))
+  #gets first column of dataframe after selecting for rows that match the two lowest localMins
+  minSpans <- aiccDf[aiccDf$aiccValues %in% minVals, 1]
+  
+  #goes through each minimum and goes deeper if resolution isn't fine enough
+  for (minSpan in minSpans) {
+    #get resolution at that point, which is greater of differences to either side
+    localResolution <- round(.localResolution(spans, minSpan), digits = .NumDecimals(resolution))
+    stopifnot(is.numeric(localResolution))
+    if (abs(localResolution) > resolution){
+      addVector <- ((localResolution * cutFactor) * 1:9)
+      newSpans <- c(minSpan - addVector, minSpan + addVector)
+      newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
+      newSpans <- round(newSpans, digits = .NumDecimals(resolution))
+      newSpans <- unique(newSpans)
+      if (showDebug) message("# new spans = ", length(newSpans))
+      #recursive call
+      aiccDf <- rbind(aiccDf, .AiccOpt(distanceDf, spans = newSpans, 
+                                       resolution = resolution, cutFactor = cutFactor))
     }
-    newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
-    newSpans <- round(newSpans, digits = .NumDecimals(resolution))
-    newSpans <- unique(newSpans)
-    if (showDebug) message("# new spans = ", length(newSpans))
-    return(rbind(aiccDf, .AiccOpt(distanceDf, spans = newSpans, resolution = resolution, cutFactor = cutFactor)))
   }
-  else return(aiccDf)
+  return(aiccDf)
 }
 
 #returns minimum two elements (useful for aicc_opt)
@@ -91,7 +109,7 @@ LoessFit <- function(mmapprData, silent = FALSE) {
 #the function that gets run for each chromosome
 #takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
 #outputs complete element of mmapprData@distance (mutcounts, wtCounts, loess, aicc)
-.LoessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor,
+.loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor,
                            showDebug = FALSE){
   
   startTime <- proc.time()
@@ -110,11 +128,11 @@ LoessFit <- function(mmapprData, silent = FALSE) {
     bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans'],
                       digits = .NumDecimals(loessOptResolution))
     bestSpan <- mean(bestSpan, na.rm = TRUE)
-    message(sprintf("Best loess span for %s = %f", resultList$seqname, bestSpan))
     resultList$loess <- MMAPPR2:::.GetLoess(bestSpan, resultList$distanceDf$pos, 
                                  resultList$distanceDf$distance, surface = "direct")
     
-    message(paste0(resultList$seqname, ": LoessFit complete"))
+    precision <- .NumDecimals(loessOptResolution)
+    message(sprintf(paste0("%s: LoessFit complete with optimized span of %.", precision, "f"), resultList$seqname, bestSpan))
     
     #no longer needed
     resultList$distanceDf <- NULL

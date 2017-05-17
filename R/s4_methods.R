@@ -4,24 +4,49 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
                         minMapQuality = 30, loessOptResolution = 0.001,
                         loessOptCutFactor = 0.1, naCutoff = 0, outputFolder = "DEFAULT") {
   
-  if (class(wtFiles) == "character") wtFiles <- BamFileList(wtFiles)
-  if (class(mutFiles) == "character") mutFiles <- BamFileList(mutFiles)
+  if (class(wtFiles) == "character" | class(wtFiles) == "BamFile") wtFiles <- BamFileList(wtFiles)
+  if (class(mutFiles) == "character" | class(mutFiles) == "BamFile") mutFiles <- BamFileList(mutFiles)
+
   if (outputFolder == "DEFAULT") outputFolder <- paste0("mmappr_results_", unclass(Sys.time()))
   
-  new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, mutFiles = mutFiles,
+  param <- new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, mutFiles = mutFiles,
       vepParam = vepParam, distancePower = distancePower, minDepth = minDepth,
       homozygoteCutoff = homozygoteCutoff, numCores = numCores, minBaseQuality = minBaseQuality,
       minMapQuality = minMapQuality, loessOptResolution = loessOptResolution,
       loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, outputFolder = outputFolder)
   
+  validity <- .validMmapprParam(param)
+  if (typeof(validity) == "logical") param else validity
 }
 
-CheckMmapprParam <- function(mmapprParam) {
+
+
+.validMmapprParam <- function(param) {
   errors <- character()
   
-  if (input(mmapprParam@vepParam)$format != "vcf") {
-    msg <- "VEP param input format must be 'vcf'"
+  vepInputFormat <- input(param@vepParam)$format
+  if (length(vepInputFormat) == 0) {
+    msg <- "VEPParam requires 'vcf' input format"
     errors <- c(errors, msg)
+  }
+  else if (vepInputFormat != "vcf") {
+    msg <- "VEPParam input format must be 'vcf'"
+    errors <- c(errors, msg)
+  }
+  
+  for (i in 1:length(param@wtFiles)) {
+    file <- param@wtFiles[i]
+    if (length(index(file)) == 0) {
+      file <- .addBamFileIndex(file)
+      if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
+    }
+  }
+  for (i in 1:length(param@mutFiles)) {
+    file <- param@wtFiles[i]
+    if (length(index(file)) == 0) {
+      file <- .addBamFileIndex(file)
+      if (length(index(file)) == 0) warning(paste0(file$path), " in mutFiles has no index file")
+    }
   }
   
   if (length(errors) == 0) TRUE else errors
