@@ -1,13 +1,32 @@
-setGeneric("Mmappr", function(obj) standardGeneric("Mmappr"))
-
-
 setGeneric("refGenome", function(obj) standardGeneric("refGenome"))
+setGeneric("wtFiles", function(obj) standardGeneric("wtFiles"))
+setGeneric("mutFiles", function(obj) standardGeneric("mutFiles"))
+setGeneric("homozygoteCutoff", function(obj) standardGeneric("homozygoteCutoff"))
+setGeneric("vepParam", function(obj) standardGeneric("vepParam"))
+setGeneric("distancePower", function(obj) standardGeneric("distancePower"))
+setGeneric("peakIntervalWidth", function(obj) standardGeneric("peakIntervalWidth"))
+setGeneric("minDepth", function(obj) standardGeneric("minDepth"))
+setGeneric("numCores", function(obj) standardGeneric("numCores"))
+setGeneric("minBaseQuality", function(obj) standardGeneric("minBaseQuality"))
+setGeneric("minMapQuality", function(obj) standardGeneric("minMapQuality"))
+setGeneric("loessOptResolution", function(obj) standardGeneric("loessOptResolution"))
+setGeneric("loessOptCutFactor", function(obj) standardGeneric("loessOptCutFactor"))
+setGeneric("naCutoff", function(obj) standardGeneric("naCutoff"))
+setGeneric("outputFolder", function(obj) standardGeneric("outputFolder"))
 
-setGeneric("refGenome<-", 
-           function(obj, value) standardGeneric("refGenome<-"))
+setGeneric("refGenome<-",function(obj,value) standardGeneric("refGenome<-"))
+setGeneric("wtFiles<-",function(obj,value) standardGeneric("wtFiles<-"))
+setGeneric("mutFiles<-",function(obj,value) standardGeneric("mutFiles<-"))
+setGeneric("homozygoteCutoff<-",function(obj,value) standardGeneric("homozygoteCutoff<-"))
+setGeneric("vepParam<-",function(obj,value) standardGeneric("vepParam<-"))
+setGeneric("distancePower<-",function(obj,value) standardGeneric("distancePower<-"))
+setGeneric("peakIntervalWidth<-",function(obj,value) standardGeneric("peakIntervalWidth<-"))
+setGeneric("minDepth<-",function(obj,value) standardGeneric("minDepth<-"))
+setGeneric("numCores<-",function(obj,value) standardGeneric("numCores<-"))
+setGeneric("minBaseQuality<-",function(obj,value) standardGeneric("minBaseQuality<-"))
+setGeneric("minMapQuality<-",function(obj,value) standardGeneric("minMapQuality<-"))
+setGeneric("loessOptResolution<-",function(obj,value) standardGeneric("loessOptResolution<-"))
+setGeneric("loessOptCutFactor<-",function(obj,value) standardGeneric("loessOptCutFactor<-"))
+setGeneric("naCutoff<-",function(obj,value) standardGeneric("naCutoff<-"))
+setGeneric("outputFolder<-",function(obj,value) standardGeneric("outputFolder<-"))
 
-setGeneric("wtFiles", 
-           function(obj, string=FALSE) standardGeneric("wtFiles"))
-
-setGeneric("wtFiles<-", 
-           function(obj, value) standardGeneric("wtFiles<-"))
