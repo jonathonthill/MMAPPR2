@@ -212,7 +212,7 @@ setMethod("outputFolder<-", "MmapprParam",
           })
 setMethod("minMapQuality<-", "MmapprParam",
           function(obj, value) {
-            obj@outputFolder <- value 
+            obj@minMapQuality <- value 
             obj
           })
 
