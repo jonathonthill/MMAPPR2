@@ -30,3 +30,7 @@ setGeneric("loessOptCutFactor<-",function(obj,value) standardGeneric("loessOptCu
 setGeneric("naCutoff<-",function(obj,value) standardGeneric("naCutoff<-"))
 setGeneric("outputFolder<-",function(obj,value) standardGeneric("outputFolder<-"))
 
+setGeneric("param", function(obj) standardGeneric("param"))
+setGeneric("distance", function(obj) standardGeneric("distance"))
+setGeneric("peaks", function(obj) standardGeneric("peaks"))
+setGeneric("candidates", function(obj) standardGeneric("candidates"))

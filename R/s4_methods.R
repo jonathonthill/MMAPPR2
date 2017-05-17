@@ -133,6 +133,13 @@ setMethod("loessOptCutFactor", "MmapprParam", function(obj) obj@loessOptCutFacto
 setMethod("naCutoff", "MmapprParam", function(obj) obj@naCutoff)
 setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
 
+setMethod("param", "MmapprData", function(obj) obj@param)
+setMethod("distance", "MmapprData", function(obj) obj@distance)
+setMethod("peaks", "MmapprData", function(obj) obj@peaks)
+setMethod("candidates", "MmapprData", function(obj) obj@candidates)
+
+
+
 setMethod("refGenome<-", "MmapprParam",
           function(obj, value) {
             obj@refGenome <- value 
