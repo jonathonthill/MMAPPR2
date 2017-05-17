@@ -77,7 +77,7 @@ GetVariantsForRange <- function(inputRange, param){
   else return(NULL)
 }
 
-RunVEPForPeak <- function(inputVariants, vepParam){
+RunVEPForVariants <- function(inputVariants, vepParam){
   require(ensemblVEP)
   stopifnot(is(vepParam, "VEPParam"))
   

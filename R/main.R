@@ -133,5 +133,12 @@ Mmappr <- function(mmapprParam) {
   return(mmapprData)
 }
 
-
+.addBamFileIndex <- function(bf) {
+  path <- bf$path
+  index <- paste0(path, ".bai")
+  if (file.exists(index)){
+    return(BamFile(path, index = index))
+  }
+  else return(bf)
+}
 
