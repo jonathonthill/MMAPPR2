@@ -107,12 +107,12 @@ Mmappr <- function(mmapprParam) {
         
         mmapprData <- PrePeak(mmapprData)
         mmapprData <- PeakRefinement(mmapprData)
-        if (length(mmapprData@peaks > 0))
+        if (length(mmapprData@peaks) > 0)
             message("Peak regions succesfully identified")
         else message("No peak regions identified")
         
         mmapprData <- GenerateCandidates(mmapprData)
-        if (length(mmapprData@candidates > 0))
+        if (length(mmapprData@candidates) > 0)
             message("Candidate variants generated, analyzed, and ranked")
         
         OutputMmapprData(mmapprData)
