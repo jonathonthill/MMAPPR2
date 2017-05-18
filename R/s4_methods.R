@@ -111,11 +111,111 @@ setMethod("show", "MmapprData", function(object) {
 })
 
 PrintWithMargin<- function(obj, margin = "  ") {
-    lines <- capture.output(obj)
-    lines <- strsplit(lines, split = "\n")
-    lines <- sapply(lines, function(x) paste0(margin, x))
-    cat(lines, sep="\n")
+  lines <- capture.output(obj)
+  lines <- strsplit(lines, split = "\n")
+  lines <- sapply(lines, function(x) paste0(margin, x))
+  cat(lines, sep="\n")
 }
 
-setMethod("plot", signature(x = "MmapprData", y = "missing"), 
-          function(x) PlotGenomeDistance(x, savePdf = FALSE))
+setMethod("refGenome", "MmapprParam", function(obj) obj@refGenome)
+setMethod("wtFiles", "MmapprParam", function(obj) obj@wtFiles)
+setMethod("mutFiles", "MmapprParam", function(obj) obj@mutFiles)
+setMethod("homozygoteCutoff", "MmapprParam", function(obj) obj@homozygoteCutoff)
+setMethod("vepParam", "MmapprParam", function(obj) obj@vepParam)
+setMethod("distancePower", "MmapprParam", function(obj) obj@distancePower)
+setMethod("peakIntervalWidth", "MmapprParam", function(obj) obj@peakIntervalWidth)
+setMethod("minDepth", "MmapprParam", function(obj) obj@minDepth)
+setMethod("numCores", "MmapprParam", function(obj) obj@numCores)
+setMethod("minBaseQuality", "MmapprParam", function(obj) obj@minBaseQuality)
+setMethod("minMapQuality", "MmapprParam", function(obj) obj@minMapQuality)
+setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolution)
+setMethod("loessOptCutFactor", "MmapprParam", function(obj) obj@loessOptCutFactor)
+setMethod("naCutoff", "MmapprParam", function(obj) obj@naCutoff)
+setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
+
+setMethod("param", "MmapprData", function(obj) obj@param)
+setMethod("distance", "MmapprData", function(obj) obj@distance)
+setMethod("peaks", "MmapprData", function(obj) obj@peaks)
+setMethod("candidates", "MmapprData", function(obj) obj@candidates)
+
+
+
+setMethod("refGenome<-", "MmapprParam",
+          function(obj, value) {
+            obj@refGenome <- value 
+            obj
+          })
+setMethod("wtFiles<-", "MmapprParam",
+          function(obj, value) {
+            obj@wtFiles <- value 
+            obj
+          })
+setMethod("mutFiles<-", "MmapprParam",
+          function(obj, value) {
+            obj@mutFiles <- value 
+            obj
+          })
+setMethod("vepParam<-", "MmapprParam",
+          function(obj, value) {
+            obj@vepParam <- value 
+            obj
+          })
+setMethod("homozygoteCutoff<-", "MmapprParam",
+          function(obj, value) {
+            obj@homozygoteCutoff <- value 
+            obj
+          })
+setMethod("distancePower<-", "MmapprParam",
+          function(obj, value) {
+            obj@distancePower <- value 
+            obj
+          })
+setMethod("peakIntervalWidth<-", "MmapprParam",
+          function(obj, value) {
+            obj@peakIntervalWidth <- value 
+            obj
+          })
+setMethod("minDepth<-", "MmapprParam",
+          function(obj, value) {
+            obj@minDepth <- value 
+            obj
+          })
+setMethod("numCores<-", "MmapprParam",
+          function(obj, value) {
+            obj@numCores <- value 
+            obj
+          })
+setMethod("minBaseQuality<-", "MmapprParam",
+          function(obj, value) {
+            obj@minBaseQuality <- value 
+            obj
+          })
+setMethod("loessOptResolution<-", "MmapprParam",
+          function(obj, value) {
+            obj@loessOptResolution <- value 
+            obj
+          })
+setMethod("loessOptCutFactor<-", "MmapprParam",
+          function(obj, value) {
+            obj@loessOptCutFactor <- value 
+            obj
+          })
+setMethod("naCutoff<-", "MmapprParam",
+          function(obj, value) {
+            obj@naCutoff <- value 
+            obj
+          })
+setMethod("outputFolder<-", "MmapprParam",
+          function(obj, value) {
+            obj@outputFolder <- value 
+            obj
+          })
+setMethod("minMapQuality<-", "MmapprParam",
+          function(obj, value) {
+            obj@minMapQuality <- value 
+            obj
+          })
+
+
+
+
