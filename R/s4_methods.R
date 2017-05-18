@@ -215,7 +215,3 @@ setMethod("minMapQuality<-", "MmapprParam",
             obj@minMapQuality <- value 
             obj
           })
-
-
-
-
