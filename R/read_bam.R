@@ -80,7 +80,8 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
         apParam <- ApplyPileupsParam(which = chrRange, what="seq", 
                                      minBaseQuality = param@minBaseQuality,
                                      minMapQuality = param@minMapQuality,
-                                     minDepth = param@minDepth)
+                                     minDepth = param@minDepth,
+                                     flag = scanBamFlag(isSecondaryAlignment=F))
         
         applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = apParam)
         
@@ -121,7 +122,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
             filter_mat <- new_mat
             
             #apply filter to dataframe
-            chrDf[,3:ncol(chrDf)][filter_mat] <- NA
+            chrDf[, 3:ncol(chrDf)][filter_mat] <- NA
             
             if (showDebug) message("after depth_filter size is ", nrow(chrDf))
             return(chrDf)      

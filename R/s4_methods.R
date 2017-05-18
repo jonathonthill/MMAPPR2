@@ -16,7 +16,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
                  loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, outputFolder = outputFolder)
     
     validity <- .validMmapprParam(param)
-    if (typeof(validity) == "logical") param else validity
+    if (typeof(validity) == "logical") param else stop(validity)
 }
 
 
@@ -35,7 +35,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
     }
     
     for (i in 1:length(param@wtFiles)) {
-        file <- param@wtFiles[i]
+        file <- param@wtFiles[[i]]
         if (length(index(file)) == 0) {
             file <- .addBamFileIndex(file)
             if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
