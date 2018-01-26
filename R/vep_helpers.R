@@ -1,21 +1,21 @@
 # take peak region dataframe and run VEP for each region
 # peak region df has cols chr, starts, and stops
 
-GenerateCandidates <- function(mmapprData) {
+generateCandidates <- function(mmapprData) {
     
     #get GRanges representation of peak
-    mmapprData@candidates <- lapply(mmapprData@peaks, GetPeakRange)
+    mmapprData@candidates <- lapply(mmapprData@peaks, .getPeakRange)
     
     #call variants in peak
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = GetVariantsForRange, 
+    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = .getVariantsForRange, 
                                     param = mmapprData@param)
     
     #run VEP
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = RunVEPForVariants,
+    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = .runVEPForVariants,
                                     vepParam = mmapprData@param@vepParam)
     
     #filter out low impact variants
-    mmapprData@candidates <- lapply(mmapprData@candidates, FilterVariants)
+    mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
     
     #density score and order variants
     mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
@@ -25,11 +25,14 @@ GenerateCandidates <- function(mmapprData) {
         return(variants)
     })
     
+    #transfer names
+    names(mmapprData@candidates) <- names(mmapprData@peaks)
+    
     
     return(mmapprData)
 }
 
-GetPeakRange <- function(peakList) {
+.getPeakRange <- function(peakList) {
     ir <- IRanges(start = as.numeric(peakList$start),
                   end = as.numeric(peakList$end),
                   names = peakList$seqname)
@@ -39,7 +42,7 @@ GetPeakRange <- function(peakList) {
     return(gr)
 }
 
-GetVariantsForRange <- function(inputRange, param){
+.getVariantsForRange <- function(inputRange, param){
     require(tidyr)
     require(dplyr)
     require(Rsamtools)
@@ -77,7 +80,7 @@ GetVariantsForRange <- function(inputRange, param){
     else return(NULL)
 }
 
-RunVEPForVariants <- function(inputVariants, vepParam){
+.runVEPForVariants <- function(inputVariants, vepParam){
     require(ensemblVEP)
     stopifnot(is(vepParam, "VEPParam"))
     
@@ -96,13 +99,13 @@ RunVEPForVariants <- function(inputVariants, vepParam){
     return(resultGRanges)
 }
 
-FilterVariants <- function(candidate_granges) {
+.filterVariants <- function(candidate_granges) {
     filter <- elementMetadata(candidate_granges)$IMPACT != 'LOW'
     filter[is.na(filter)] <- TRUE
     return(candidate_granges[filter])
 }
 
-DensityScoreAndOrderVariants <- function(candidate_granges, density_function) {
+.densityScoreAndOrderVariants <- function(candidate_granges, density_function) {
     #density calculation
     positions <- start(candidate_granges) + ((width(candidate_granges) - 1) / 2)
     density_col <- sapply(positions, density_function)

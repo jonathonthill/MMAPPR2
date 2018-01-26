@@ -1,10 +1,14 @@
+.prepareOutputFolder <- function(mmapprData) {
+    
+    if (!dir.exists(mmapprData@param@outputFolder)) dir.create(mmapprData@param@outputFolder)
+}
+
 OutputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     if (class(mmapprData) != "MmapprData"){
         stop("Input object not of 'MmapprData' type")
     }
     
-    if (!dir.exists(mmapprData@param@outputFolder)) dir.create(mmapprData@param@outputFolder)
-    
+    .prepareOutputFolder(mmapprData)
     PlotGenomeDistance(mmapprData)
     PlotPeaks(mmapprData)
     if (plotAicc) PlotAicc(mmapprData@distance)

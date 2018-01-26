@@ -1,4 +1,4 @@
-GetFileReadChrList <- function(mmapprData) {suppressWarnings({
+.getFileReadChrList <- function(mmapprData) {suppressWarnings({
     wtFiles <- mmapprData@param@wtFiles
     mutFiles <- mmapprData@param@mutFiles
     
@@ -16,16 +16,16 @@ GetFileReadChrList <- function(mmapprData) {suppressWarnings({
     return(chrList)
 })}
 
-ReadInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
+readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
     require(doParallel)
     require(GenomeInfoDb)
     require(Rsamtools)
     
     message("Reading in files")
     
-    chrList <- suppressWarnings(GetFileReadChrList(mmapprData))
+    chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
-    mmapprData@distance <- RunFunctionInParallel(chrList, functionToRun = ReadFilesForChr, 
+    mmapprData@distance <- .runFunctionInParallel(chrList, functionToRun = .readFilesForChr, 
                                                  packages = c('tidyr', 'dplyr', 'Rsamtools'),
                                                  secondInput = showDebug,
                                                  numCores = mmapprData@param@numCores,
@@ -35,7 +35,7 @@ ReadInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
 }
 
 
-ReadFilesForChr <- function(inputList, showDebug = FALSE){
+.readFilesForChr <- function(inputList, showDebug = FALSE){
     startTime <- proc.time()
     library(dplyr)
     library(tidyr)
@@ -81,6 +81,7 @@ ReadFilesForChr <- function(inputList, showDebug = FALSE){
                                      minBaseQuality = param@minBaseQuality,
                                      minMapQuality = param@minMapQuality,
                                      minDepth = param@minDepth,
+                                     maxDepth = 8000L,
                                      flag = scanBamFlag(isSecondaryAlignment=F))
         
         applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = apParam)

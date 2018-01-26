@@ -19,7 +19,7 @@ mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
 #automatic core number generation (only on Linux)
 #mem_req is memory required per base for distance list item, as returned in ReadInFiles
-CoreCalc <- function(mem_req = 33.3){
+.coreCalc <- function(mem_req = 33.3){
     tryCatch({
         # #this gets free RAM (on Linux)
         # free_ram <- system("awk '/MemFree/ {print $2}' /proc/meminfo", intern = TRUE) #gets mem info in MB
@@ -39,7 +39,7 @@ CoreCalc <- function(mem_req = 33.3){
     )
 }
 
-RepList <- function(object, times) {
+.repList <- function(object, times) {
     stopifnot(times >= 0)
     result <- list()
     if (times == 0) return(result)
@@ -49,7 +49,7 @@ RepList <- function(object, times) {
     return(result)
 }
 
-RunFunctionInParallel <- function(inputList, functionToRun, numCores, silent = FALSE,
+.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent = FALSE,
                                   packages = c(), secondInput = NULL, thirdInput = NULL) {
     if (length(inputList) < numCores) numCores <- length(inputList)
     
@@ -65,14 +65,14 @@ RunFunctionInParallel <- function(inputList, functionToRun, numCores, silent = F
         message(sprintf("Beginning parallel calculation with %i core(s)", numCores))
         if (!is.null(thirdInput)) {
             numParams <- 3
-            thirdInput <- RepList(thirdInput, length(inputList))
-            secondInput <- RepList(secondInput, length(inputList))
+            thirdInput <- .repList(thirdInput, length(inputList))
+            secondInput <- .repList(secondInput, length(inputList))
             resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
                                   .packages = packages) %dopar% functionToRun(a, b, c)
         }
         else if (!is.null(secondInput)) {
             numParams <- 2
-            secondInput <- RepList(secondInput, length(inputList))
+            secondInput <- .repList(secondInput, length(inputList))
             resultList <- foreach(a = inputList, b = secondInput,
                                   .packages = packages) %dopar% functionToRun(a, b)
         }
@@ -93,29 +93,42 @@ RunFunctionInParallel <- function(inputList, functionToRun, numCores, silent = F
     return(resultList)
 }
 
-Mmappr <- function(mmapprParam) {
+mmappr <- function(mmapprParam) {
     startTime <- proc.time()
     
     mmapprData = new("MmapprData", param = mmapprParam)
     
+    if(dir.exists(mmapprParam@outputFolder)){
+        cat(sprintf("Output folder %s has already been created", mmapprParam@outputFolder))
+        answer <- character()
+        while(answer != "y" & answer != "n"){
+            answer <- readline("Would you like to overwrite previously created results folder (y\n)?  ")
+        }
+        if (answer == "n") {
+            newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
+            if (is.na(newOutputFolder)) mmapprParam@outputFolder <- "DEFAULT"
+            else mmapprParam@outputFolder <- newOutputFolder
+        }
+    }
+    
     mmapprData <- tryCatch({
-        mmapprData <- ReadInFiles(mmapprData)
+        mmapprData <- readInFiles(mmapprData)
         message("File reading successfully completed and Euclidian distance data generated")
         
-        mmapprData <- LoessFit(mmapprData)
+        mmapprData <- loessFit(mmapprData)
         message("Loess regression successfully completed")
         
-        mmapprData <- PrePeak(mmapprData)
-        mmapprData <- PeakRefinement(mmapprData)
+        mmapprData <- prePeak(mmapprData)
+        mmapprData <- peakRefinement(mmapprData)
         if (length(mmapprData@peaks) > 0)
             message("Peak regions succesfully identified")
         else message("No peak regions identified")
         
-        mmapprData <- GenerateCandidates(mmapprData)
+        mmapprData <- generateCandidates(mmapprData)
         if (length(mmapprData@candidates) > 0)
             message("Candidate variants generated, analyzed, and ranked")
         
-        OutputMmapprData(mmapprData)
+        outputMmapprData(mmapprData)
         message("Output PDF files generated")
         
         return(mmapprData)
@@ -132,6 +145,7 @@ Mmappr <- function(mmapprParam) {
     
     message("Mmappr runtime:")
     print(proc.time() - startTime)
+    .prepareOutputFolder(mmapprData)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
     return(mmapprData)
 }
@@ -139,9 +153,9 @@ Mmappr <- function(mmapprParam) {
 .addBamFileIndex <- function(bf) {
     path <- bf$path
     index <- paste0(path, ".bai")
-    if (file.exists(index)){
-        return(BamFile(path, index = index))
+    if (!file.exists(index)){
+        indexBam(bf)
     }
-    else return(bf)
+    return(BamFile(path, index = index))
 }
 

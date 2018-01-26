@@ -1,6 +1,6 @@
 library(dplyr)
 
-PeakRefinement <- function(mmapprData){
+peakRefinement <- function(mmapprData){
     options(warn=-1)
     
     for(chr in names(mmapprData@peaks)){
@@ -52,7 +52,7 @@ PeakRefinement <- function(mmapprData){
 }
 
 
-PrePeak <- function(mmapprData) {
+prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     
     #need to calculate standard dev of all chromosomes for cutoff

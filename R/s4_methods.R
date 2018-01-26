@@ -1,6 +1,6 @@
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
                         distancePower = 4, peakIntervalWidth = 0.95, minDepth = 10,
-                        homozygoteCutoff = 0.8, numCores = 4, minBaseQuality = 20,
+                        homozygoteCutoff = 0.95, numCores = 4, minBaseQuality = 20,
                         minMapQuality = 30, loessOptResolution = 0.001,
                         loessOptCutFactor = 0.1, naCutoff = 0, outputFolder = "DEFAULT") {
     
@@ -25,13 +25,9 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
     errors <- character()
     
     vepInputFormat <- input(param@vepParam)$format
-    if (length(vepInputFormat) == 0) {
-        msg <- "VEPParam requires 'vcf' input format"
-        errors <- c(errors, msg)
-    }
-    else if (vepInputFormat != "vcf") {
-        msg <- "VEPParam input format must be 'vcf'"
-        errors <- c(errors, msg)
+    if (length(vepInputFormat) == 0 | vepInputFormat != "vcf") {
+        warning("Overriding VEPParam input format: must be 'vcf'")
+        input(param@vepParam)$format <- "vcf"
     }
     
     for (i in 1:length(param@wtFiles)) {
@@ -42,7 +38,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
         }
     }
     for (i in 1:length(param@mutFiles)) {
-        file <- param@wtFiles[i]
+        file <- param@wtFiles[[i]]
         if (length(index(file)) == 0) {
             file <- .addBamFileIndex(file)
             if (length(index(file)) == 0) warning(paste0(file$path), " in mutFiles has no index file")
@@ -56,13 +52,13 @@ setMethod("show", "MmapprParam", function(object) {
     margin <- "   "
     cat("MmapprParam object with following values:\n")
     cat("refGenome:\n")
-    PrintWithMargin(object@refGenome, margin)
+    .customPrint(object@refGenome, margin)
     cat("wtFiles:\n", sep="")
-    PrintWithMargin(object@wtFiles, margin)
+    .customPrint(object@wtFiles, margin)
     cat("mutFiles:\n", sep="")
-    PrintWithMargin(object@mutFiles, margin)
+    .customPrint(object@mutFiles, margin)
     cat("vepParam:\n", sep="")
-    PrintWithMargin(object@vepParam, margin)
+    .customPrint(object@vepParam, margin)
     
     cat("Other parameters:\n")
     slotNames <- names(
@@ -76,7 +72,7 @@ setMethod("show", "MmapprData", function(object) {
     margin <- "  "
     cat("MmapprData object with following slots:\n")
     cat("param:\n")
-    PrintWithMargin(object@param, margin)
+    .customPrint(object@param, margin)
     
     cat("distance:\n")
     classes <- sapply(object@distance, class)
@@ -107,14 +103,15 @@ setMethod("show", "MmapprData", function(object) {
     }
     
     cat("candidates:\n")
-    PrintWithMargin(object@candidates, margin)
+    for (i in 1:length(object@candidates)) .customPrint(object@candidates[i], margin, lineMax = 5)
 })
 
-PrintWithMargin<- function(obj, margin = "  ") {
+.customPrint <- function(obj, margin = "  ", lineMax = getOption("max.print")) {
   lines <- capture.output(obj)
   lines <- strsplit(lines, split = "\n")
   lines <- sapply(lines, function(x) paste0(margin, x))
-  cat(lines, sep="\n")
+  if (lineMax > length(lines)) lineMax = length(lines)
+  cat(lines[1:lineMax], sep="\n")
 }
 
 setMethod("refGenome", "MmapprParam", function(obj) obj@refGenome)
