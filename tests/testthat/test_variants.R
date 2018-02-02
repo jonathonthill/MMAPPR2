@@ -4,8 +4,7 @@ library(VariantTools)
 library(rtracklayer)
 
 refGenFasta <- FastaFile(normalizePath("./test_data/ref_genome_fastas/chr5.fa"))
-#TODO get right ref genome for tests
-testGenome <- GmapGenome(refGenFasta, name = "dan_rerio_zv9_chr5", create = TRUE)
+invisible(capture.output(testGenome <- GmapGenome(refGenFasta, name = "dan_rerio_zv9_chr5", create = TRUE)))
 
 mmapprData <- readRDS("test_data/intermediate_MDs/post_peak.RDS")
 mmapprData@param@vepParam <- VEPParam(

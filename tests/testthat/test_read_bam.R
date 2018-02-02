@@ -47,3 +47,5 @@ test_that("whole genome is read correctly", {
     
     # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })
+
+# TODO: test_that("replicates are handled correctly")

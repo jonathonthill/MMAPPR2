@@ -30,7 +30,7 @@ mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
         # message("num_cores = ", num_cores)
         # return(num_cores)
         
-        return(detectCores() - 2)
+        return(if (detectCores() > 2) detectCores() - 2 else 1)
     },
     warning = function(w) {
         message('Warning: arbitrary number of clusters used (are you not on Linux?)')
