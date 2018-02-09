@@ -1,4 +1,4 @@
-library("testthat")
+context("Peak functions")
 
 if (F){
     md <- readRDS("test_data/intermediate_MDs/post_loess.RDS")

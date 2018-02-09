@@ -2,47 +2,44 @@
     wtFiles <- mmapprData@param@wtFiles
     mutFiles <- mmapprData@param@mutFiles
     
-    chrRanges <- as(seqinfo(BamFileList(c(wtFiles, mutFiles))), "GRanges")
+    chrRanges <- as(GenomeInfoDb::seqinfo(Rsamtools::BamFileList(c(wtFiles, mutFiles))), "GRanges")
     #cut to standard chromosomes
     chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges)
     
     chrList <- list()
     # store range for each chromosome as list item
-    for (i in suppressWarnings(orderSeqlevels(names(chrRanges)))) {
-        chrList[[toString(seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
+    for (i in suppressWarnings(GenomeInfoDb::orderSeqlevels(names(chrRanges)))) {
+        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
                                                             param = mmapprData@param)
     }
     
     return(chrList)
 })}
 
-readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
-    require(doParallel)
-    require(GenomeInfoDb)
-    require(Rsamtools)
-    
+readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
     message("Reading in files")
     
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
-    mmapprData@distance <- .runFunctionInParallel(chrList, functionToRun = .readFilesForChr, 
-                                                 packages = c('tidyr', 'dplyr', 'Rsamtools'),
-                                                 secondInput = showDebug,
-                                                 numCores = mmapprData@param@numCores,
-                                                 silent = silent)
+    if (numCores(param(mmapprData)) > 1)
+        mmapprData@distance <- .runFunctionInParallel(chrList, functionToRun=.readFilesForChr, 
+                                                 packages=c('tidyr', 'dplyr', 'Rsamtools'),
+                                                 secondInput=showDebug,
+                                                 numCores=numCores(param(mmapprData)),
+                                                 silent=silent)
+    else
+        mmapprData@distance <- lapply(chrList, function(i) .readFilesForChr(i, showDebug=showDebug))
     
     return(mmapprData)
 }
 
 
-.readFilesForChr <- function(inputList, showDebug = FALSE){
+.readFilesForChr <- function(inputList, showDebug=FALSE){
     startTime <- proc.time()
-    library(dplyr)
-    library(tidyr)
-    library(Rsamtools)
     tryCatch({
+        if showDebug message("in .readFilesForChr")
         #parameter check
-        stopifnot(length(seqnames(inputList$range)) == 1)
+        stopifnot(length(GenomeInfoDb::seqnames(inputList$range)) == 1)
         stopifnot(class(inputList$param) == "MmapprParam")
         
         chrRange <- inputList$range
@@ -54,8 +51,8 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         #DEBUG
         # width(chrRange) <- 10000
         
-        pf <- PileupFiles(wtFiles)
-        pf_mut <- PileupFiles(mutFiles)
+        pf <- Rsamtools::PileupFiles(wtFiles)
+        pf_mut <- Rsamtools::PileupFiles(mutFiles)
         
         #Function for use in applyPileups: gets list for each pileup position
         CalcInfo <-
@@ -63,12 +60,14 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
             {
                 ## x == information for each file
                 nuc <- c('A', 'C', 'G', 'T')
-                #this apply goes over each column of 'seq' array, which is each file
+                #this apply goes over each column of 'seq' array, which is 
+                # each file
                 #that means 'y' is a matrix of nucleotide by position
                 info <- apply(x[["seq"]], 2, function(y) {
                     y <- y[c("A", "C", "G", "T"),,drop=FALSE]
                     cvg <- colSums(y)
-                    #y <- y / cvg[col(y)] # normalizes reads: don't do that yet, since we'll combine files later
+                    #y <- y / cvg[col(y)] # normalizes reads: don't do that yet, 
+                    # since we'll combine files later
                     #add coverage row that stores read depth
                     y <- rbind(y, cvg)
                     return(y)
@@ -77,17 +76,19 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
                 list(pos=x[["pos"]], info=info) 
             }
         
-        apParam <- ApplyPileupsParam(which = chrRange, what="seq", 
+        apParam <- Rsamtools::ApplyPileupsParam(which = chrRange, what="seq", 
                                      minBaseQuality = param@minBaseQuality,
                                      minMapQuality = param@minMapQuality,
                                      minDepth = param@minDepth,
                                      maxDepth = 8000L,
                                      flag = scanBamFlag(isSecondaryAlignment=F))
         
-        applyPileupWT <- applyPileups(pf, FUN = CalcInfo, param = apParam)
+        applyPileupWT <- Rsamtools::applyPileups(pf, FUN = CalcInfo, 
+                                                 param = apParam)
         
         
-        #make_df_for_chromsome: makes a function that turns each info list (from pileup) into dataframe
+        #make_df_for_chromsome: makes a function that turns each info list 
+        # (from pileup) into dataframe
         #So it taks a list and returns a dataframe
         make_df_for_chromosome <-
             function(infoList){
@@ -112,7 +113,8 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
             #gets only cvg rows (every 5th), then only info cols
             #returns true for undercovered rows
             #can only subset 2 dimensions with a matrix, not a df. Don't know why.
-            filter_mat <- as.matrix(chrDf[seq(5, to=nrow(chrDf), by=5), 3:ncol(chrDf)] < param@minDepth)
+            filter_mat <- as.matrix(chrDf[seq(5, to=nrow(chrDf), by=5), 
+                                          3:ncol(chrDf)] < param@minDepth)
             
             #expand filter_mat to cover all 5 rows for each position
             new_mat <- c()
@@ -131,11 +133,14 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         
         
         ###Filter for NAs
-        #function we can use in lapply on results list, takes dataframe, returns it after filtering for nas
-        #format for df (input and output) should be pos (5 for each), nuc (ACGTcvg), file1, file2...
+        #function we can use in lapply on results list, takes dataframe, 
+        # returns it after filtering for NAs
+        #format for df (input and output) should be pos (5 for each), 
+        # nuc (ACGTcvg), file1, file2...
         na_filter <- function(chrDf){
             #if only one file and na_cutoff isn't 0
-            if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 & param@naCutoff != 0){
+            if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 
+                 & param@naCutoff != 0){
                 warning('naCutoff for a single-file pool must be 0. Continuing with cutoff of 0.')
                 param@naCutoff <- 0
             }
@@ -177,14 +182,14 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         
         #apply functions to wild type pool
         #CAUTION: functions must be applied in this order to work right
-        message(paste0(toString(seqnames(chrRange)), ": Reading wild-type file(s)"))
+        message(paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": Reading wild-type file(s)"))
         tryCatch(
             wtCounts <- applyPileupWT[[1]] %>%
                 make_df_for_chromosome() %>%
                 depth_filter %>%
                 na_filter() %>%
                 avg_files() %>%
-                spread(key = nucleotide, value = avg_count) %>%
+                tidyr::spread(key = nucleotide, value = avg_count) %>%
                 #homoz filter only on wt pool
                 homozygote_filter(),
             
@@ -197,7 +202,7 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         rm(applyPileupWT)
         
         #apply functions to mutant pool
-        message(paste0(toString(seqnames(chrRange)), ": Reading mutant file(s)"))
+        message(paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": Reading mutant file(s)"))
         applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
         tryCatch(
             mutCounts <- applyPileupMut[[1]] %>%
@@ -205,7 +210,7 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
                 depth_filter %>%
                 na_filter() %>%
                 avg_files() %>%
-                spread(key = nucleotide, value = avg_count),
+                tidyr::spread(key = nucleotide, value = avg_count),
             
             error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
@@ -213,12 +218,14 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
             }
         )
         
-        colnames(mutCounts)[2:6] <- c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
+        colnames(mutCounts)[2:6] <- 
+            c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
         rm(applyPileupMut)
         
         #inner_join already removes rows without a match
         distanceDf <- inner_join(wtCounts, mutCounts, by=c('pos'))
-        if (length(distanceDf) == 0) stop('Empty dataframe after joining WT and Mut count tables')
+        if (length(distanceDf) == 0) 
+            stop('Empty dataframe after joining WT and Mut count tables')
         
         #calculate Euclidian distance
         distanceDf$A.wt <- (distanceDf$A.wt - distanceDf$A.mut)^2
@@ -226,7 +233,7 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         distanceDf$G.wt <- (distanceDf$G.wt - distanceDf$G.mut)^2
         distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
         
-        distanceDf <- transmute(distanceDf, 
+        distanceDf <- dplyr::transmute(distanceDf, 
                                 pos = pos,
                                 distance = (A.wt + C.wt + G.wt + T.wt)^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
@@ -236,17 +243,18 @@ readInFiles <- function(mmapprData, showDebug = FALSE, silent = FALSE) {
         
         resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts, 
                            distanceDf = distanceDf)
-        #debug: option to return pileup (memory / base pairs / reps) in order to predict memory
+        #debug: option to return pileup (memory / base pairs / reps) 
+        # in order to predict memory
         readMemReqPerBP <- object.size(resultList) / nrow(wtCounts)
         resultList$readMemReqPerBP <- readMemReqPerBP  
         
-        resultList$seqname <- as.character(seqnames(chrRange))
+        resultList$seqname <- as.character(GenomeInfoDb::seqnames(chrRange))
         
         return(resultList)
     },
     
     error = function(e) {
-        msg <- paste0(toString(seqnames(chrRange)), ": ", e$message)
+        msg <- paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": ", e$message)
         message(msg)
         return(msg)
     }

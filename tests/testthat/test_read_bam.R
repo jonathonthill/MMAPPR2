@@ -7,8 +7,9 @@ DebugSkip <- function() {
 
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam", 
                      "./test_data/bam_files/zy14_mut_cut_filt.bam",
-                     vepParam = VEPParam(input=c(format="vcf")))
+                     vepParam = ensemblVEP::VEPParam(input=c(format="vcf")))
 mmapprData <- new("MmapprData", param = param)
+
 
 test_that("correct ranges are being read", {
     DebugSkip()
@@ -21,6 +22,7 @@ test_that("correct ranges are being read", {
     expect_s4_class(chrList$chr5$range, "GRanges")
     expect_s4_class(chrList$chr5$param, "MmapprParam")
 })
+
 
 test_that("single chromosome is read correctly", {
     DebugSkip()
@@ -36,9 +38,12 @@ test_that("single chromosome is read correctly", {
     expect_equal_to_reference(result$distanceDf, "test_data/reference/read_bam_distance.RDS")
 })
 
+
 test_that("whole genome is read correctly", {
     DebugSkip()
-    mmapprData <- readInFiles(mmapprData, silent = TRUE)
+    cat("before\n")
+    mmapprData <- readInFiles(mmapprData, showDebug=T, silent = F)
+    cat("after\n")
     expect_equal(length(mmapprData@distance), 26)
     
     classes <- lapply(mmapprData@distance, class)
@@ -47,5 +52,3 @@ test_that("whole genome is read correctly", {
     
     # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
 })
-
-# TODO: test_that("replicates are handled correctly")

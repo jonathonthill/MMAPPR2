@@ -1,6 +1,3 @@
-library(ensemblVEP)
-library(gmapR)
-
 setClass("MmapprParam",
          representation(
              refGenome = "GmapGenome",
@@ -20,24 +17,6 @@ setClass("MmapprParam",
              loessOptCutFactor = "numeric",
              naCutoff = "numeric", # the most NAs we'll accept, that is, the number of files without data for that position
              outputFolder = "character"
-         ),
-         prototype(
-             vepParam = VEPParam(scriptPath =
-                                     "ensembl-tools-release-86/scripts/variant_effect_predictor/variant_effect_predictor.pl",
-                                 input = c(species = 'danio_rerio_merged', format = "vcf"),
-                                 cache = c(cache = TRUE, offline = TRUE),
-                                 database = c(database = FALSE)),
-             distancePower = 4,
-             peakIntervalWidth = 0.95,
-             minDepth = 10,
-             homozygoteCutoff = 0.8, 
-             numCores = 4,
-             minBaseQuality = 20,
-             minMapQuality = 30,
-             loessOptResolution = 0.01,
-             loessOptCutFactor = 0.1,
-             naCutoff = 0,
-             outputFolder = "mmappr_result"
          )
 )
 

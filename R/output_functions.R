@@ -1,28 +1,47 @@
 .prepareOutputFolder <- function(mmapprData) {
+    if (outputFolder(param(mmapprData)) == "DEFAULT") 
+        outputFolder(param(mmapprData)) <- 
+            paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
     
-    if (!dir.exists(mmapprData@param@outputFolder)) dir.create(mmapprData@param@outputFolder)
+    
+    if(dir.exists(outputFolder(param(mmapprData)))){
+        cat(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
+        answer <- " "
+        while(answer != "y" & answer != "n"){
+            answer <- readline("Would you like to overwrite previously created results folder (y/n)?  ")
+        }
+        if (answer == "n") {
+            newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
+            if (is.na(newOutputFolder)) outputFolder(param(mmapprData)) <- "DEFAULT"
+            else outputFolder(param(mmapprData)) <- newOutputFolder
+        }
+    }
+    
+    if (!dir.exists(outputFolder(param(mmapprData)))) 
+        dir.create(outputFolder(param(mmapprData)))
 }
 
-OutputMmapprData <- function(mmapprData, plotAicc = FALSE) {
+#TODO explore ggplot2 and lattice
+outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     if (class(mmapprData) != "MmapprData"){
         stop("Input object not of 'MmapprData' type")
     }
     
     .prepareOutputFolder(mmapprData)
-    PlotGenomeDistance(mmapprData)
-    PlotPeaks(mmapprData)
-    if (plotAicc) PlotAicc(mmapprData@distance)
+    .plotGenomeDistance(mmapprData)
+    .plotPeaks(mmapprData)
+    if (plotAicc) .plotAicc(distance(mmapprData))
     
-    WriteTextFiles(mmapprData@candidates)  
+    .writeCandidateFiles(mmapprData@candidates)  
 }
 
-PlotGenomeDistance <- function(mmapprData, savePdf = TRUE) {
+.plotGenomeDistance <- function(mmapprData, savePdf = TRUE) {
     #generate one big dataframe for plots, along with break and label points
     tailPos <- 0
     plotDf <- NULL
     breaks <- tailPos
     labelpos <- NULL
-    for (i in orderSeqlevels(names(mmapprData@distance))) {
+    for (i in GenomeInfoDb::orderSeqlevels(names(mmapprData@distance))) {
         if (class(mmapprData@distance[[i]]) != "list")
             next
         else if (!("loess" %in% names(mmapprData@distance[[i]])))
@@ -60,7 +79,7 @@ PlotGenomeDistance <- function(mmapprData, savePdf = TRUE) {
     if (savePdf) dev.off()
 }
 
-PlotPeaks <- function(mmapprData) {
+.plotPeaks <- function(mmapprData) {
     pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
     par(mfrow=c(2,1))
     
@@ -94,7 +113,7 @@ PlotPeaks <- function(mmapprData) {
     dev.off()
 }
 
-PlotAicc <- function(mmapprDataDistance) {
+.plotAicc <- function(mmapprDataDistance) {
     
 }
 
@@ -106,7 +125,7 @@ WriteCandidateVCFs <- function(mmapprData) {
 }
 
 
-WriteTextFiles <- function(variantsList, outputFolder){
+.writeCandidateFiles <- function(variantsList, outputFolder){
     
     for(chr in names(variantsList)){
         output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 

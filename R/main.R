@@ -1,7 +1,3 @@
-require(doParallel)
-require(foreach)
-require(Rsamtools)
-
 ## load bam file using the which argument to ScanBamParam
 # bamfile3 <- "STAR/11647X5_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 # bamfile2 <- "STAR/11647X3_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
@@ -10,11 +6,11 @@ require(Rsamtools)
 # bamfilem2 <- "STAR/11647X4_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 # bamfilem3 <- "STAR/11647X6_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 
-bamfile1 <- BamFile("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
-bamfilem1 <- BamFile("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
+bamfile1 <- Rsamtools::BamFile("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
+bamfilem1 <- Rsamtools::BamFile("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
 
-wt_list <- BamFileList(bamfile1)#, bamfile2, bamfile3))
-mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
+wt_list <- Rsamtools::BamFileList(bamfile1)#, bamfile2, bamfile3))
+mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
 
 #automatic core number generation (only on Linux)
@@ -49,16 +45,17 @@ mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     return(result)
 }
 
-.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent = FALSE,
-                                  packages = c(), secondInput = NULL, thirdInput = NULL) {
+.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent=FALSE,
+                                  packages=c(), secondInput=NULL, thirdInput=NULL) {
+    require(doParallel, quietly=TRUE)
     if (length(inputList) < numCores) numCores <- length(inputList)
     
     #cluster generation
     outfile <- if (silent) "/dev/null" else ""
-    cl <- makeCluster(numCores, type = "SOCK", outfile = outfile)
+    cl <- snow::makeSOCKcluster(count=numCores, outfile=outfile)
     
     # register the cluster
-    registerDoParallel(cl)
+    doParallel::registerDoParallel(cl)
     
     tryCatch({
         # find number of parameters and perform calculation
@@ -86,33 +83,20 @@ mut_list <- BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
         
     }, finally = {
         stopCluster(cl)
-        registerDoSEQ()
+        foreach::registerDoSEQ()
         invisible(gc)
     })
     
     return(resultList)
 }
 
-mmappr <- function(mmapprParam) {
+mmappr <- function(mmapprParam, showDebug=FALSE) {
     startTime <- proc.time()
     
-    mmapprData = new("MmapprData", param = mmapprParam)
-    
-    if(dir.exists(mmapprParam@outputFolder)){
-        cat(sprintf("Output folder %s has already been created", mmapprParam@outputFolder))
-        answer <- character()
-        while(answer != "y" & answer != "n"){
-            answer <- readline("Would you like to overwrite previously created results folder (y\n)?  ")
-        }
-        if (answer == "n") {
-            newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
-            if (is.na(newOutputFolder)) mmapprParam@outputFolder <- "DEFAULT"
-            else mmapprParam@outputFolder <- newOutputFolder
-        }
-    }
+    mmapprData = new("MmapprData", param=mmapprParam)
     
     mmapprData <- tryCatch({
-        mmapprData <- readInFiles(mmapprData)
+        mmapprData <- readInFiles(mmapprData, showDebug=showDebug)
         message("File reading successfully completed and Euclidian distance data generated")
         
         mmapprData <- loessFit(mmapprData)
@@ -122,7 +106,9 @@ mmappr <- function(mmapprParam) {
         mmapprData <- peakRefinement(mmapprData)
         if (length(mmapprData@peaks) > 0)
             message("Peak regions succesfully identified")
-        else message("No peak regions identified")
+        else {
+            error("No peak regions identified")
+        }
         
         mmapprData <- generateCandidates(mmapprData)
         if (length(mmapprData@candidates) > 0)
@@ -137,7 +123,9 @@ mmappr <- function(mmapprParam) {
         traceback()
         message(e$message)
         message("MmapprData object is returned up until the failing step")
-        message("You can also recover the object after the latest successful step from 'mmappr_data.RDS' in the output folder")
+        message(paste0("You can also recover the object after the latest successful step from 'mmappr_data.RDS' in the '", 
+                outputFolder(param(mmapprData)),
+                "' output folder"))
         return(mmapprData)
     })
     
@@ -156,6 +144,6 @@ mmappr <- function(mmapprParam) {
     if (!file.exists(index)){
         indexBam(bf)
     }
-    return(BamFile(path, index = index))
+    return(Rsamtools::BamFile(path, index = index))
 }
 

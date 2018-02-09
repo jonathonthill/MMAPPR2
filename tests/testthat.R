@@ -1,4 +1,4 @@
-library(testthat)
-library(MMAPPR2)
+# suppressMessages(library(testthat))
+# suppressMessages(library(MMAPPR2))
 
 test_check("MMAPPR2")

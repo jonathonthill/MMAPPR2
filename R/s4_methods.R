@@ -1,19 +1,22 @@
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
-                        distancePower = 4, peakIntervalWidth = 0.95, minDepth = 10,
-                        homozygoteCutoff = 0.95, numCores = 4, minBaseQuality = 20,
-                        minMapQuality = 30, loessOptResolution = 0.001,
-                        loessOptCutFactor = 0.1, naCutoff = 0, outputFolder = "DEFAULT") {
+                        distancePower=4, peakIntervalWidth=0.95, minDepth=10,
+                        homozygoteCutoff=0.95, numCores=4, minBaseQuality=20,
+                        minMapQuality=30, loessOptResolution=0.001,
+                        loessOptCutFactor=0.1, naCutoff=0, outputFolder="DEFAULT",
+                        showDebug=FALSE) {
     
-    if (class(wtFiles) == "character" | class(wtFiles) == "BamFile") wtFiles <- BamFileList(wtFiles)
-    if (class(mutFiles) == "character" | class(mutFiles) == "BamFile") mutFiles <- BamFileList(mutFiles)
+    if (class(wtFiles) == "character" | class(wtFiles) == "BamFile") wtFiles <- Rsamtools::BamFileList(wtFiles)
+    if (class(mutFiles) == "character" | class(mutFiles) == "BamFile") mutFiles <- Rsamtools::BamFileList(mutFiles)
     
-    if (outputFolder == "DEFAULT") outputFolder <- paste0("mmappr_results_", unclass(Sys.time()))
-    
-    param <- new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, mutFiles = mutFiles,
-                 vepParam = vepParam, distancePower = distancePower, minDepth = minDepth,
-                 homozygoteCutoff = homozygoteCutoff, numCores = numCores, minBaseQuality = minBaseQuality,
-                 minMapQuality = minMapQuality, loessOptResolution = loessOptResolution,
-                 loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, outputFolder = outputFolder)
+    param <- new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, 
+                 mutFiles = mutFiles, vepParam = vepParam, 
+                 distancePower = distancePower, minDepth = minDepth,
+                 homozygoteCutoff = homozygoteCutoff, numCores = numCores, 
+                 minBaseQuality = minBaseQuality, 
+                 minMapQuality = minMapQuality,
+                 loessOptResolution = loessOptResolution,
+                 loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, 
+                 outputFolder = outputFolder, showDebug=showDebug)
     
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param else stop(validity)
@@ -24,24 +27,33 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
 .validMmapprParam <- function(param) {
     errors <- character()
     
-    vepInputFormat <- input(param@vepParam)$format
+    vepInputFormat <- ensemblVEP::input(param@vepParam)$format
     if (length(vepInputFormat) == 0 | vepInputFormat != "vcf") {
         warning("Overriding VEPParam input format: must be 'vcf'")
         input(param@vepParam)$format <- "vcf"
     }
     
+    # TODO: put this file checking in the files<- functions instead
     for (i in 1:length(param@wtFiles)) {
         file <- param@wtFiles[[i]]
-        if (length(index(file)) == 0) {
-            file <- .addBamFileIndex(file)
-            if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
+        if (file.exists(file$path)) {
+            if (length(Rsamtools::index(file)) == 0) {
+                file <- .addBamFileIndex(file)
+                if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
+            }
+        } else {
+            errors <- c(errors, paste0(file$path, " does not exist"))
         }
     }
     for (i in 1:length(param@mutFiles)) {
         file <- param@wtFiles[[i]]
-        if (length(index(file)) == 0) {
-            file <- .addBamFileIndex(file)
-            if (length(index(file)) == 0) warning(paste0(file$path), " in mutFiles has no index file")
+        if (file.exists(file$path)) {
+            if (length(Rsamtools::index(file)) == 0) {
+                file <- .addBamFileIndex(file)
+                if (length(index(file)) == 0) warning(paste0(file$path), " in mutFiles has no index file")
+            }
+        } else {
+            errors <- c(errors, paste0(file$path, " does not exist"))
         }
     }
     
@@ -136,7 +148,7 @@ setMethod("peaks", "MmapprData", function(obj) obj@peaks)
 setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 
 
-
+# TODO: need to declare generics?
 setMethod("refGenome<-", "MmapprParam",
           function(obj, value) {
             obj@refGenome <- value 
