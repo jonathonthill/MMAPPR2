@@ -37,7 +37,6 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
 .readFilesForChr <- function(inputList, showDebug=FALSE){
     startTime <- proc.time()
     tryCatch({
-        if showDebug message("in .readFilesForChr")
         #parameter check
         stopifnot(length(GenomeInfoDb::seqnames(inputList$range)) == 1)
         stopifnot(class(inputList$param) == "MmapprParam")
@@ -89,7 +88,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
         
         #make_df_for_chromsome: makes a function that turns each info list 
         # (from pileup) into dataframe
-        #So it taks a list and returns a dataframe
+        #So it takes a list and returns a dataframe
         make_df_for_chromosome <-
             function(infoList){
                 x <- data.frame('pos' = rep(infoList$pos, each = 5), 

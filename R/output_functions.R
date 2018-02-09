@@ -22,6 +22,16 @@
 }
 
 #TODO explore ggplot2 and lattice
+
+#' Title
+#'
+#' @param mmapprData 
+#' @param plotAicc 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     if (class(mmapprData) != "MmapprData"){
         stop("Input object not of 'MmapprData' type")

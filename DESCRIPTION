@@ -1,6 +1,6 @@
-Package: MMAPPR
+Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 2.0.0
+Version: 0.99.0
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Maintainer: Jonathon Hill <jhill@byu.edu>
 Description: maps mutations
@@ -10,3 +10,9 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat
+Imports: ensemblVEP,
+    gmapR,
+    Rsamtools,
+    foreach,
+    doParallel,
+    VariantAnnotation
