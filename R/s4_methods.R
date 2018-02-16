@@ -16,7 +16,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
                  minMapQuality = minMapQuality,
                  loessOptResolution = loessOptResolution,
                  loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, 
-                 outputFolder = outputFolder, showDebug=showDebug)
+                 outputFolder = outputFolder)
     
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param else stop(validity)

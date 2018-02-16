@@ -1,4 +1,6 @@
 peakRefinement <- function(mmapprData){
+    library(magrittr, quietly=TRUE)
+    
     options(warn=-1)
     
     for(chr in names(mmapprData@peaks)){
@@ -23,7 +25,10 @@ peakRefinement <- function(mmapprData){
         
         densityRank <- data.frame(seq(xMin,xMax))
         names(densityRank) <- "pos"
-        densityRank <- dplyr::mutate(densityRank, densityValue = densityFunction(seq(xMin,xMax))) %>% arrange(desc(densityValue))
+        densityRank <- 
+            dplyr::mutate(densityRank, 
+                          densityValue = densityFunction(seq(xMin,xMax))) %>%
+            dplyr::arrange(desc(densityValue))
         
         rollingSum <- cumsum(densityRank$densityValue)
         cutoffPosition <- which(rollingSum > mmapprData@param@peakIntervalWidth)[1]
@@ -57,7 +62,7 @@ prePeak <- function(mmapprData) {
     combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
         if(class(chr) == "list"){
             var(chr$loess$fitted)/length(chr$loess$fitted)
-        }else{
+        } else {
             return(0)
         }
     })

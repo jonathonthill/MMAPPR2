@@ -3,9 +3,10 @@ loessFit <- function(mmapprData, silent = FALSE) {
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor
     
     #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
-    mmapprData@distance <- .runFunctionInParallel(mmapprData@distance, functionToRun = .loessFitForChr, silent = silent,
-                                                 secondInput = loessOptResolution, thirdInput = loessOptCutFactor,
-                                                 numCores = mmapprData@param@numCores, packages = c("MMAPPR2"))
+    mmapprData@distance <- 
+        .runFunctionInParallel(mmapprData@distance, functionToRun = .loessFitForChr, silent = silent,
+                               secondInput = loessOptResolution, thirdInput = loessOptCutFactor,
+                               numCores = mmapprData@param@numCores, packages = c("MMAPPR2"))
     #.loessFitForChr returns list with mutCounts, wtCounts, loess, aicc
     
     return(mmapprData)

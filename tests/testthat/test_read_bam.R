@@ -18,7 +18,7 @@ test_that("correct ranges are being read", {
     expect_type(chrList, "list")
     expect_type(chrList[[1]], "list")
     
-    expect_equal(names(chrList$chr5), c("range", "param"))
+    expect_named(chrList$chr5, c("range", "param"), ignore.order=TRUE)
     expect_s4_class(chrList$chr5$range, "GRanges")
     expect_s4_class(chrList$chr5$param, "MmapprParam")
 })
@@ -30,7 +30,8 @@ test_that("single chromosome is read correctly", {
     expect_type(inputList, "list")
     
     result <- .readFilesForChr(inputList)
-    expect_true(all(c("wtCounts", "mutCounts", "distanceDf", "seqname") %in% names(result)))
+    expect_named(result, c("wtCounts", "mutCounts", "distanceDf", "seqname"),
+                 ignore.order=TRUE)
     expect_gt(nrow(result$wtCounts), 0)
     expect_gt(nrow(result$mutCounts), 0)
     expect_gt(nrow(result$distanceDf), 0)

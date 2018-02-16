@@ -26,7 +26,7 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
         # message("num_cores = ", num_cores)
         # return(num_cores)
         
-        return(if (detectCores() > 2) detectCores() - 2 else 1)
+        return(if (parallel::detectCores() > 2) parallel::detectCores() - 2 else 1)
     },
     warning = function(w) {
         message('Warning: arbitrary number of clusters used (are you not on Linux?)')
@@ -51,11 +51,16 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     if (length(inputList) < numCores) numCores <- length(inputList)
     
     #cluster generation
-    outfile <- if (silent) "/dev/null" else ""
-    cl <- snow::makeSOCKcluster(count=numCores, outfile=outfile)
+    if (numCores > 1) {
+        outfile <- if (silent) "/dev/null" else ""
+        cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
+        # cl <- snow::makeCluster(2, outfile="")
+        
+        # register the cluster
+        doParallel::registerDoParallel(cl)
+    }
     
-    # register the cluster
-    doParallel::registerDoParallel(cl)
+    
     
     tryCatch({
         # find number of parameters and perform calculation
@@ -64,27 +69,41 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
             numParams <- 3
             thirdInput <- .repList(thirdInput, length(inputList))
             secondInput <- .repList(secondInput, length(inputList))
-            resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
+            if (numCores > 1)
+                resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
                                   .packages = packages) %dopar% functionToRun(a, b, c)
+            else
+                resultList <- 
+                    lapply(inputList, 
+                           function(x) functionToRun(x, secondInput, thirdInput))
         }
         else if (!is.null(secondInput)) {
             numParams <- 2
             secondInput <- .repList(secondInput, length(inputList))
-            resultList <- foreach(a = inputList, b = secondInput,
+            if (numCores > 1)
+                resultList <- foreach(a = inputList, b = secondInput,
                                   .packages = packages) %dopar% functionToRun(a, b)
+            else
+                resultList <- 
+                    lapply(inputList, function(x) functionToRun(x, secondInput))
         }
         else {
             numParams <- 1
-            resultList <- foreach(a = inputList,
+            if (numCores > 1)
+                resultList <- foreach(a = inputList,
                                   .packages = packages) %dopar% functionToRun(a)
+            else
+                resultList <- lapply(inputList, functionToRun)
         }
         
         names(resultList) <- names(inputList)
         
     }, finally = {
-        stopCluster(cl)
-        foreach::registerDoSEQ()
-        invisible(gc)
+        if (numCores > 1) {
+            stopCluster(cl)
+            foreach::registerDoSEQ()
+            invisible(gc)
+        }
     })
     
     return(resultList)

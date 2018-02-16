@@ -35,6 +35,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
 
 
 .readFilesForChr <- function(inputList, showDebug=FALSE){
+    require(magrittr, quietly=TRUE)
     startTime <- proc.time()
     tryCatch({
         #parameter check
@@ -85,12 +86,16 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
         applyPileupWT <- Rsamtools::applyPileups(pf, FUN = CalcInfo, 
                                                  param = apParam)
         
+        if (showDebug){
+            for (ap in applyPileupWT)
+                message(paste0("WT pileup with ", length(ap$pos), " rows"))
+        }
+        
         
         #make_df_for_chromsome: makes a function that turns each info list 
         # (from pileup) into dataframe
         #So it takes a list and returns a dataframe
-        make_df_for_chromosome <-
-            function(infoList){
+        make_df_for_chromosome <- function(infoList){
                 x <- data.frame('pos' = rep(infoList$pos, each = 5), 
                                 'nucleotide' = c("A", "C", "G", "T", "cvg"))
                 #gets right number of columns(files) by column bind
@@ -99,7 +104,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
                 x <- cbind(x, infoList$info)
                 if (showDebug) message("after make_df_for_chr size is ", nrow(x))
                 return(x)
-            }
+        }
         
         
         ###depth filter
@@ -222,7 +227,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
         rm(applyPileupMut)
         
         #inner_join already removes rows without a match
-        distanceDf <- inner_join(wtCounts, mutCounts, by=c('pos'))
+        distanceDf <- dplyr::inner_join(wtCounts, mutCounts, by=c('pos'))
         if (length(distanceDf) == 0) 
             stop('Empty dataframe after joining WT and Mut count tables')
         
