@@ -1,6 +1,6 @@
 # context("Main and helper functions")
 # 
-# vepParam <- ensemblVEP::VEPParam(input = c(format="vcf"))
+# vepParam <- ensemblVEP::VEPFlags(flags = list(format="vcf"))
 # param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
 #                      "test_data/bam_files/zy14_mut_cut_filt.bam",
 #                      vepParam = vepParam)

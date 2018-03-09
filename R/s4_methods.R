@@ -27,10 +27,10 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
 .validMmapprParam <- function(param) {
     errors <- character()
     
-    vepInputFormat <- ensemblVEP::input(param@vepParam)$format
+    vepInputFormat <- ensemblVEP::flags(param@vepFlags)$format
     if (length(vepInputFormat) == 0 | vepInputFormat != "vcf") {
         warning("Overriding VEPParam input format: must be 'vcf'")
-        input(param@vepParam)$format <- "vcf"
+        flags(param@vepFlags)$format <- "vcf"
     }
     
     # TODO: put this file checking in the files<- functions instead
