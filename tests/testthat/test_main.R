@@ -1,9 +1,9 @@
 # context("Main and helper functions")
 # 
-# vepParam <- ensemblVEP::VEPFlags(flags = list(format="vcf"))
+# vepFlags <- ensemblVEP::VEPFlags(flags = list(format="vcf"))
 # param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
 #                      "test_data/bam_files/zy14_mut_cut_filt.bam",
-#                      vepParam = vepParam)
+#                      vepFlags = vepFlags)
 # 
 # test_that(".runFunctionInParallel work with packages", {
 #     testFunction <- function(x) {
@@ -47,22 +47,22 @@
 #     fn_mut <- "test_data/bam_files/zy14_mut_cut_filt.bam"
 # 
 #     # non-existing filename shouldn't work
-#     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut', vepParam))
+#     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut', vepFlags))
 # 
 #     # existing filename, just character, should work
-#     param1 <- MmapprParam(new("GmapGenome"), fn_wt, fn_mut, vepParam)
+#     param1 <- MmapprParam(new("GmapGenome"), fn_wt, fn_mut, vepFlags)
 #     expect_s4_class(param1, "MmapprParam")
 #     expect_s4_class(param1@wtFiles, "BamFileList")
 #     expect_s4_class(param1@mutFiles, "BamFileList")
 # 
 #     bf <- BamFile("test_data/bam_files/zy14_mut_cut_filt.bam")
-#     param2 <- MmapprParam(new("GmapGenome"), bf, bf, vepParam=vepParam)
+#     param2 <- MmapprParam(new("GmapGenome"), bf, bf, vepFlags=vepFlags)
 #     expect_s4_class(param2, "MmapprParam")
 #     expect_s4_class(param2@wtFiles, "BamFileList")
 #     expect_s4_class(param2@mutFiles, "BamFileList")
 # 
 #     bfl <- BamFileList("test_data/bam_files/zy14_mut_cut_filt.bam")
-#     param3 <- MmapprParam(new("GmapGenome"), bfl, bfl, vepParam=vepParam)
+#     param3 <- MmapprParam(new("GmapGenome"), bfl, bfl, vepFlags=vepFlags)
 #     expect_s4_class(param3, "MmapprParam")
 #     expect_s4_class(param3@wtFiles, "BamFileList")
 #     expect_s4_class(param3@mutFiles, "BamFileList")

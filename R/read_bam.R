@@ -4,7 +4,8 @@
     
     chrRanges <- as(GenomeInfoDb::seqinfo(Rsamtools::BamFileList(c(wtFiles, mutFiles))), "GRanges")
     #cut to standard chromosomes
-    chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges)
+    chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges, pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM', pruning.mode='coarse')
     
     chrList <- list()
     # store range for each chromosome as list item

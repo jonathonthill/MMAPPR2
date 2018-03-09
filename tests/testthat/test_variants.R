@@ -7,7 +7,7 @@
 #                                                create = TRUE)))
 # 
 # mmapprData <- readRDS("test_data/intermediate_MDs/post_peak.RDS")
-# mmapprData@param@vepParam <- ensemblVEP::VEPFlags(
+# mmapprData@param@vepFlags <- ensemblVEP::VEPFlags(
 #     flags = list(species = "danio_rerio_merged", format = "vcf",
 #                  database = TRUE)
 # )
