@@ -1,6 +1,6 @@
 .prepareOutputFolder <- function(mmapprData) {
-    if (outputFolder(param(mmapprData)) == "DEFAULT") 
-        outputFolder(param(mmapprData)) <- 
+    if (outputFolder(mmapprData@param) == "DEFAULT") 
+        outputFolder(mmapprData@param) <- 
             paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
     
     
@@ -18,8 +18,10 @@
         }
     }
     
-    if (!dir.exists(outputFolder(param(mmapprData)))) 
-        dir.create(outputFolder(param(mmapprData)))
+    if (!dir.exists(outputFolder(mmapprData@param))) 
+        dir.create(outputFolder(mmapprData@param))
+    
+    return(mmapprData)
 }
 
 #TODO explore ggplot2 and lattice

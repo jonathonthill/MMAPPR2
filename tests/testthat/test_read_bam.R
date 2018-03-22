@@ -7,7 +7,7 @@ DebugSkip <- function() {
 
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam", 
                      "./test_data/bam_files/zy14_mut_cut_filt.bam",
-                     vepFlags = ensemblVEP::VEPFlags())
+                     vepFlags = ensemblVEP::VEPFlags(flags=list(format='vcf')))
 mmapprData <- new("MmapprData", param = param)
 
 

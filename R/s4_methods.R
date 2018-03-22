@@ -1,64 +1,83 @@
-MmapprParam <- function(refGenome, wtFiles, mutFiles, vepParam,
+MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         distancePower=4, peakIntervalWidth=0.95, minDepth=10,
                         homozygoteCutoff=0.95, numCores=4, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
                         loessOptCutFactor=0.1, naCutoff=0, outputFolder="DEFAULT",
                         showDebug=FALSE) {
     
-    if (class(wtFiles) == "character" | class(wtFiles) == "BamFile") wtFiles <- Rsamtools::BamFileList(wtFiles)
-    if (class(mutFiles) == "character" | class(mutFiles) == "BamFile") mutFiles <- Rsamtools::BamFileList(mutFiles)
+    wtFiles <- .toBFList(wtFiles)
+    mutFiles <- .toBFList(mutFiles)
     
-    param <- new("MmapprParam", refGenome = refGenome, wtFiles = wtFiles, 
-                 mutFiles = mutFiles, vepParam = vepParam, 
-                 distancePower = distancePower, minDepth = minDepth,
-                 homozygoteCutoff = homozygoteCutoff, numCores = numCores, 
-                 minBaseQuality = minBaseQuality, 
-                 minMapQuality = minMapQuality,
-                 loessOptResolution = loessOptResolution,
-                 loessOptCutFactor = loessOptCutFactor, naCutoff = naCutoff, 
-                 outputFolder = outputFolder)
+    param <- new("MmapprParam", refGenome=refGenome, wtFiles=wtFiles, 
+                 mutFiles=mutFiles, vepFlags=vepFlags, 
+                 distancePower=distancePower, peakIntervalWidth=peakIntervalWidth,
+                 minDepth=minDepth,
+                 homozygoteCutoff=homozygoteCutoff, numCores=numCores, 
+                 minBaseQuality=minBaseQuality, 
+                 minMapQuality=minMapQuality,
+                 loessOptResolution=loessOptResolution,
+                 loessOptCutFactor=loessOptCutFactor, naCutoff=naCutoff, 
+                 outputFolder=outputFolder)
     
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param else stop(validity)
 }
 
+.toBFList <- function(files) {
+    if (class(files) == "character" | class(files) == "BamFile") files <- Rsamtools::BamFileList(files)
+    return(files)
+}
 
+
+### VALIDITY FUNCTIONS
 
 .validMmapprParam <- function(param) {
     errors <- character()
     
-    vepInputFormat <- ensemblVEP::flags(param@vepFlags)$format
-    if (length(vepInputFormat) == 0 | vepInputFormat != "vcf") {
-        warning("Overriding VEPParam input format: must be 'vcf'")
-        flags(param@vepFlags)$format <- "vcf"
+    .validityErrors <- function(fxn, value, errors) {
+        result <- fxn(value)
+        if (typeof(result) != 'logical')
+            return(c(errors, result))
+        else
+            return(errors)
     }
     
-    # TODO: put this file checking in the files<- functions instead
-    for (i in 1:length(param@wtFiles)) {
-        file <- param@wtFiles[[i]]
+    errors <- .validityErrors(.validFiles, param@wtFiles, errors)
+    errors <- .validityErrors(.validFiles, param@mutFiles, errors)
+    errors <- .validityErrors(.validVepFlags, param@vepFlags, errors)
+
+    
+    if (length(errors) == 0) TRUE else errors
+}
+
+.validFiles <- function(files) {
+    errors <- c()
+    if (class(files) != "BamFileList") 
+        errors <- c(errors, paste0(files, " is not a BamFileList object"))
+    for (i in 1:length(files)) {
+        file <- files[[i]]
         if (file.exists(file$path)) {
             if (length(Rsamtools::index(file)) == 0) {
                 file <- .addBamFileIndex(file)
                 if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
             }
         } else {
-            errors <- c(errors, paste0(file$path, " does not exist"))
+            errors <- c(errors, paste0(file$path, " does not exist\n"))
         }
     }
-    for (i in 1:length(param@mutFiles)) {
-        file <- param@wtFiles[[i]]
-        if (file.exists(file$path)) {
-            if (length(Rsamtools::index(file)) == 0) {
-                file <- .addBamFileIndex(file)
-                if (length(index(file)) == 0) warning(paste0(file$path), " in mutFiles has no index file")
-            }
-        } else {
-            errors <- c(errors, paste0(file$path, " does not exist"))
-        }
-    }
-    
     if (length(errors) == 0) TRUE else errors
 }
+
+.validVepFlags <- function(vepFlags) {
+    vepFormat <- ensemblVEP::flags(vepFlags)$format
+    if (is.null(vepFormat)) vepFormat <- "" # makes next conditional statement work
+    if (vepFormat != 'vcf'){
+        return(paste0("VEPFlags format flag must be 'vcf'\n",
+                      "  e.g., flags(vepFlags)$format <- 'vcf'"))
+    } 
+    return(TRUE)
+}
+
 
 setMethod("show", "MmapprParam", function(object) {
     margin <- "   "
@@ -69,15 +88,14 @@ setMethod("show", "MmapprParam", function(object) {
     .customPrint(object@wtFiles, margin)
     cat("mutFiles:\n", sep="")
     .customPrint(object@mutFiles, margin)
-    cat("vepParam:\n", sep="")
-    .customPrint(object@vepParam, margin)
+    cat("vepFlags:\n", sep="")
+    .customPrint(object@vepFlags, margin)
     
     cat("Other parameters:\n")
-    slotNames <- names(
-        getSlots("MmapprParam")[5:length(getSlots("MmapprParam"))])
+    slotNames <- slotNames("MmapprParam")[5:length(slotNames("MmapprParam"))]
     slotValues <- sapply(slotNames, function(name) slot(object, name))
     names(slotValues) <- slotNames
-    print(slotValues, quote = FALSE)
+    print(slotValues, quote=FALSE)
 })
 
 setMethod("show", "MmapprData", function(object) {
@@ -97,14 +115,14 @@ setMethod("show", "MmapprData", function(object) {
         loessFits <- sum(sapply(object@distance[successes], function(seq) {
             if (!is.null(seq$loess)) return(TRUE)
             else return(FALSE)
-        })), silent = TRUE
+        })), silent=TRUE
     )
     cat(margin, sprintf(
         "and Loess regression data for %i of those\n", loessFits
     ), sep="")
     distanceSize <- object.size(object@distance)
     cat(margin, sprintf("Memory usage = %.0f MB\n", 
-                        distanceSize/1000000), sep = "")
+                        distanceSize/1000000), sep="")
     
     cat("peaks:\n")
     for (peak in object@peaks){
@@ -115,14 +133,14 @@ setMethod("show", "MmapprData", function(object) {
     }
     
     cat("candidates:\n")
-    for (i in 1:length(object@candidates)) .customPrint(object@candidates[i], margin, lineMax = 5)
+    for (i in 1:length(object@candidates)) .customPrint(object@candidates[i], margin, lineMax=5)
 })
 
-.customPrint <- function(obj, margin = "  ", lineMax = getOption("max.print")) {
+.customPrint <- function(obj, margin="  ", lineMax=getOption("max.print")) {
   lines <- capture.output(obj)
-  lines <- strsplit(lines, split = "\n")
+  lines <- strsplit(lines, split="\n")
   lines <- sapply(lines, function(x) paste0(margin, x))
-  if (lineMax > length(lines)) lineMax = length(lines)
+  if (lineMax > length(lines)) lineMax=length(lines)
   cat(lines[1:lineMax], sep="\n")
 }
 
@@ -130,7 +148,7 @@ setMethod("refGenome", "MmapprParam", function(obj) obj@refGenome)
 setMethod("wtFiles", "MmapprParam", function(obj) obj@wtFiles)
 setMethod("mutFiles", "MmapprParam", function(obj) obj@mutFiles)
 setMethod("homozygoteCutoff", "MmapprParam", function(obj) obj@homozygoteCutoff)
-setMethod("vepParam", "MmapprParam", function(obj) obj@vepParam)
+setMethod("vepFlags", "MmapprParam", function(obj) obj@vepFlags)
 setMethod("distancePower", "MmapprParam", function(obj) obj@distancePower)
 setMethod("peakIntervalWidth", "MmapprParam", function(obj) obj@peakIntervalWidth)
 setMethod("minDepth", "MmapprParam", function(obj) obj@minDepth)
@@ -141,14 +159,12 @@ setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolut
 setMethod("loessOptCutFactor", "MmapprParam", function(obj) obj@loessOptCutFactor)
 setMethod("naCutoff", "MmapprParam", function(obj) obj@naCutoff)
 setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
-
 setMethod("param", "MmapprData", function(obj) obj@param)
 setMethod("distance", "MmapprData", function(obj) obj@distance)
 setMethod("peaks", "MmapprData", function(obj) obj@peaks)
 setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 
 
-# TODO: need to declare generics?
 setMethod("refGenome<-", "MmapprParam",
           function(obj, value) {
             obj@refGenome <- value 
@@ -156,17 +172,19 @@ setMethod("refGenome<-", "MmapprParam",
           })
 setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
-            obj@wtFiles <- value 
-            obj
+              obj@wtFiles <- .toBFList(value)
+              .validFiles(obj@wtFiles)
+              if (typeof(v) == 'logical') obj else v
           })
 setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
-            obj@mutFiles <- value 
-            obj
+              obj@mutFiles <- .toBFList(value)
+              v <- .validFiles(obj@wtFiles)
+              if (typeof(v) == 'logical') obj else v
           })
-setMethod("vepParam<-", "MmapprParam",
+setMethod("vepFlags<-", "MmapprParam",
           function(obj, value) {
-            obj@vepParam <- value 
+            obj@vepFlags <- value 
             obj
           })
 setMethod("homozygoteCutoff<-", "MmapprParam",

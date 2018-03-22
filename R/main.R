@@ -1,13 +1,7 @@
 ## load bam file using the which argument to ScanBamParam
-# bamfile3 <- "STAR/11647X5_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
-# bamfile2 <- "STAR/11647X3_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
-# bamfile1 <- "STAR/11647X1_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
-# bamfilem1 <- "STAR/11647X2_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
-# bamfilem2 <- "STAR/11647X4_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
-# bamfilem3 <- "STAR/11647X6_150723_D00550_0277_BC7TFTANXX_1/Aligned.sortedByCoord.out.bam"
 
-bamfile1 <- Rsamtools::BamFile("../shared/MMAPPRtests/zy13/8187X1_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
-bamfilem1 <- Rsamtools::BamFile("../shared/MMAPPRtests/zy13/8187X2_110524_SN141_0355_AD0D99ABXX_1Aligned_chr_fix.bam")
+bamfile1 <- Rsamtools::BamFile("../shared/mmappr_tests/zy14/hisat2-zv9/8187X3_110524_SN141_0355_AD0D99ABXX_2.hisat2.sorted.fixed.bam")
+bamfilem1 <- Rsamtools::BamFile("../shared/mmappr_tests/zy14/hisat2-zv9/8187X4_110524_SN141_0355_AD0D99ABXX_2.hisat2.sorted.fixed.bam")
 
 wt_list <- Rsamtools::BamFileList(bamfile1)#, bamfile2, bamfile3))
 mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
@@ -49,6 +43,7 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
                                   packages=c(), secondInput=NULL, thirdInput=NULL) {
     require(doParallel, quietly=TRUE)
     if (length(inputList) < numCores) numCores <- length(inputList)
+    
     
     #cluster generation
     if (numCores > 1) {
@@ -152,7 +147,7 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
     
     message("Mmappr runtime:")
     print(proc.time() - startTime)
-    .prepareOutputFolder(mmapprData)
+    mmapprData <- .prepareOutputFolder(mmapprData)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
     return(mmapprData)
 }
