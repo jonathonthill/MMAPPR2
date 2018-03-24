@@ -49,7 +49,8 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     if (numCores > 1) {
         outfile <- if (silent) "/dev/null" else ""
         cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
-        # cl <- snow::makeCluster(2, outfile="")
+        #clusterEvalQ(cl, devtools::dev_mode()) #TODO: for development only
+        
         
         # register the cluster
         doParallel::registerDoParallel(cl)
@@ -104,10 +105,22 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     return(resultList)
 }
 
+
+
+#' Title
+#'
+#' @param mmapprParam 
+#' @param showDebug 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 mmappr <- function(mmapprParam, showDebug=FALSE) {
     startTime <- proc.time()
     
-    mmapprData = new("MmapprData", param=mmapprParam)
+    mmapprData <- new("MmapprData", param=mmapprParam)
+    mmapprData <- .prepareOutputFolder(mmapprData)
     
     mmapprData <- tryCatch({
         mmapprData <- readInFiles(mmapprData, showDebug=showDebug)
@@ -147,7 +160,6 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
     
     message("Mmappr runtime:")
     print(proc.time() - startTime)
-    mmapprData <- .prepareOutputFolder(mmapprData)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
     return(mmapprData)
 }

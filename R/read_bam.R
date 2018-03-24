@@ -23,11 +23,12 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
     if (numCores(param(mmapprData)) > 1)
-        mmapprData@distance <- .runFunctionInParallel(chrList, functionToRun=.readFilesForChr, 
-                                                 packages=c('tidyr', 'dplyr', 'Rsamtools'),
-                                                 secondInput=showDebug,
-                                                 numCores=numCores(param(mmapprData)),
-                                                 silent=silent)
+        mmapprData@distance <- 
+        .runFunctionInParallel(chrList, functionToRun=.readFilesForChr, 
+                               packages=c('tidyr', 'dplyr', 'Rsamtools'),
+                               secondInput=showDebug,
+                               numCores=numCores(param(mmapprData)),
+                               silent=silent)
     else
         mmapprData@distance <- lapply(chrList, function(i) .readFilesForChr(i, showDebug=showDebug))
     

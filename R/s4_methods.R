@@ -173,7 +173,7 @@ setMethod("refGenome<-", "MmapprParam",
 setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
               obj@wtFiles <- .toBFList(value)
-              .validFiles(obj@wtFiles)
+              v <- .validFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else v
           })
 setMethod("mutFiles<-", "MmapprParam",
