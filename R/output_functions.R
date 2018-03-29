@@ -4,7 +4,7 @@
             paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
     
     
-    if(dir.exists(outputFolder(param(mmapprData)))){
+    if(dir.exists(outputFolder(mmapprData@param))){
         cat(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
         answer <- " "
         while(answer != "y" & answer != "n"){
@@ -14,7 +14,7 @@
         if (answer == "n") {
             newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
             if (is.na(newOutputFolder)) outputFolder(param(mmapprData)) <- "DEFAULT"
-            else outputFolder(param(mmapprData)) <- newOutputFolder
+            else outputFolder(mmapprData@param) <- newOutputFolder
         }
     }
     
@@ -40,7 +40,6 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
         stop("Input object not of 'MmapprData' type")
     }
     
-    .prepareOutputFolder(mmapprData)
     .plotGenomeDistance(mmapprData)
     .plotPeaks(mmapprData)
     if (plotAicc) .plotAicc(distance(mmapprData))

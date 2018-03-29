@@ -107,17 +107,34 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
 
 
-#' Title
+#' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
+#' 
+#' This describes what we're doing
 #'
-#' @param mmapprParam 
-#' @param showDebug 
+#' @param mmapprParam A \links4class{MmapprParam} object containing desired parameters
+#' @param showDebug If set to \code{TRUE}, intermediate dataframe sizes are
+#'     displayed during file reading step
 #'
-#' @return
+#' @return A \links4class{MmapprData} object containing results
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' vepFlags <- ensemblVEP::VEPFlags(
+#'                  flags=list(species = "danio_rerio_merged", 
+#'                             format = "vcf",
+#'                             database = TRUE))
+#' mmapprParam <- MmapprParam(GmapGenome("danio_rerio_10"),
+#'                            "wild_type.sorted.bam",
+#'                            "mutant.sorted.bam",
+#'                            vepFlags)
+#' mmapprData <- mmappr(mmapprParam)
+#' }
 mmappr <- function(mmapprParam, showDebug=FALSE) {
     startTime <- proc.time()
+    message("------------------------------------")
+    message("-------- Welcome to MMAPPR2 --------")
+    message("------------------------------------")
     
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
