@@ -1,3 +1,4 @@
+
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         distancePower=4, peakIntervalWidth=0.95, minDepth=10,
                         homozygoteCutoff=0.95, numCores=4, minBaseQuality=20,

@@ -1,3 +1,28 @@
+
+#' MmapprParam object
+#' 
+#' \code{MmapprParam} stores options for running MMAPPR
+#'
+#' @slot refGenome GmapGenome. 
+#' @slot wtFiles BamFileList. 
+#' @slot mutFiles BamFileList. 
+#' @slot vepFlags VEPFlags. 
+#' @slot distancePower numeric. 
+#' @slot peakIntervalWidth numeric. 
+#' @slot minDepth numeric. 
+#' @slot homozygoteCutoff numeric. 
+#' @slot numCores numeric. 
+#' @slot minBaseQuality numeric. 
+#' @slot minMapQuality numeric. 
+#' @slot loessOptResolution numeric. 
+#' @slot loessOptCutFactor numeric. 
+#' @slot naCutoff numeric. 
+#' @slot outputFolder character. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 setClass("MmapprParam",
          representation(
              refGenome = "GmapGenome",
