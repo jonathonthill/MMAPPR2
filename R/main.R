@@ -30,58 +30,58 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     return(result)
 }
 
-.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent=FALSE,
+.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent=TRUE,
                                   packages=c(), secondInput=NULL, thirdInput=NULL) {
-    require(doParallel, quietly=TRUE)
+    # require(doParallel, quietly=TRUE)
+    require(doSNOW, quietly = F)
     if (length(inputList) < numCores) numCores <- length(inputList)
     
     #cluster generation
     if (numCores > 1) {
         outfile <- if (silent) "/dev/null" else ""
         cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
-        #clusterEvalQ(cl, devtools::dev_mode()) #TODO: for development only
-        # register the cluster
-        doParallel::registerDoParallel(cl)
+        doSNOW::registerDoSNOW(cl)
     }
+    
+    pb <- txtProgressBar(min=1, max=length(inputList), style=3)
+    #TODO: must have max > min on pb
+    progress <- function(n) setTxtProgressBar(pb, n)
+    opts <- list(progress=progress)
     
     tryCatch({
         # find number of parameters and perform calculation
         message(sprintf("Beginning parallel calculation with %i core(s)", numCores))
         if (!is.null(thirdInput)) {
             numParams <- 3
-            if (numCores > 1) {
-                thirdInput <- .repList(thirdInput, length(inputList))
-                secondInput <- .repList(secondInput, length(inputList))
-                resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
-                                  .packages = packages) %dopar% functionToRun(a, b, c)
-            } else
-                resultList <- 
-                    lapply(inputList, 
-                           function(x) functionToRun(x, secondInput, thirdInput))
+            thirdInput <- .repList(thirdInput, length(inputList))
+            secondInput <-
+                .repList(secondInput, length(inputList))
+            resultList <- foreach::foreach(a=inputList, b=secondInput,
+                                           c = thirdInput,
+                                           .packages = packages,
+                                           .options.snow =  opts) %dopar%
+                functionToRun(a, b, c)
         }
         else if (!is.null(secondInput)) {
             numParams <- 2
-            if (numCores > 1) {
-                secondInput <- .repList(secondInput, length(inputList))
-                resultList <- foreach(a = inputList, b = secondInput,
-                                  .packages = packages) %dopar% functionToRun(a, b)
-            } else
-                resultList <- 
-                    lapply(inputList, function(x) functionToRun(x, secondInput))
+            secondInput <- .repList(secondInput, length(inputList))
+            resultList <- foreach::foreach(a = inputList,
+                                           b = secondInput,
+                                           .packages = packages,
+                                           .options.snow = opts) %dopar%
+                functionToRun(a, b)
         }
         else {
             numParams <- 1
-            if (numCores > 1)
-                resultList <- foreach(a = inputList,
-                                  .packages = packages) %dopar% functionToRun(a)
-            else
-                resultList <- lapply(inputList, functionToRun)
+            resultList <- foreach::foreach(a = inputList, .packages = packages,
+                                  .options.snow=opts) %dopar% functionToRun(a)
         }
         
         names(resultList) <- names(inputList)
         
     }, finally = {
         if (numCores > 1) {
+            close(pb)
             stopCluster(cl)
             foreach::registerDoSEQ()
             invisible(gc)
