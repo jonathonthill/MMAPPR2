@@ -11,15 +11,6 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 #mem_req is memory required per base for distance list item, as returned in ReadInFiles
 .coreCalc <- function(mem_req = 33.3){
     tryCatch({
-        # #this gets free RAM (on Linux)
-        # free_ram <- system("awk '/MemFree/ {print $2}' /proc/meminfo", intern = TRUE) #gets mem info in MB
-        # #get numeric, in bytes (not MB)
-        # free_ram <- 1000 * as.numeric(free_ram)
-        # #get longest chromosome, calculate needed memory, and divide into free RAM
-        # num_cores <- ceiling(free_ram / (max(seqlengths(myrange)) * mem_req))
-        # message("num_cores = ", num_cores)
-        # return(num_cores)
-        
         return(if (parallel::detectCores() > 2) parallel::detectCores() - 2 else 1)
     },
     warning = function(w) {
@@ -44,42 +35,37 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     require(doParallel, quietly=TRUE)
     if (length(inputList) < numCores) numCores <- length(inputList)
     
-    
     #cluster generation
     if (numCores > 1) {
         outfile <- if (silent) "/dev/null" else ""
         cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
         #clusterEvalQ(cl, devtools::dev_mode()) #TODO: for development only
-        
-        
         # register the cluster
         doParallel::registerDoParallel(cl)
     }
-    
-    
     
     tryCatch({
         # find number of parameters and perform calculation
         message(sprintf("Beginning parallel calculation with %i core(s)", numCores))
         if (!is.null(thirdInput)) {
             numParams <- 3
-            thirdInput <- .repList(thirdInput, length(inputList))
-            secondInput <- .repList(secondInput, length(inputList))
-            if (numCores > 1)
+            if (numCores > 1) {
+                thirdInput <- .repList(thirdInput, length(inputList))
+                secondInput <- .repList(secondInput, length(inputList))
                 resultList <- foreach(a = inputList, b = secondInput, c = thirdInput,
                                   .packages = packages) %dopar% functionToRun(a, b, c)
-            else
+            } else
                 resultList <- 
                     lapply(inputList, 
                            function(x) functionToRun(x, secondInput, thirdInput))
         }
         else if (!is.null(secondInput)) {
             numParams <- 2
-            secondInput <- .repList(secondInput, length(inputList))
-            if (numCores > 1)
+            if (numCores > 1) {
+                secondInput <- .repList(secondInput, length(inputList))
                 resultList <- foreach(a = inputList, b = secondInput,
                                   .packages = packages) %dopar% functionToRun(a, b)
-            else
+            } else
                 resultList <- 
                     lapply(inputList, function(x) functionToRun(x, secondInput))
         }

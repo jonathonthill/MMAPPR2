@@ -7,7 +7,18 @@ param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.
 
 test_that(".runFunctionInParallel works on single core", {
   input <- list(a='test')
-  output <- .runFunctionInParallel(input, function(x) x, 1)
+  output <- .runFunctionInParallel(input, function(x) paste(x, x), 1)
+  expect_identical(output, 'test test')
+})
+
+test_that(".runFunctionInParllel works on multiple cores", {
+    input <- list(a='test', b='test')
+    expected <- list(a='test test', b='test test')
+    #TODO
+})
+
+test_that(".runFunctionInParallel limits numCores to list size", {
+  #TODO  
 })
 
 test_that(".runFunctionInParallel work with packages", {
@@ -23,8 +34,8 @@ test_that(".runFunctionInParallel work with packages", {
 })
 
 test_that(".runFunctionInParellel works with extra inputs", {
-    testFun <- function(x, a=0, b=0) {
-        return(c(x, a, b))
+    testFun <- function(a, b=0, c=0) {
+        return(c(a, b, c))
     }
     x <- list(1)
     expect_identical(.runFunctionInParallel(x, testFun, 1, silent=TRUE),

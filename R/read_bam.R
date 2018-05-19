@@ -83,10 +83,10 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
                                      minMapQuality = param@minMapQuality,
                                      minDepth = param@minDepth,
                                      maxDepth = 8000L,
-                                     flag = scanBamFlag(isSecondaryAlignment=F))
+                                     flag = scanBamFlag(isSecondaryAlignment=FALSE))
         
-        applyPileupWT <- Rsamtools::applyPileups(pf, FUN = CalcInfo, 
-                                                 param = apParam)
+        applyPileupWT <- Rsamtools::applyPileups(pf, FUN=CalcInfo, 
+                                                 param=apParam)
         
         if (showDebug){
             for (ap in applyPileupWT)
