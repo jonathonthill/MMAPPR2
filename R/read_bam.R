@@ -17,8 +17,8 @@
     return(chrList)
 })}
 
-readInFiles <- function(mmapprData, showDebug=FALSE, silent=FALSE) {
-    message("Reading in files")
+readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
+    message("Reading BAM files")
     
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     

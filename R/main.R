@@ -32,25 +32,20 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 
 .runFunctionInParallel <- function(inputList, functionToRun, numCores, silent=TRUE,
                                   packages=c(), secondInput=NULL, thirdInput=NULL) {
-    # require(doParallel, quietly=TRUE)
-    require(doSNOW, quietly = F)
+    require(doSNOW, quietly = TRUE)
     if (length(inputList) < numCores) numCores <- length(inputList)
+    message(sprintf("Beginning parallel computation with %i core(s)", numCores))
     
     #cluster generation
-    if (numCores > 1) {
-        outfile <- if (silent) "/dev/null" else ""
-        cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
-        doSNOW::registerDoSNOW(cl)
-    }
+    outfile <- if (silent) "/dev/null" else ""
+    cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
+    doSNOW::registerDoSNOW(cl)
     
-    pb <- txtProgressBar(min=1, max=length(inputList), style=3)
-    #TODO: must have max > min on pb
+    pb <- txtProgressBar(max=length(inputList), style=3)
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress=progress)
     
     tryCatch({
-        # find number of parameters and perform calculation
-        message(sprintf("Beginning parallel calculation with %i core(s)", numCores))
         if (!is.null(thirdInput)) {
             numParams <- 3
             thirdInput <- .repList(thirdInput, length(inputList))

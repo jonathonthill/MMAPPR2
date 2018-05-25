@@ -7,7 +7,7 @@ param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.
 
 test_that(".runFunctionInParallel works on single core", {
   input <- list(a='test')
-  output <- .runFunctionInParallel(input, function(x) paste(x, x), 1)
+  output <- expect_warning(.runFunctionInParallel(input, function(x) paste(x, x), 1))
   expect_identical(output, list(a='test test'))
 })
 

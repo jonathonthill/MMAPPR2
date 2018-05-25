@@ -5,8 +5,9 @@ DebugSkip <- function() {
 }
 
 
+numCores <- parallel::detectCores() / 2
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam", 
-                     "./test_data/bam_files/zy14_mut_cut_filt.bam",
+                     "./test_data/bam_files/zy14_mut_cut_filt.bam", numCores=numCores,
                      vepFlags = ensemblVEP::VEPFlags(flags=list(format='vcf')))
 mmapprData <- new("MmapprData", param = param)
 
@@ -14,7 +15,7 @@ mmapprData <- new("MmapprData", param = param)
 test_that("correct ranges are being read", {
     DebugSkip()
     chrList <- .getFileReadChrList(mmapprData)
-    expect_equal(length(chrList), 26)
+    expect_equal(length(chrList), 25)
     expect_type(chrList, "list")
     expect_type(chrList[[1]], "list")
     
@@ -36,20 +37,19 @@ test_that("single chromosome is read correctly", {
     expect_gt(nrow(result$mutCounts), 0)
     expect_gt(nrow(result$distanceDf), 0)
     expect_named(result$distanceDf, c("pos", "distance"))
-    expect_equal_to_reference(result$distanceDf, "test_data/reference/read_bam_distance.RDS")
+    expect_known_value(result$distanceDf, "test_data/objects/chr5_distance.RDS",
+                              update=FALSE)
 })
 
 
 test_that("whole genome is read correctly", {
     DebugSkip()
+    # with dummy files
+    wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
+    mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     cat("before\n")
-    mmapprData <- readInFiles(mmapprData, showDebug=T, silent = F)
+    mmapprData <- readInFiles(mmapprData)
     cat("after\n")
-    expect_equal(length(mmapprData@distance), 26)
-    
-    classes <- lapply(mmapprData@distance, class)
-    expect_equal(sum(classes == "character"), 25)
-    expect_type(mmapprData@distance$chr5, "list")
-    
-    # saveRDS(mmapprData, "test_data/intermediate_MDs/post_file_read.RDS")
+    expect_known_value(mmapprData@distance, "test_data/objects/post_file_read_dummy_distance.RDS",
+                       update=FALSE)
 })
