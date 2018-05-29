@@ -1,10 +1,9 @@
 context("Loess fit/AICc optimization")
 
 
-md <- readRDS("test_data/intermediate_MDs/post_file_read.RDS")
-md@param@loessOptResolution <- 0.001
-md@param@loessOptCutFactor <- 0.01
-SkipDebug <- function() if(T) skip("skipping to save time")
+SkipDebug <- function()
+    if (F)
+        skip("skipping to save time")
 
 test_that(".minTwo works right", {
     x <- c(1, 2, 3)
@@ -43,43 +42,53 @@ test_that(".localResolution works right", {
     expect_equal(.localResolution(spans, .34), .02)
     expect_equal(.localResolution(spans, .37), .03)
     expect_equal(.localResolution(spans, .40), .03)
-
+    
     spans <- c(-.01, 0, .01)
     expect_error(.localResolution(spans, .01))
-
+    
     spans <- c(.32, .31, .34, .40, .36, .36, .37)
     expect_equal(.localResolution(spans, .31), .01)
     expect_equal(.localResolution(spans, .32), .02)
     expect_error(.localResolution(spans, .33))
-
+    
 })
 
-test_that("normal chromosome performs fit correctly", {
+test_that("peak chromosome is fit correctly", {
     SkipDebug()
-    chr5List <- .loessFitForChr(md@distance$chr5,
-                                loessOptResolution = md@param@loessOptResolution,
-                                loessOptCutFactor = md@param@loessOptCutFactor)
-    expect_type(chr5List, "list")
-    expect_true(all(c("wtCounts", "mutCounts", "loess", "aicc") %in% names(chr5List)))
-    expect_gt(length(chr5List$loess$x), 5000)
-    expect_equal(chr5List$loess$pars$span, 0.03)
+    chr5distDf <- readRDS("test_data/objects/chr5_distance.RDS")
+    chr5list <-
+        list(
+            wtCounts = NULL,
+            mutCounts = NULL,
+            distanceDf = chr5distDf,
+            seqname = 'chr5'
+        )
+    chr5list <- expect_warning(.loessFitForChr(
+        chr5list,
+        loessOptResolution = .001,
+        loessOptCutFactor = 0.01
+    ))
+    expect_type(chr5list, "list")
+    expect_true(all(
+        c("wtCounts", "mutCounts", "loess", "aicc") %in%
+            names(chr5list)
+    ))
+    expect_gt(length(chr5list$loess$x), 4000)
+    expect_equal(chr5list$loess$pars$span, 0.101)
 })
 
-test_that("Empty chromosome is skipped", {
-    chr4error <- .loessFitForChr(md@distance$chr4,
-                                 loessOptResolution = md@param@loessOptResolution,
-                                 loessOptCutFactor = md@param@loessOptCutFactor)
-    expect_type(chr4error, "character")
-})
 
 test_that("loessFit runs properly for whole mmapprData", {
     SkipDebug()
-    md2 <- loessFit(md, silent=T)
-    successes <- sapply(md2@distance, function(seq) class(seq) == "list")
-    expect_equal(length(successes), 26)
-    expect_equal(sum(successes), 1)
-
-
-    expect_equal_to_reference(md2, "test_data/intermediate_MDs/post_loess.RDS")
+    md <- readRDS('test_data/objects/post_file_read_dummy_md.RDS')
+    md <- loessFit(md, silent = T)
+    successes <-
+        sapply(md@distance, function(seq)
+            class(seq) == "list")
+    expect_equal(length(successes), 25)
+    expect_equal(sum(successes), 0)
+    
+    expect_known_value(md@distance,
+                       "test_data/objects/post_loess_dummy_distance.RDS",
+                       update = FALSE)
 })
-

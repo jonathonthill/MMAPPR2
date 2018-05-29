@@ -42,7 +42,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
         else
             return(errors)
     }
-    
+
     errors <- .validityErrors(.validFiles, param@wtFiles, errors)
     errors <- .validityErrors(.validFiles, param@mutFiles, errors)
     errors <- .validityErrors(.validVepFlags, param@vepFlags, errors)

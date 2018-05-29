@@ -78,12 +78,13 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
                 list(pos=x[["pos"]], info=info) 
             }
         
-        apParam <- Rsamtools::ApplyPileupsParam(which = chrRange, what="seq", 
-                                     minBaseQuality = param@minBaseQuality,
-                                     minMapQuality = param@minMapQuality,
-                                     minDepth = param@minDepth,
-                                     maxDepth = 8000L,
-                                     flag = scanBamFlag(isSecondaryAlignment=FALSE))
+        apParam <- Rsamtools::ApplyPileupsParam(which = chrRange, what="seq",
+                                 minBaseQuality = param@minBaseQuality,
+                                 minMapQuality = param@minMapQuality,
+                                 minDepth = param@minDepth,
+                                 maxDepth = 8000L,
+                                 flag = Rsamtools::scanBamFlag(
+                                     isSecondaryAlignment=FALSE))
         
         applyPileupWT <- Rsamtools::applyPileups(pf, FUN=CalcInfo, 
                                                  param=apParam)
@@ -209,7 +210,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
         
         #apply functions to mutant pool
         message(paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": Reading mutant file(s)"))
-        applyPileupMut <- applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
+        applyPileupMut <- Rsamtools::applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
         tryCatch(
             mutCounts <- applyPileupMut[[1]] %>%
                 make_df_for_chromosome() %>%

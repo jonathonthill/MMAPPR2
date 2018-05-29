@@ -5,10 +5,13 @@ DebugSkip <- function() {
 }
 
 
-numCores <- parallel::detectCores() / 2
+vepFlags <- new('VEPFlags')
+ensemblVEP::flags(vepFlags)$format <- 'vcf'
+numCores <- ceiling(parallel::detectCores() / 2)
+# numCores <- 1
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam", 
                      "./test_data/bam_files/zy14_mut_cut_filt.bam", numCores=numCores,
-                     vepFlags = ensemblVEP::VEPFlags(flags=list(format='vcf')))
+                     vepFlags=vepFlags)
 mmapprData <- new("MmapprData", param = param)
 
 
@@ -22,6 +25,7 @@ test_that("correct ranges are being read", {
     expect_named(chrList$chr5, c("range", "param"), ignore.order=TRUE)
     expect_s4_class(chrList$chr5$range, "GRanges")
     expect_s4_class(chrList$chr5$param, "MmapprParam")
+    rm(chrList)
 })
 
 
@@ -31,14 +35,15 @@ test_that("single chromosome is read correctly", {
     expect_type(inputList, "list")
     
     result <- .readFilesForChr(inputList)
-    expect_named(result, c("wtCounts", "mutCounts", "distanceDf", "seqname"),
-                 ignore.order=TRUE)
+    expect_true(all(c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
+                        names(result)))
     expect_gt(nrow(result$wtCounts), 0)
     expect_gt(nrow(result$mutCounts), 0)
     expect_gt(nrow(result$distanceDf), 0)
     expect_named(result$distanceDf, c("pos", "distance"))
     expect_known_value(result$distanceDf, "test_data/objects/chr5_distance.RDS",
                               update=FALSE)
+    rm(result)
 })
 
 

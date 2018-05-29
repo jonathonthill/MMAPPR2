@@ -1,13 +1,14 @@
 context("Main and helper functions")
 
-vepFlags <- ensemblVEP::VEPFlags(flags=list(format="vcf"))
+vepFlags <- new('VEPFlags')
+ensemblVEP::flags(vepFlags)$format <- 'vcf'
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
                      "test_data/bam_files/zy14_mut_cut_filt.bam",
                      vepFlags = vepFlags)
 
 test_that(".runFunctionInParallel works on single core", {
   input <- list(a='test')
-  output <- expect_warning(.runFunctionInParallel(input, function(x) paste(x, x), 1))
+  output <- .runFunctionInParallel(input, function(x) paste(x, x), 1)
   expect_identical(output, list(a='test test'))
 })
 
@@ -45,7 +46,7 @@ test_that(".runFunctionInParellel works with extra inputs", {
                      list(c(1, 1, 1)))
 })
 
-test_that(".repList function works", {
+test_that(".repList function works as expected", {
     expect_equal(length(.repList(param, 5)), 5)
     expect_equal(length(.repList(param, 0)), 0)
     expect_equal(length(.repList(param, 1)), 1)

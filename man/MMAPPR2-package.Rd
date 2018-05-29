@@ -6,7 +6,7 @@
 \alias{MMAPPR2-package}
 \title{Mutation Mapping Analysis Pipeline for Pooled RNA-seq}
 \description{
-The main functionality of this package is described in the \code{\link{mamppr}}
+The main functionality of this package is described in the \code{\link{mmappr}}
 function.
 }
 \details{

@@ -1,4 +1,4 @@
-loessFit <- function(mmapprData, silent = FALSE) {
+loessFit <- function(mmapprData, silent=TRUE) {
     loessOptResolution <- mmapprData@param@loessOptResolution
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor
     
