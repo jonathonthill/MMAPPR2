@@ -8,25 +8,23 @@ param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.
 
 test_that(".runFunctionInParallel works on single core", {
   input <- list(a='test')
-  output <- .runFunctionInParallel(input, function(x) paste(x, x), 1)
+  output <- .runFunctionInParallel(input, function(x) paste(x, x))
   expect_identical(output, list(a='test test'))
 })
 
 test_that(".runFunctionInParllel works on multiple cores", {
     input <- list(a='test', b='test')
     expected <- list(a='test test', b='test test')
-    output <- .runFunctionInParallel(input, function(x) paste(x, x), 2)
+    output <- .runFunctionInParallel(input, function(x) paste(x, x))
     expect_identical(output, expected)
 })
 
-test_that(".runFunctionInParallel work with packages", {
+test_that(".runFunctionInParallel work with package functions", {
     testFunction <- function(x) {
         return(.repList(x, 2))
     }
     x <- list(a=1, b=1, c=1)
-    y <- .runFunctionInParallel(x, testFunction, silent=TRUE,
-                                         numCores=MMAPPR2:::.coreCalc(),
-                                         packages=c("MMAPPR2"))
+    y <- .runFunctionInParallel(x, testFunction)
     expResult <- list(a=list(1, 1), b=list(1, 1), c=list(1, 1))
     expect_identical(y, expResult)
 })
@@ -36,13 +34,11 @@ test_that(".runFunctionInParellel works with extra inputs", {
         return(c(a, b, c))
     }
     x <- list(1)
-    expect_identical(.runFunctionInParallel(x, testFun, 1, silent=TRUE),
+    expect_identical(.runFunctionInParallel(x, testFun),
                      list(c(1, 0, 0)))
-    expect_identical(.runFunctionInParallel(x, testFun, 1, silent=TRUE,
-                                                     secondInput=1),
+    expect_identical(.runFunctionInParallel(x, testFun, b=1),
                      list(c(1, 1, 0)))
-    expect_identical(.runFunctionInParallel(x, testFun, 1, silent=TRUE,
-                                                     secondInput=1, thirdInput=1),
+    expect_identical(.runFunctionInParallel(x, testFun, b=1, c=1),
                      list(c(1, 1, 1)))
 })
 

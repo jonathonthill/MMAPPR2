@@ -15,4 +15,5 @@ Imports: ensemblVEP (>= 1.20.0),
     Rsamtools,
     foreach,
     doSNOW,
-    VariantAnnotation
+    VariantAnnotation,
+    BiocParallel
