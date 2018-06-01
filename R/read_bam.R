@@ -10,43 +10,35 @@
     chrList <- list()
     # store range for each chromosome as list item
     for (i in suppressWarnings(GenomeInfoDb::orderSeqlevels(names(chrRanges)))) {
-        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- list(range = chrRanges[i], 
-                                                            param = mmapprData@param)
+        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- chrRanges[i]
     }
     
     return(chrList)
 })}
 
-readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
+
+readInFiles <- function(mmapprData, showDebug=FALSE) {
     message("Reading BAM files")
     
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
-    if (numCores(param(mmapprData)) > 1)
-        mmapprData@distance <- 
-        .runFunctionInParallel(chrList, functionToRun=.readFilesForChr, 
-                               packages=c('tidyr', 'dplyr', 'Rsamtools'),
-                               secondInput=showDebug,
-                               numCores=numCores(param(mmapprData)),
-                               silent=silent)
-    else
-        mmapprData@distance <- lapply(chrList, function(i) .readFilesForChr(i, showDebug=showDebug))
+    mmapprData@distance <-
+    .runFunctionInParallel(chrList, .readFilesForChr, param=mmapprData@param,
+                           showDebug=showDebug)
     
     return(mmapprData)
 }
 
 
-.readFilesForChr <- function(inputList, showDebug=FALSE){
+.readFilesForChr <- function(chrRange, param, showDebug=FALSE){
     require(magrittr, quietly=TRUE)
     startTime <- proc.time()
     tryCatch({
         #parameter check
-        stopifnot(length(GenomeInfoDb::seqnames(inputList$range)) == 1)
-        stopifnot(class(inputList$param) == "MmapprParam")
+        stopifnot(length(GenomeInfoDb::seqnames(chrRange)) == 1)
+        stopifnot(class(param) == "MmapprParam")
         
-        chrRange <- inputList$range
         stopifnot(!is.null(chrRange))
-        param <- inputList$param
         wtFiles <- param@wtFiles
         mutFiles <- param@mutFiles
         
@@ -189,7 +181,6 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
         
         #apply functions to wild type pool
         #CAUTION: functions must be applied in this order to work right
-        message(paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": Reading wild-type file(s)"))
         tryCatch(
             wtCounts <- applyPileupWT[[1]] %>%
                 make_df_for_chromosome() %>%
@@ -209,7 +200,6 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
         rm(applyPileupWT)
         
         #apply functions to mutant pool
-        message(paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": Reading mutant file(s)"))
         applyPileupMut <- Rsamtools::applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
         tryCatch(
             mutCounts <- applyPileupMut[[1]] %>%
@@ -262,7 +252,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE, silent=TRUE) {
     
     error = function(e) {
         msg <- paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": ", e$message)
-        message(msg)
+        str(msg)
         return(msg)
     }
     )

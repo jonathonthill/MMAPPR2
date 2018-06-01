@@ -30,59 +30,12 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
     return(result)
 }
 
-.runFunctionInParallel <- function(inputList, functionToRun, numCores, silent=TRUE,
-                                  packages=c(), secondInput=NULL, thirdInput=NULL) {
-    require(doSNOW, quietly = TRUE)
-    if (length(inputList) < numCores) numCores <- length(inputList)
-    message(sprintf("Beginning parallel computation with %i core(s)", numCores))
-    
-    #cluster generation
-    outfile <- if (silent) "/dev/null" else ""
-    cl <- parallel::makeCluster(numCores, type='SOCK', outfile=outfile)
-    doSNOW::registerDoSNOW(cl)
-    
-    pb <- txtProgressBar(max=length(inputList), style=3)
-    progress <- function(n) setTxtProgressBar(pb, n)
-    opts <- list(progress=progress)
-    
-    tryCatch({
-        if (!is.null(thirdInput)) {
-            numParams <- 3
-            thirdInput <- .repList(thirdInput, length(inputList))
-            secondInput <-
-                .repList(secondInput, length(inputList))
-            resultList <- foreach::foreach(a=inputList, b=secondInput,
-                                           c = thirdInput,
-                                           .packages = packages,
-                                           .options.snow =  opts) %dopar%
-                functionToRun(a, b, c)
-        }
-        else if (!is.null(secondInput)) {
-            numParams <- 2
-            secondInput <- .repList(secondInput, length(inputList))
-            resultList <- foreach::foreach(a = inputList,
-                                           b = secondInput,
-                                           .packages = packages,
-                                           .options.snow = opts) %dopar%
-                functionToRun(a, b)
-        }
-        else {
-            numParams <- 1
-            resultList <- foreach::foreach(a = inputList, .packages = packages,
-                                  .options.snow=opts) %dopar% functionToRun(a)
-        }
-        
-        names(resultList) <- names(inputList)
-        
-    }, finally = {
-        if (numCores > 1) {
-            close(pb)
-            stopCluster(cl)
-            foreach::registerDoSEQ()
-            invisible(gc)
-        }
-    })
-    
+.runFunctionInParallel <- function(inputList, functionToRun, ...) {
+    bpParam <- BiocParallel::bpparam()
+    BiocParallel::bpprogressbar(bpParam) <- TRUE
+    resultList <- BiocParallel::bplapply(inputList, functionToRun, ...,
+                                    BPPARAM=bpParam)
+    BiocParallel::bpstop(bpParam)
     return(resultList)
 }
 

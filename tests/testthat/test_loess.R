@@ -5,6 +5,7 @@ SkipDebug <- function()
     if (F)
         skip("skipping to save time")
 
+
 test_that(".minTwo works right", {
     x <- c(1, 2, 3)
     expect_equal(.minTwo(x), c(1, 2))
@@ -81,7 +82,7 @@ test_that("peak chromosome is fit correctly", {
 test_that("loessFit runs properly for whole mmapprData", {
     SkipDebug()
     md <- readRDS('test_data/objects/post_file_read_dummy_md.RDS')
-    md <- loessFit(md, silent = T)
+    md <- loessFit(md)
     successes <-
         sapply(md@distance, function(seq)
             class(seq) == "list")

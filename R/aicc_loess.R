@@ -1,12 +1,12 @@
-loessFit <- function(mmapprData, silent=TRUE) {
+loessFit <- function(mmapprData) {
     loessOptResolution <- mmapprData@param@loessOptResolution
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor
     
     #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
     mmapprData@distance <- 
-        .runFunctionInParallel(mmapprData@distance, functionToRun = .loessFitForChr, silent = silent,
-                               secondInput = loessOptResolution, thirdInput = loessOptCutFactor,
-                               numCores = mmapprData@param@numCores, packages = c("MMAPPR2"))
+        .runFunctionInParallel(mmapprData@distance, functionToRun=.loessFitForChr,
+                               loessOptResolution=loessOptResolution,
+                               loessOptCutFactor=loessOptCutFactor)
     #.loessFitForChr returns list with mutCounts, wtCounts, loess, aicc
     
     return(mmapprData)
