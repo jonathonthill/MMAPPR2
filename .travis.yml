@@ -1,0 +1,23 @@
+language: r
+cache: packages
+r: 
+  - bioc-release
+  - bioc-devel
+git:
+  # To only get latest commit for ensembl-vep
+  depth: 1
+
+before_install:
+  sudo apt-get install perl
+  # install VEP
+  git clone https://github.com/Ensembl/ensembl-vep.git
+  cd ensembl-vep
+  perl INSTALL.pl
+  cd ..
+
+install:
+  - R CMD build .
+
+script:
+  - R CMD BiocCheck *tar.gz
+
