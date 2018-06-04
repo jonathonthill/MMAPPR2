@@ -47,6 +47,7 @@ test_that("correct ranges are being read", {
 
 test_that("single chromosome is read correctly", {
     DebugSkip()
+    gc()
     inputRange <- .getFileReadChrList(mmapprData)[['chr5']]
     expect_s4_class(inputRange, "GRanges")
 
