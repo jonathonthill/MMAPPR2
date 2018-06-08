@@ -118,7 +118,7 @@ loessFit <- function(mmapprData) {
         
         #returns dataframe with spans and aicc values for each loess
         startSpans <- .01 * c(1:16, 1 + 10*2:9)
-        resultList$aicc <- MMAPPR2:::.aiccOpt(distanceDf = resultList$distanceDf, 
+        resultList$aicc <- .aiccOpt(distanceDf = resultList$distanceDf, 
                                               spans = startSpans,
                                               resolution = loessOptResolution,
                                               cutFactor = loessOptCutFactor,
@@ -128,7 +128,7 @@ loessFit <- function(mmapprData) {
         bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans'],
                           digits = .numDecimals(loessOptResolution))
         bestSpan <- mean(bestSpan, na.rm = TRUE)
-        resultList$loess <- MMAPPR2:::.getLoess(bestSpan, resultList$distanceDf$pos, 
+        resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos, 
                                                 resultList$distanceDf$distance, surface = "direct")
         
         precision <- .numDecimals(loessOptResolution)
