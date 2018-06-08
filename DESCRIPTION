@@ -27,4 +27,5 @@ Imports: ensemblVEP (>= 1.20.0),
     SummarizedExperiment,
     tidyr,
     VariantTools,
-    magrittr
+    magrittr,
+    methods
