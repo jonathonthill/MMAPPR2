@@ -7,7 +7,7 @@
 mmappr(mmapprParam, showDebug = FALSE)
 }
 \arguments{
-\item{mmapprParam}{A \links4class{MmapprParam} object containing desired parameters}
+\item{mmapprParam}{A \linkS4class{MmapprParam} object containing desired parameters}
 
 \item{showDebug}{If set to \code{TRUE}, intermediate dataframe sizes are
 displayed during file reading step}
