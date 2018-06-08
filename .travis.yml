@@ -6,4 +6,20 @@ r:
 git:
   # To only get latest commit for ensembl-vep
   depth: 1
-warnings_are_errors: false
+warnings_are_errors: true
+sudo: required
+r_binary_packages: # to install them faster
+  - r-cran-devtools
+  - r-cran-bindr
+  - r-cran-bindrcpp
+  - r-cran-dplyr
+
+install:
+- R -e 'devtools::install_deps(dep = T)'
+# so namespace is up-to-date
+- R -e 'devtools::document(roclets=c('rd', 'collate', 'namespace'))'
+
+script:
+- R CMD build .
+- R CMD check *tar.gz
+- R CMD BiocCheck *tar.gz
