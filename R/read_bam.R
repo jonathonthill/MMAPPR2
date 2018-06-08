@@ -30,8 +30,17 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
 }
 
 
+#' Read BAM files for single chromosome
+#'
+#' @param chrRange A GRanges object containing range to be analyzed
+#' @param param MmapprParam object for analysis
+#' @param showDebug Logical. Determines whether to print size of dataframe
+#'   with each filtering step.
+#'
+#' @return List with wtCounts, mutCounts, and distanceDf
+#' 
+#' @importFrom magrittr %>%
 .readFilesForChr <- function(chrRange, param, showDebug=FALSE){
-    requireNamespace(magrittr, quietly=TRUE)
     startTime <- proc.time()
     tryCatch({
         #parameter check
