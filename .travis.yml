@@ -4,7 +4,7 @@ r:
   - bioc-release
   - bioc-devel
 git:
-  # To only get latest commit for ensembl-vep
+  # To only get latest commit
   depth: 1
 warnings_are_errors: true
 sudo: required
