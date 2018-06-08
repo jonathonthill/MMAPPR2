@@ -28,8 +28,8 @@
 
 #' Title
 #'
-#' @param mmapprData 
-#' @param plotAicc 
+#' @param mmapprData description
+#' @param plotAicc description
 #'
 #' @return
 #' @export
