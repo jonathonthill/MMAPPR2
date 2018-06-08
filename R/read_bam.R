@@ -252,7 +252,6 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
     
     error = function(e) {
         msg <- paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": ", e$message)
-        str(msg)
         return(msg)
     }
     )
