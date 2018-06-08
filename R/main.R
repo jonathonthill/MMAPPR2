@@ -45,7 +45,7 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 #' 
 #' This describes what we're doing
 #'
-#' @param mmapprParam A \links4class{MmapprParam} object containing desired parameters
+#' @param mmapprParam A \linkS4class{MmapprParam} object containing desired parameters
 #' @param showDebug If set to \code{TRUE}, intermediate dataframe sizes are
 #'     displayed during file reading step
 #'
