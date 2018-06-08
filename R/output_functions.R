@@ -132,7 +132,8 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
 WriteCandidateVCFs <- function(mmapprData) {
     for (seqname in names(mmapprData@candidates)) {
         candidateVCF <- asVCF(mmapprData@candidates[[seqname]])
-        writeVcf(candidateVCF, paste0("mmappr_results", seqname, ".vcf"))
+        VariantAnnotation::writeVcf(candidateVCF, 
+                                    paste0("mmappr_results", seqname, ".vcf"))
     }
 }
 
