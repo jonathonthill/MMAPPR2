@@ -7,9 +7,9 @@
 outputMmapprData(mmapprData, plotAicc = FALSE)
 }
 \arguments{
-\item{mmapprData}{}
+\item{mmapprData}{description}
 
-\item{plotAicc}{}
+\item{plotAicc}{description}
 }
 \description{
 Title

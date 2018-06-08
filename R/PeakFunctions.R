@@ -6,9 +6,22 @@ peakRefinement <- function(mmapprData){
     return(mmapprData)
 }
 
+#' Refine peak for single chromosome
+#'
+#' @param inputList List containing seqname
+#' @param mmapprData MmapprData object froma analysis
+#'
+#' @return List containing seqname, peak start, peak end, peak density
+#'   function, and peak position
+#'   
+#' @importFrom magrittr %>%
+#' 
+#' @examples
+#' \dontrun{
+#' inputList <- list('chr5')
+#' chr5peak <- .peakRefinementChr(inputList, mmapprData)
+#' }
 .peakRefinementChr <- function(inputList, mmapprData) {
-    require(magrittr, quietly=TRUE)
-    
     stopifnot('seqname' %in% names(inputList))
     seqname <- inputList$seqname
     

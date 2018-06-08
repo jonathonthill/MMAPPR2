@@ -3,3 +3,4 @@
 export(mmappr)
 export(outputMmapprData)
 exportClasses(MmapprParam)
+importFrom(magrittr,"%>%")
