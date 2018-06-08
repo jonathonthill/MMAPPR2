@@ -8,15 +8,6 @@ git:
   depth: 1
 warnings_are_errors: false
 
-before_install:
-  - sudo apt-get install perl
-  # install VEP
-  - git clone https://github.com/Ensembl/ensembl-vep.git
-  - cd ensembl-vep
-  - perl INSTALL.pl
-  - cd ..
-
 script:
-  - R CMD check *tar.gz
   - R CMD BiocCheck *tar.gz
 
