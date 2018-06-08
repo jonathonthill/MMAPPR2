@@ -9,10 +9,10 @@ git:
 warnings_are_errors: true
 sudo: required
 r_binary_packages: # to install them faster
-  - r-cran-devtools
-  - r-cran-bindr
-  - r-cran-bindrcpp
-  - r-cran-dplyr
+  - devtools
+  - bindr
+  - bindrcpp
+  - dplyr
 
 install:
 - R -e 'devtools::install_deps(dep = T)'
