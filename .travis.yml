@@ -4,7 +4,7 @@ r:
   - bioc-release
   - bioc-devel
 git:
-  # To only get latest commit for ensembl-vep
+  # To only get latest commit
   depth: 1
 warnings_are_errors: true
 r_binary_packages: # to install them faster
@@ -12,6 +12,8 @@ r_binary_packages: # to install them faster
   - bindr
   - bindrcpp
   - dplyr
+r_packages:
+  - roxygen2
 
 install:
   - R -e 'devtools::install_deps(dep = T)'
