@@ -6,18 +6,17 @@ r:
 git:
   # To only get latest commit for ensembl-vep
   depth: 1
+warnings_are_errors: false
 
 before_install:
-  sudo apt-get install perl
+  - sudo apt-get install perl
   # install VEP
-  git clone https://github.com/Ensembl/ensembl-vep.git
-  cd ensembl-vep
-  perl INSTALL.pl
-  cd ..
-
-install:
-  - R CMD build .
+  - git clone https://github.com/Ensembl/ensembl-vep.git
+  - cd ensembl-vep
+  - perl INSTALL.pl
+  - cd ..
 
 script:
+  - R CMD check *tar.gz
   - R CMD BiocCheck *tar.gz
 
