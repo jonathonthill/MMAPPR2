@@ -7,7 +7,6 @@ git:
   # To only get latest commit
   depth: 1
 warnings_are_errors: true
-sudo: required
 r_binary_packages: # to install them faster
   - devtools
   - bindr
@@ -15,11 +14,11 @@ r_binary_packages: # to install them faster
   - dplyr
 
 install:
-- R -e 'devtools::install_deps(dep = T)'
-# so namespace is up-to-date
-- R -e 'devtools::document(roclets=c('rd', 'collate', 'namespace'))'
+  - R -e 'devtools::install_deps(dep = T)'
+  # so namespace is up-to-date
+  - R -e 'devtools::document(roclets=c('rd', 'collate', 'namespace'))'
 
 script:
-- R CMD build .
-- R CMD check *tar.gz
-- R CMD BiocCheck *tar.gz
+  - R CMD build .
+  - R CMD check *tar.gz
+  - R CMD BiocCheck *tar.gz
