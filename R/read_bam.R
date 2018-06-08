@@ -31,7 +31,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
 
 
 .readFilesForChr <- function(chrRange, param, showDebug=FALSE){
-    require(magrittr, quietly=TRUE)
+    requireNamespace(magrittr, quietly=TRUE)
     startTime <- proc.time()
     tryCatch({
         #parameter check
