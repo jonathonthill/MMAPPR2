@@ -23,7 +23,9 @@ peakRefinement <- function(mmapprData){
     for (i in 1:1000){
         tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
         tempData <- tempData[order(tempData$pos),]
-        loessData <- loess(euclideanDistance~pos, data=tempData, span = loessSpan, family = c("symmetric"))
+        loessData <- suppressWarnings(
+            loess(euclideanDistance~pos, data=tempData,
+                  span=loessSpan, family=c("symmetric")))
         maxValues[i] <- loessData$x[which.max(loessData$fitted)]
     }
     
