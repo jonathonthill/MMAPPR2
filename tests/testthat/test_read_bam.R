@@ -2,15 +2,12 @@ context("BAM file reading")
 Sys.unsetenv("R_TESTS")
 
 DebugSkip <- function() {
-    if (F)
+    if (T)
         skip("Skipping file reading tests to save time")
 }
 
 
-# set path to vep so it doesn't complain
-Sys.setenv('PATH'=paste0(Sys.getenv('PATH'), ':', '/home/kylej13/ensembl-vep'))
-vepFlags <- ensemblVEP::VEPFlags()
-ensemblVEP::flags(vepFlags)$format <- 'vcf'
+vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 numCores <- ceiling(parallel::detectCores() / 2)
 param <-
     MmapprParam(
