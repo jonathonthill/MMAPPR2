@@ -7,7 +7,3 @@ git:
   # To only get latest commit for ensembl-vep
   depth: 1
 warnings_are_errors: false
-
-script:
-  - R CMD BiocCheck *tar.gz
-
