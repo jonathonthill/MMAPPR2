@@ -7,7 +7,9 @@ DebugSkip <- function() {
 }
 
 
-vepFlags <- new('VEPFlags')
+# set path to vep so it doesn't complain
+Sys.setenv('PATH'=paste0(Sys.getenv('PATH'), ':', '/home/kylej13/ensembl-vep'))
+vepFlags <- ensemblVEP::VEPFlags()
 ensemblVEP::flags(vepFlags)$format <- 'vcf'
 numCores <- ceiling(parallel::detectCores() / 2)
 param <-

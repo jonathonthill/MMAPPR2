@@ -1,6 +1,8 @@
 context("Main and helper functions")
 
-vepFlags <- new('VEPFlags')
+# set path to vep so it doesn't complain
+Sys.setenv('PATH'=paste0(Sys.getenv('PATH'), ':', '/home/kylej13/ensembl-vep'))
+vepFlags <- ensemblVEP::VEPFlags()
 ensemblVEP::flags(vepFlags)$format <- 'vcf'
 param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
                      "test_data/bam_files/zy14_mut_cut_filt.bam",
