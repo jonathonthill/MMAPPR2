@@ -55,6 +55,7 @@ peakRefinement <- function(mmapprData){
     peakPosition <- densityRank$pos[which.max(densityRank$densityValue)]
     
     outputList <- list()
+    outputList$seqname <- seqname
     outputList$start <- minPos
     outputList$end <- maxPos
     outputList$densityFunction <- densityFunction

@@ -20,7 +20,8 @@ test_that('peak is identified for chromosome 5', {
 test_that(".peakRefinementChr works right on chr 5", {
     inputList <- list(seqname='chr5')
     chr5list <- .peakRefinementChr(inputList, md)
-    expect_true(all(c('start', 'end', 'densityFunction', 'peakPosition') %in%
+    expect_true(all(c('start', 'end', 'densityFunction',
+                      'peakPosition', 'seqname') %in%
                         names(chr5list)))
     expect_true(chr5list$peakPosition > 19000000)
     expect_true(chr5list$peakPosition < 25000000)
