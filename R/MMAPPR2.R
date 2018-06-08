@@ -12,4 +12,5 @@ NULL
 #' @importFrom grDevices dev.off pdf rgb
 #' @importFrom stats approxfun density.default loess median
 #' @importFrom utils capture.output object.size str write.table
+#' @importFrom gmapr GmapGenome
 NULL
