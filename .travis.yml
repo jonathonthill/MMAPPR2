@@ -7,6 +7,7 @@ git:
   # To only get latest commit
   depth: 1
 warnings_are_errors: true
+sudo: required
 r_binary_packages: # to install them faster
   - devtools
   - bindr
