@@ -12,9 +12,9 @@ r_packages:
 
 install:
   - R -e 'devtools::install_deps(dep = T)'
-  - R 'e 'install.packages('roxygen2')'
+  - R 'e 'install.packages("roxygen2")'
   # so namespace is up-to-date
-  - R -e 'devtools::document(roclets=c('rd', 'collate', 'namespace'))'
+  - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
 
 script:
   - R CMD build .
