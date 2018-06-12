@@ -7,10 +7,14 @@ git:
   # To only get latest commit
   depth: 1
 warnings_are_errors: true
-  
-before_install:
-  - R -e 'install.packages("roxygen2")'
+sudo: required
 
+bioc_packages:
+  - BiocCheck
+  
+r_packages:
+  - roxygen2
+  
 install:
   - R -e 'devtools::install_deps(dep = T)'
   # so namespace is up-to-date
