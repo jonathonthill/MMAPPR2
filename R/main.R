@@ -49,7 +49,7 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 #' @param showDebug If set to \code{TRUE}, intermediate dataframe sizes are
 #'     displayed during file reading step
 #'
-#' @return A \links4class{MmapprData} object containing results
+#' @return A \linkS4class{MmapprData} object containing results
 #' @export
 #'
 #' @examples
