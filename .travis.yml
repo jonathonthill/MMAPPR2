@@ -12,8 +12,8 @@ sudo: required
 bioc_packages:
   - BiocCheck
   
-r_packages:
-  - roxygen2
+before_install:
+  - R -e 'install.packages("roxygen2")'
   
 install:
   - R -e 'devtools::install_deps(dep = T)'
