@@ -60,7 +60,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
         if (file.exists(file$path)) {
             if (length(Rsamtools::index(file)) == 0) {
                 file <- .addBamFileIndex(file)
-                if (length(index(file)) == 0) warning(paste0(file$path), " in wtFiles has no index file")
+                if (length(Rsamtools::index(file)) == 0)
+                    warning(paste0(file$path), " in wtFiles has no index file")
             }
         } else {
             errors <- c(errors, paste0(file$path, " does not exist\n"))

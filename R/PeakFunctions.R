@@ -33,12 +33,12 @@ peakRefinement <- function(mmapprData){
     xMin <- min(densityData$x)
     xMax <- max(densityData$x)
     
-    densityRank <- data.frame(seq(xMin,xMax))
+    densityRank <- data.frame(seq(xMin, xMax))
     names(densityRank) <- "pos"
     densityRank <- 
         dplyr::mutate(densityRank, 
                       densityValue = densityFunction(seq(xMin,xMax))) %>%
-        dplyr::arrange(desc(densityValue))
+        dplyr::arrange(dplyr::desc(densityValue))
     
     rollingSum <- cumsum(densityRank$densityValue)
     cutoffPosition <- which(rollingSum > mmapprData@param@peakIntervalWidth)[1]

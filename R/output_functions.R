@@ -129,9 +129,9 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     
 }
 
-WriteCandidateVCFs <- function(mmapprData) {
+.writeCandidateVCFs <- function(mmapprData) {
     for (seqname in names(mmapprData@candidates)) {
-        candidateVCF <- asVCF(mmapprData@candidates[[seqname]])
+        candidateVCF <- VariantAnnotation::asVCF(mmapprData@candidates[[seqname]])
         VariantAnnotation::writeVcf(candidateVCF, 
                                     paste0("mmappr_results", seqname, ".vcf"))
     }

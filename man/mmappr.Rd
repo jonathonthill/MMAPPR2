@@ -13,7 +13,7 @@ mmappr(mmapprParam, showDebug = FALSE)
 displayed during file reading step}
 }
 \value{
-A \links4class{MmapprData} object containing results
+A \linkS4class{MmapprData} object containing results
 }
 \description{
 This describes what we're doing

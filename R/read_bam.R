@@ -45,7 +45,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         # width(chrRange) <- 10000
         
         pf <- Rsamtools::PileupFiles(wtFiles)
-        pf_mut <- Rsamtools::PileupFiles(mutFiles)
+        pfMut <- Rsamtools::PileupFiles(mutFiles)
         
         #Function for use in applyPileups: gets list for each pileup position
         CalcInfo <-
@@ -199,7 +199,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         rm(applyPileupWT)
         
         #apply functions to mutant pool
-        applyPileupMut <- Rsamtools::applyPileups(pf_mut, FUN = CalcInfo, param = apParam)
+        applyPileupMut <- Rsamtools::applyPileups(pfMut, FUN = CalcInfo, param = apParam)
         tryCatch(
             mutCounts <- applyPileupMut[[1]] %>%
                 make_df_for_chromosome() %>%

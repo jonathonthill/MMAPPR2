@@ -7,12 +7,12 @@ generateCandidates <- function(mmapprData) {
     mmapprData@candidates <- lapply(mmapprData@peaks, .getPeakRange)
     
     #call variants in peak
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = .getVariantsForRange, 
-                                    param = mmapprData@param)
+    mmapprData@candidates <- lapply(mmapprData@candidates, FUN=.getVariantsForRange, 
+                                    param=mmapprData@param)
     
     #run VEP
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN = .runVEPForVariants,
-                                    vepParam = mmapprData@param@vepParam)
+    mmapprData@candidates <- lapply(mmapprData@candidates, FUN=.runVEPForVariants,
+                                    vepParam=mmapprData@param@vepParam)
     
     #filter out low impact variants
     mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
@@ -21,7 +21,7 @@ generateCandidates <- function(mmapprData) {
     mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
         densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
         variants <- mmapprData@candidates[[seqname]]
-        variants <- DensityScoreAndOrderVariants(variants, densityFunction)
+        variants <- .densityScoreAndOrderVariants(variants, densityFunction)
         return(variants)
     })
     
@@ -33,12 +33,12 @@ generateCandidates <- function(mmapprData) {
 }
 
 .getPeakRange <- function(peakList) {
-    ir <- IRanges::IRanges(start = as.numeric(peakList$start),
-                  end = as.numeric(peakList$end),
-                  names = peakList$seqname) #TODO: keep seqname, put in tests
+    ir <- IRanges::IRanges(start=as.numeric(peakList$start),
+                  end=as.numeric(peakList$end),
+                  names=peakList$seqname)
     
-    gr <- GenomicRanges::GRanges(seqnames = names(ir), 
-                  ranges = ir)
+    gr <- GenomicRanges::GRanges(seqnames=names(ir), 
+                  ranges=ir)
     return(gr)
 }
 
@@ -46,30 +46,32 @@ generateCandidates <- function(mmapprData) {
     # merge mutant bam files in desired regions
     if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
     else{
-        mutBam <- Rsamtools::mergeBam(param@mutFiles, destination = "tmp_m.bam", region = g_ranges)
+        mutBam <- Rsamtools::mergeBam(param@mutFiles, destination="tmp_m.bam", region=inputRange)
     }
     #merge wt files
     if (length(param@wtFiles) < 2) wtBam <- param@wtFiles[[1]]
     else{
-        wtBam <- Rsamtools::mergeBam(param@wtFiles, destination = "tmp_wt.bam", region = g_ranges)
+        wtBam <- Rsamtools::mergeBam(param@wtFiles, destination="tmp_wt.bam", region=inputRange)
     }
     
     # create param for variant calling 
-    tally_param <- VariantTools::TallyVariantsParam(genome = param@refGenome, 
-                                      which = inputRange,
-                                      indels = TRUE
+    tallyParam <- VariantTools::TallyVariantsParam(genome=param@refGenome, 
+                                      which=inputRange,
+                                      indels=TRUE
     )
     
-    resultVr <- (VariantTools::callSampleSpecificVariants(mutBam, wtBam, 
-                                            tally.param = tally_param))
+    resultVr <- VariantTools::callSampleSpecificVariants(
+        mutBam, wtBam, tally.param=tallyParam)
     
     if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
     if (file.exists("tmp_m.bm")) file.remove("tmp_m.bam")
     
     if (length(resultVr) > 0){
         # need sampleNames to convert to VCF; using mutant file names
-        Biobase::sampleNames(resultVr) <- paste0(sapply(param@mutFiles, path), collapse = " -- ")
-        mcols(resultVr) <- NULL
+        Biobase::sampleNames(resultVr) <- paste0(
+            sapply(param@mutFiles, Rsamtools::path),
+            collapse=" -- ")
+        S4Vectors::mcols(resultVr) <- NULL
         return(resultVr)
     } 
     else return(NULL)
@@ -108,7 +110,7 @@ generateCandidates <- function(mmapprData) {
     S4Vectors::mcols(candidateGRanges)$peakDensity <- densityCol
     
     #re-order
-    orderVec <- order(densityCol, decreasing = TRUE)
+    orderVec <- order(densityCol, decreasing=TRUE)
     candidateGRanges <- candidateGRanges[orderVec]
     
     return(candidateGRanges)
