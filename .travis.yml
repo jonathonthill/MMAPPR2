@@ -15,12 +15,12 @@ before_install:
 before_script:
   # so NAMESPACE is up-to-date
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
-  # BiocCheck
-  - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("BiocCheck")'
 
 script:
   - R CMD build .
   - R CMD check *tar.gz
 
 after_success:
+  # BiocCheck
+  - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("BiocCheck")'
   - R CMD BiocCheck *tar.gz

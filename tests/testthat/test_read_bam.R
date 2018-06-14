@@ -2,7 +2,7 @@ context("BAM file reading")
 Sys.unsetenv("R_TESTS")
 
 DebugSkip <- function() {
-    if (T)
+    if (F)
         skip("Skipping file reading tests to save time")
 }
 
