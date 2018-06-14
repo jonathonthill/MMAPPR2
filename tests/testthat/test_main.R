@@ -20,11 +20,11 @@ test_that(".runFunctionInParllel works on multiple cores", {
 
 test_that(".runFunctionInParallel work with package functions", {
     testFunction <- function(x) {
-        return(.repList(x, 2))
+        return(rep(x, 2))
     }
     x <- list(a=1, b=1, c=1)
     y <- .runFunctionInParallel(x, testFunction)
-    expResult <- list(a=list(1, 1), b=list(1, 1), c=list(1, 1))
+    expResult <- list(a=c(1, 1), b=c(1, 1), c=c(1, 1))
     expect_identical(y, expResult)
 })
 
@@ -41,15 +41,6 @@ test_that(".runFunctionInParellel works with extra inputs", {
                      list(c(1, 1, 1)))
 })
 
-test_that(".repList function works as expected", {
-    expect_equal(length(.repList(param, 5)), 5)
-    expect_equal(length(.repList(param, 0)), 0)
-    expect_equal(length(.repList(param, 1)), 1)
-    expect_equal(length(.repList(param, 2)), 2)
-    expect_error(length(.repList(param, -1)))
-    x <- .repList(param, 2)
-    expect_identical(x[[1]], x[[2]])
-})
 
 test_that("MmapprParam takes character, BamFile, or BamFileList of real files", {
     fn_wt <- "test_data/bam_files/zy14_wt_cut_filt.bam"
