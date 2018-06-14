@@ -197,6 +197,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         )
         colnames(wtCounts)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
         rm(applyPileupWT)
+        gc()
         
         #apply functions to mutant pool
         applyPileupMut <- Rsamtools::applyPileups(pfMut, FUN = CalcInfo, param = apParam)
@@ -217,6 +218,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         colnames(mutCounts)[2:6] <- 
             c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
         rm(applyPileupMut)
+        gc()
         
         #inner_join already removes rows without a match
         distanceDf <- dplyr::inner_join(wtCounts, mutCounts, by=c('pos'))
@@ -230,7 +232,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
         
         distanceDf <- dplyr::transmute(distanceDf, 
-                                'pos'=pos,
+                                'pos'='pos',
                                 distance=
                                     ('A.wt' + 'C.wt' + 'G.wt' + 'T.wt')^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower

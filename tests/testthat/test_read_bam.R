@@ -55,6 +55,7 @@ test_that("single chromosome is read correctly", {
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)
     ))
+    expect_type(result, 'list')
     expect_gt(nrow(result$wtCounts), 0)
     expect_gt(nrow(result$mutCounts), 0)
     expect_gt(nrow(result$distanceDf), 0)

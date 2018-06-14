@@ -9,9 +9,11 @@ git:
 warnings_are_errors: true
 sudo: required
 
+# faster install
+r_binary_packages:
+  - devtools
 r_packages:
   - roxygen2
-  
 bioc_packages:
   - BiocCheck
   
