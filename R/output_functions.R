@@ -13,7 +13,7 @@
         }
         if (answer == "n") {
             newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
-            if (is.na(newOutputFolder)) outputFolder(param(mmapprData)) <- "DEFAULT"
+            if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- "DEFAULT"
             else outputFolder(mmapprData@param) <- newOutputFolder
         }
     }

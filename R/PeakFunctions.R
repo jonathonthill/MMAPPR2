@@ -37,7 +37,7 @@ peakRefinement <- function(mmapprData){
     names(densityRank) <- "pos"
     densityRank <- 
         dplyr::mutate(densityRank, 
-                      densityValue = densityFunction(seq(xMin,xMax))) %>%
+                      'densityValue'=densityFunction(seq(xMin,xMax))) %>%
         dplyr::arrange(dplyr::desc(densityValue))
     
     rollingSum <- cumsum(densityRank$densityValue)

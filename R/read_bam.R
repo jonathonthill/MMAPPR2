@@ -90,8 +90,8 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         # (from pileup) into dataframe
         #So it takes a list and returns a dataframe
         make_df_for_chromosome <- function(infoList){
-                x <- data.frame('pos' = rep(infoList$pos, each = 5), 
-                                'nucleotide' = c("A", "C", "G", "T", "cvg"))
+                x <- data.frame('pos'=rep(infoList$pos, each=5), 
+                                'nucleotide'=c("A", "C", "G", "T", "cvg"))
                 #gets right number of columns(files) by column bind
                 #because $info is info by file, and info, which was originally
                 #a matrix, gets simplified into a vector which matches
@@ -186,7 +186,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
                 depth_filter %>%
                 na_filter() %>%
                 avg_files() %>%
-                tidyr::spread(key = nucleotide, value = avg_count) %>%
+                tidyr::spread(key='nucleotide', value='avg_count') %>%
                 #homoz filter only on wt pool
                 homozygote_filter(),
             
@@ -206,7 +206,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
                 depth_filter %>%
                 na_filter() %>%
                 avg_files() %>%
-                tidyr::spread(key = nucleotide, value = avg_count),
+                tidyr::spread(key='nucleotide', value='avg_count'),
             
             error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
@@ -230,8 +230,9 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
         
         distanceDf <- dplyr::transmute(distanceDf, 
-                                pos = pos,
-                                distance = (A.wt + C.wt + G.wt + T.wt)^(1/2))
+                                'pos'=pos,
+                                distance=
+                                    ('A.wt' + 'C.wt' + 'G.wt' + 'T.wt')^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
         
         stopifnot(nrow(distanceDf) > 0)
