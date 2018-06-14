@@ -9,8 +9,11 @@ git:
 warnings_are_errors: true
 sudo: required
 
-before_install:
-  - R -e 'install.packages("roxygen2")'
+#before_install:
+#  - R -e 'install.packages("roxygen2")'
+
+r_packages:
+  - roxygen2
   
 before_script:
   # so NAMESPACE is up-to-date
