@@ -13,8 +13,6 @@ Suggests: testthat
 Imports: ensemblVEP (>= 1.20.0),
     gmapR,
     Rsamtools,
-    foreach,
-    doSNOW,
     VariantAnnotation,
     BiocParallel,
     Biobase,

@@ -9,11 +9,11 @@ git:
 warnings_are_errors: true
 sudo: required
 
-#before_install:
-#  - R -e 'install.packages("roxygen2")'
-
 r_packages:
   - roxygen2
+  
+bioc_packages:
+  - BiocCheck
   
 before_script:
   # so NAMESPACE is up-to-date
@@ -25,5 +25,4 @@ script:
 
 after_success:
   # BiocCheck
-  - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("BiocCheck")'
   - R CMD BiocCheck *tar.gz
