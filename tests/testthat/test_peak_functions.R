@@ -16,10 +16,20 @@ test_that('peak is identified for chromosome 5', {
     expect_equal(names(md@peaks)[1], 'chr5')
 })
 
+mockSubsampleLoessMax <- function(rawData, loessSpan) {
+    # return max pos without performing loess fit
+    tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
+    return(tempData$pos[which.max(tempData$euclideanDistance)])
+}
+
 
 test_that(".peakRefinementChr works right on chr 5", {
+    skip_if_not_travis_or_bioc()
     inputList <- list(seqname='chr5')
-    chr5list <- .peakRefinementChr(inputList, md)
+    chr5list <- with_mock(
+        .getSubsampleLoessMax=mockSubsampleLoessMax,
+        .peakRefinementChr(inputList, md)
+    )
     expect_true(all(c('start', 'end', 'densityFunction',
                       'peakPosition', 'seqname') %in%
                         names(chr5list)))

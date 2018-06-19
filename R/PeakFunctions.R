@@ -6,30 +6,33 @@ peakRefinement <- function(mmapprData){
     return(mmapprData)
 }
 
+.getSubsampleLoessMax <- function(rawData, loessSpan) {
+    tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
+    tempData <- tempData[order(tempData$pos),]
+    loessData <- suppressWarnings(
+        loess(euclideanDistance~pos, data=tempData,
+              span=loessSpan, family=c("symmetric")))
+    return(loessData$x[which.max(loessData$fitted)])
+}
+
 .peakRefinementChr <- function(inputList, mmapprData) {
     stopifnot('seqname' %in% names(inputList))
     seqname <- inputList$seqname
     
-    options(warn=-1)
     
     loessSpan <- mmapprData@distance[[seqname]]$loess$pars$span
     pos <- mmapprData@distance[[seqname]]$loess$x
     euclideanDistance <- mmapprData@distance[[seqname]]$loess$y
     rawData <- data.frame(pos, euclideanDistance)
     
-    maxValues <- rep(NA, 1000)
-    for (i in 1:1000){
-        tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
-        tempData <- tempData[order(tempData$pos),]
-        loessData <- suppressWarnings(
-            loess(euclideanDistance~pos, data=tempData,
-                  span=loessSpan, family=c("symmetric")))
-        maxValues[i] <- loessData$x[which.max(loessData$fitted)]
-    }
+    # get peak values of loess fits of 1000 subsamples
+    maxValues <- replicate(1000, .getSubsampleLoessMax(rawData=rawData,
+                                                       loessSpan=loessSpan))
+    str(maxValues)
     
     densityData <- density.default(maxValues)
-    
     densityFunction <- approxfun(x=densityData$x, y=densityData$y)
+    
     xMin <- min(densityData$x)
     xMax <- max(densityData$x)
     
@@ -37,7 +40,9 @@ peakRefinement <- function(mmapprData){
     names(densityRank) <- "pos"
     densityRank <- dplyr::mutate(densityRank, 
                       'densityValue'=densityFunction(seq(xMin,xMax)))
-    densityRank <- dplyr::arrange(densityRank, dplyr::desc('densityValue'))
+    # this arrange part is slow.
+    densityRank <- dplyr::arrange(densityRank,
+                                  dplyr::desc(densityRank$densityValue))
     
     rollingSum <- cumsum(densityRank$densityValue)
     cutoffPosition <- which(rollingSum > mmapprData@param@peakIntervalWidth)[1]
@@ -60,8 +65,6 @@ peakRefinement <- function(mmapprData){
     outputList$densityFunction <- densityFunction
     outputList$peakPosition <- peakPosition
     
-    
-    options(warn=0)
     return(outputList)
 }
 

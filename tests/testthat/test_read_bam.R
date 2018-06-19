@@ -1,11 +1,6 @@
 context("BAM file reading")
 Sys.unsetenv("R_TESTS")
 
-DebugSkip <- function() {
-    if (F)
-        skip("Skipping file reading tests to save time")
-}
-
 
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 numCores <- ceiling(parallel::detectCores() / 2)
@@ -23,7 +18,7 @@ mmapprData <- new("MmapprData", param = param)
 test_that("whole genome is read correctly", {
     wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
-    DebugSkip()
+    skip_if_not_travis_or_bioc()
     mmapprData <- readInFiles(mmapprData)
     expect_known_value(
         mmapprData@distance,
@@ -34,7 +29,7 @@ test_that("whole genome is read correctly", {
 
 
 test_that("correct ranges are being read", {
-    DebugSkip()
+    skip_if_not_travis_or_bioc()
     chrList <- .getFileReadChrList(mmapprData)
     expect_equal(length(chrList), 25)
     expect_type(chrList, "list")
@@ -45,7 +40,7 @@ test_that("correct ranges are being read", {
 
 
 test_that("single chromosome is read correctly", {
-    DebugSkip()
+    skip_if_not_travis_or_bioc()
     gc()
     inputRange <- .getFileReadChrList(mmapprData)[['chr5']]
     expect_s4_class(inputRange, "GRanges")
@@ -55,6 +50,7 @@ test_that("single chromosome is read correctly", {
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)
     ))
+    if (typeof(result) != 'list') str(result)
     expect_type(result, 'list')
     expect_gt(nrow(result$wtCounts), 0)
     expect_gt(nrow(result$mutCounts), 0)

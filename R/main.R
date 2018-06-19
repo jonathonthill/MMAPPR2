@@ -1,5 +1,5 @@
-.runFunctionInParallel <- function(inputList, functionToRun, ...) {
-    bpParam <- BiocParallel::bpparam()
+.runFunctionInParallel <- function(inputList, functionToRun, ..., BPPARAM=NULL) {
+    if (is.null(BPPARAM)) bpParam <- BiocParallel::bpparam()
     BiocParallel::bpprogressbar(bpParam) <- TRUE
     resultList <- BiocParallel::bplapply(inputList, functionToRun, ...,
                                     BPPARAM=bpParam)
