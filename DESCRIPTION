@@ -3,7 +3,12 @@ Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 Version: 0.99.0
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Maintainer: Jonathon Hill <jhill@byu.edu>
-Description: Maps mutations resulting from pooled RNA-seq data from the F2 cross of forward genetic screens
+Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
+    cross of forward genetic screens. Its predecessor is described in a paper published
+    in Gennome Research (Hill et al. 2013). MMAPPR2 accepts aligned BAM files as well as
+    a reference genome as input, identifies loci of high sequence disparity between the
+    control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
+    Effect Predictor, and outputs a ranked list of candidate mutations.
 Depends: R (>= 3.3.1)
 License: GPL-3
 Encoding: UTF-8

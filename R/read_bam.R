@@ -234,7 +234,10 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         distanceDf <- dplyr::transmute(distanceDf, 
                                 'pos'='pos',
                                 distance=
-                                    ('A.wt' + 'C.wt' + 'G.wt' + 'T.wt')^(1/2))
+                                    (distanceDf$A.wt +
+                                         distanceDf$C.wt +
+                                         distanceDf$G.wt +
+                                         distanceDf$T.wt)^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
         
         stopifnot(nrow(distanceDf) > 0)
