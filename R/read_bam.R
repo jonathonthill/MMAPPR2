@@ -232,7 +232,7 @@ readInFiles <- function(mmapprData, showDebug=FALSE) {
         distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
         
         distanceDf <- dplyr::transmute(distanceDf, 
-                                'pos'='pos',
+                                pos=distanceDf$pos,
                                 distance=
                                     (distanceDf$A.wt +
                                          distanceDf$C.wt +
