@@ -51,9 +51,10 @@ test_that('.getPeakFromTopP works on edge peak', {
 
 test_that(".peakRefinementChr works right on chr 5", {
     inputList <- list(seqname='chr5')
-    chr5list <- with_mock(
+    chr5list <- mockr::with_mock(
         .getSubsampleLoessMax=.mockSubsampleLoessMax,
         .getPeakFromTopP=.mockPeakFromTopP,
+        .env=as.environment('package:MMAPPR2'),
         .peakRefinementChr(inputList, md)
     )
     expect_true(all(c('start', 'end', 'densityFunction',
