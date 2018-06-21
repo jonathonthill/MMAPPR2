@@ -43,7 +43,8 @@ test_that("single chromosome is read correctly", {
     skip_if_not_travis_or_bioc()
     gc()
     inputRange <-
-        GenomicRanges::GRanges('chr5', IRanges(start=1, width=75682077))
+        GenomicRanges::GRanges('chr5',
+                               IRanges::IRanges(start=1, width=75682077))
     expect_s4_class(inputRange, "GRanges")
 
     result <- .readFilesForChr(inputRange, param=param)
