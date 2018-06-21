@@ -16,9 +16,9 @@ mmapprData <- new("MmapprData", param = param)
 
 # with dummy files
 test_that("whole genome is read correctly", {
+    skip_if_not_travis_or_bioc()
     wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
-    skip_if_not_travis_or_bioc()
     mmapprData <- readInFiles(mmapprData)
     expect_known_value(
         mmapprData@distance,
@@ -42,7 +42,8 @@ test_that("correct ranges are being read", {
 test_that("single chromosome is read correctly", {
     skip_if_not_travis_or_bioc()
     gc()
-    inputRange <- .getFileReadChrList(mmapprData)[['chr5']]
+    inputRange <-
+        GenomicRanges::GRanges('chr5', IRanges(start=1, width=75682077))
     expect_s4_class(inputRange, "GRanges")
 
     result <- .readFilesForChr(inputRange, param=param)
@@ -50,12 +51,14 @@ test_that("single chromosome is read correctly", {
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)
     ))
-    if (typeof(result) != 'list') str(result)
     expect_type(result, 'list')
     expect_gt(nrow(result$wtCounts), 0)
     expect_gt(nrow(result$mutCounts), 0)
     expect_gt(nrow(result$distanceDf), 0)
     expect_named(result$distanceDf, c("pos", "distance"))
+    expect_is(result$distanceDf$pos, 'integer')
+    expect_is(result$distanceDf$distance, 'numeric')
+    # doesn't take hardly any extra time
     expect_known_value(result$distanceDf,
                        "test_data/objects/chr5_distance.RDS",
                        update = FALSE)

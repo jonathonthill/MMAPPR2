@@ -15,6 +15,27 @@ peakRefinement <- function(mmapprData){
     return(loessData$x[which.max(loessData$fitted)])
 }
 
+.getPeakFromTopP <- function(data, topP) {
+    # Takes a dataframe of x and y and identfies the top
+    # values totaling `topP` or greater. It returns
+    # a peak defined by this region
+    stopifnot(ncol(data) == 2)
+    names(data) <- c('x', 'y')
+    # this arrange part is slow.
+    data <- dplyr::arrange(data, dplyr::desc(data$y))
+    
+    rollingSum <- cumsum(data$y)
+    cutoffValue <- data$y[rollingSum >= topP][1]
+    
+    data <- dplyr::filter(data, data$y >= cutoffValue)
+    
+    minPos = min(data$x)
+    maxPos = max(data$x)
+    peakPos <- data$x[which.max(data$y)]
+    
+    return(list(minPos=minPos, maxPos=maxPos, peakPos=peakPos))
+}
+
 .peakRefinementChr <- function(inputList, mmapprData) {
     stopifnot('seqname' %in% names(inputList))
     seqname <- inputList$seqname
@@ -28,7 +49,6 @@ peakRefinement <- function(mmapprData){
     # get peak values of loess fits of 1000 subsamples
     maxValues <- replicate(1000, .getSubsampleLoessMax(rawData=rawData,
                                                        loessSpan=loessSpan))
-    str(maxValues)
     
     densityData <- density.default(maxValues)
     densityFunction <- approxfun(x=densityData$x, y=densityData$y)
@@ -40,30 +60,18 @@ peakRefinement <- function(mmapprData){
     names(densityRank) <- "pos"
     densityRank <- dplyr::mutate(densityRank, 
                       'densityValue'=densityFunction(seq(xMin,xMax)))
-    # this arrange part is slow.
-    densityRank <- dplyr::arrange(densityRank,
-                                  dplyr::desc(densityRank$densityValue))
     
-    rollingSum <- cumsum(densityRank$densityValue)
-    cutoffPosition <- which(rollingSum > mmapprData@param@peakIntervalWidth)[1]
-    cutoffValue <- densityRank$densityValue[cutoffPosition]
-    
-    densityRank <- dplyr::filter(densityRank, 'densityValue' >= cutoffValue)
-    
-    minPos = min(densityRank$pos)
-    maxPos = max(densityRank$pos)
-    
+    peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
+
     densityPlot <- plot(densityData)
-    abline(v = c(minPos, maxPos))
-    
-    peakPosition <- densityRank$pos[which.max(densityRank$densityValue)]
+    abline(v = c(peak$minPos, peak$maxPos))
     
     outputList <- list()
     outputList$seqname <- seqname
-    outputList$start <- minPos
-    outputList$end <- maxPos
+    outputList$start <- peak$minPos
+    outputList$end <- peak$maxPos
     outputList$densityFunction <- densityFunction
-    outputList$peakPosition <- peakPosition
+    outputList$peakPosition <- peak$peakPos
     
     return(outputList)
 }
