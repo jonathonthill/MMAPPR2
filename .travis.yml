@@ -9,21 +9,11 @@ git:
 warnings_are_errors: true
 sudo: required
 
-# faster install
-r_binary_packages:
-  - devtools
-r_packages:
-  - roxygen2
 bioc_packages:
   - BiocCheck
   
-before_script:
-  # so NAMESPACE is up-to-date
-  - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
-
 script:
-  - R CMD build .
-  - R CMD check *tar.gz
+  - R -e 'devtools::check(document=TRUE, cran=FALSE, force_suggests=TRUE)'
 
 after_success:
   # BiocCheck
