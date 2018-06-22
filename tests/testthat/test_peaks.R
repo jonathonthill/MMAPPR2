@@ -33,7 +33,7 @@ test_that('.getPeakFromTopP works on edge peak', {
 })
 
 .mockSubsampleLoessMax <- function(rawData, loessSpan) {
-    # return max pos without performing loess fit
+    # return max pos of subsample without performing loess fit
     tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
     return(tempData$pos[which.max(tempData$euclideanDistance)])
 }
@@ -50,16 +50,17 @@ test_that('.getPeakFromTopP works on edge peak', {
 }
 
 test_that(".peakRefinementChr works right on chr 5", {
+    skip_if_not_installed('mockery')
+    
     inputList <- list(seqname='chr5')
-    chr5list <- with_mock(
-        .getSubsampleLoessMax=.mockSubsampleLoessMax,
-        .getPeakFromTopP=.mockPeakFromTopP,
-        .peakRefinementChr(inputList, md)
-    )
+    
+    mockery::stub(.peakRefinementChr, '.getSubsampleLoessMax', .mockSubsampleLoessMax)
+    mockery::stub(.peakRefinementChr, '.getPeakFromTopP', .mockPeakFromTopP)
+    chr5list <- .peakRefinementChr(inputList, md)
+    
     expect_true(all(c('start', 'end', 'densityFunction',
                       'peakPosition', 'seqname') %in%
                         names(chr5list)))
     expect_true(chr5list$peakPosition > 19000000)
     expect_true(chr5list$peakPosition < 25000000)
 })
-
