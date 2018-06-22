@@ -19,7 +19,7 @@ before_script:
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
 
 script:
-  - R CMD build .
+  - R CMD build --no-manual .
   - R CMD check *tar.gz
 
 after_success:
