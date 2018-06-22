@@ -42,6 +42,7 @@ test_that("correct ranges are being read", {
 test_that("single chromosome is read correctly", {
     skip_if_not_travis_or_bioc()
     gc()
+    BiocParallel::register(BiocParallel::SerialParam())
     inputRange <-
         GenomicRanges::GRanges('chr5',
                                IRanges::IRanges(start=1, width=75682077))
