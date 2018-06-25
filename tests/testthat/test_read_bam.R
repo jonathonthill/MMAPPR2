@@ -40,15 +40,23 @@ test_that("correct ranges are being read", {
 
 
 test_that("single chromosome is read correctly", {
-    skip_if_not_travis_or_bioc()
-    gc()
-    BiocParallel::register(BiocParallel::SerialParam())
+    skip_if_not_installed('mockery')
+
     inputRange <-
         GenomicRanges::GRanges('chr5',
                                IRanges::IRanges(start=1, width=75682077))
     expect_s4_class(inputRange, "GRanges")
 
+    infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
+    mockAP <- mockery::mock(
+        list(list(pos=1:10, # WT
+             info=matrix(infoVec, ncol=1))),
+        list(list(pos=2:11, # MUT
+             info=matrix(infoVec, ncol=1)))
+    )
+    mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
     result <- .readFilesForChr(inputRange, param=param)
+    mockery::expect_called(mockAP, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)
@@ -60,11 +68,4 @@ test_that("single chromosome is read correctly", {
     expect_named(result$distanceDf, c("pos", "distance"))
     expect_is(result$distanceDf$pos, 'integer')
     expect_is(result$distanceDf$distance, 'numeric')
-    # doesn't take hardly any extra time
-    expect_known_value(result$distanceDf,
-                       "test_data/objects/chr5_distance.RDS",
-                       update = FALSE)
-    rm(result)
 })
-
-
