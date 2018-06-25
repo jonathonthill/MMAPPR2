@@ -13,8 +13,6 @@
 #' This describes what we're doing
 #'
 #' @param mmapprParam A \linkS4class{MmapprParam} object containing desired parameters
-#' @param showDebug If set to \code{TRUE}, intermediate dataframe sizes are
-#'     displayed during file reading step
 #'
 #' @return A \linkS4class{MmapprData} object containing results
 #' @export

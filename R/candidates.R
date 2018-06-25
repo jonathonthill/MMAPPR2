@@ -69,7 +69,7 @@ generateCandidates <- function(mmapprData) {
     if (length(resultVr) > 0){
         # need sampleNames to convert to VCF; using mutant file names
         Biobase::sampleNames(resultVr) <- paste0(
-            sapply(param@mutFiles, Rsamtools::path),
+            sapply(param@mutFiles, path),
             collapse=" -- ")
         S4Vectors::mcols(resultVr) <- NULL
         return(resultVr)
