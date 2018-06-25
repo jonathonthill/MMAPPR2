@@ -31,7 +31,7 @@
 #'                            vepFlags)
 #' mmapprData <- mmappr(mmapprParam)
 #' }
-mmappr <- function(mmapprParam, showDebug=FALSE) {
+mmappr <- function(mmapprParam) {
     startTime <- proc.time()
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
@@ -41,7 +41,7 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
     mmapprData <- .prepareOutputFolder(mmapprData)
     
     mmapprData <- tryCatch({
-        mmapprData <- readInFiles(mmapprData, showDebug=showDebug)
+        mmapprData <- readInFiles(mmapprData)
         message("File reading successfully completed and Euclidian distance data generated")
         
         mmapprData <- loessFit(mmapprData)
