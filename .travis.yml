@@ -7,7 +7,6 @@ git:
   # To only get latest commit
   depth: 1
 pandoc: false
-latex: false
 warnings_are_errors: true
 sudo: required
 
@@ -19,7 +18,7 @@ before_script:
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
 
 script:
-  - R CMD build --no-manual .
+  - R CMD build .
   - R CMD check *tar.gz
 
 after_success:

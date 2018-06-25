@@ -4,13 +4,10 @@
 \alias{mmappr}
 \title{Mutation Mapping Analysis Pipeline for Pooled RNA-Seq}
 \usage{
-mmappr(mmapprParam, showDebug = FALSE)
+mmappr(mmapprParam)
 }
 \arguments{
 \item{mmapprParam}{A \linkS4class{MmapprParam} object containing desired parameters}
-
-\item{showDebug}{If set to \code{TRUE}, intermediate dataframe sizes are
-displayed during file reading step}
 }
 \value{
 A \linkS4class{MmapprData} object containing results
