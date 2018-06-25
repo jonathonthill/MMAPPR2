@@ -6,65 +6,73 @@ peakRefinement <- function(mmapprData){
     return(mmapprData)
 }
 
-.peakRefinementChr <- function(inputList, mmapprData) {
-    require(magrittr, quietly=TRUE)
+.getSubsampleLoessMax <- function(rawData, loessSpan) {
+    tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
+    tempData <- tempData[order(tempData$pos),]
+    loessData <- suppressWarnings(
+        loess(euclideanDistance~pos, data=tempData,
+              span=loessSpan, family=c("symmetric")))
+    return(loessData$x[which.max(loessData$fitted)])
+}
+
+.getPeakFromTopP <- function(data, topP) {
+    # Takes a dataframe of x and y and identfies the top
+    # values totaling `topP` or greater. It returns
+    # a peak defined by this region
+    stopifnot(ncol(data) == 2)
+    names(data) <- c('x', 'y')
+    # this arrange part is slow.
+    data <- dplyr::arrange(data, dplyr::desc(data$y))
     
+    rollingSum <- cumsum(data$y)
+    cutoffValue <- data$y[rollingSum >= topP][1]
+    
+    data <- dplyr::filter(data, data$y >= cutoffValue)
+    
+    minPos = min(data$x)
+    maxPos = max(data$x)
+    peakPos <- data$x[which.max(data$y)]
+    
+    return(list(minPos=minPos, maxPos=maxPos, peakPos=peakPos))
+}
+
+.peakRefinementChr <- function(inputList, mmapprData) {
     stopifnot('seqname' %in% names(inputList))
     seqname <- inputList$seqname
     
-    options(warn=-1)
     
     loessSpan <- mmapprData@distance[[seqname]]$loess$pars$span
     pos <- mmapprData@distance[[seqname]]$loess$x
     euclideanDistance <- mmapprData@distance[[seqname]]$loess$y
     rawData <- data.frame(pos, euclideanDistance)
     
-    maxValues <- rep(NA, 1000)
-    for (i in 1:1000){
-        tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
-        tempData <- tempData[order(tempData$pos),]
-        loessData <- suppressWarnings(
-            loess(euclideanDistance~pos, data=tempData,
-                  span=loessSpan, family=c("symmetric")))
-        maxValues[i] <- loessData$x[which.max(loessData$fitted)]
-    }
+    # get peak values of loess fits of 1000 subsamples
+    maxValues <- replicate(1000, .getSubsampleLoessMax(rawData=rawData,
+                                                       loessSpan=loessSpan))
     
     densityData <- density.default(maxValues)
-    
     densityFunction <- approxfun(x=densityData$x, y=densityData$y)
+    
     xMin <- min(densityData$x)
     xMax <- max(densityData$x)
     
-    densityRank <- data.frame(seq(xMin,xMax))
+    densityRank <- data.frame(seq(xMin, xMax))
     names(densityRank) <- "pos"
-    densityRank <- 
-        dplyr::mutate(densityRank, 
-                      densityValue = densityFunction(seq(xMin,xMax))) %>%
-        dplyr::arrange(desc(densityValue))
+    densityRank <- dplyr::mutate(densityRank, 
+                      'densityValue'=densityFunction(seq(xMin,xMax)))
     
-    rollingSum <- cumsum(densityRank$densityValue)
-    cutoffPosition <- which(rollingSum > mmapprData@param@peakIntervalWidth)[1]
-    cutoffValue <- densityRank$densityValue[cutoffPosition]
-    
-    densityRank <- dplyr::filter(densityRank, densityValue >= cutoffValue)
-    
-    minPos = min(densityRank$pos)
-    maxPos = max(densityRank$pos)
-    
+    peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
+
     densityPlot <- plot(densityData)
-    abline(v = c(minPos, maxPos))
-    
-    peakPosition <- densityRank$pos[which.max(densityRank$densityValue)]
+    abline(v = c(peak$minPos, peak$maxPos))
     
     outputList <- list()
     outputList$seqname <- seqname
-    outputList$start <- minPos
-    outputList$end <- maxPos
+    outputList$start <- peak$minPos
+    outputList$end <- peak$maxPos
     outputList$densityFunction <- densityFunction
-    outputList$peakPosition <- peakPosition
+    outputList$peakPosition <- peak$peakPos
     
-    
-    options(warn=0)
     return(outputList)
 }
 

@@ -1,37 +1,5 @@
-## load bam file using the which argument to ScanBamParam
-
-bamfile1 <- Rsamtools::BamFile("../shared/mmappr_tests/zy14/hisat2-zv9/8187X3_110524_SN141_0355_AD0D99ABXX_2.hisat2.sorted.fixed.bam")
-bamfilem1 <- Rsamtools::BamFile("../shared/mmappr_tests/zy14/hisat2-zv9/8187X4_110524_SN141_0355_AD0D99ABXX_2.hisat2.sorted.fixed.bam")
-
-wt_list <- Rsamtools::BamFileList(bamfile1)#, bamfile2, bamfile3))
-mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
-
-
-#automatic core number generation (only on Linux)
-#mem_req is memory required per base for distance list item, as returned in ReadInFiles
-.coreCalc <- function(mem_req = 33.3){
-    tryCatch({
-        return(if (parallel::detectCores() > 2) parallel::detectCores() - 2 else 1)
-    },
-    warning = function(w) {
-        message('Warning: arbitrary number of clusters used (are you not on Linux?)')
-        return(ceiling(detectCores() / 3))
-    }
-    )
-}
-
-.repList <- function(object, times) {
-    stopifnot(times >= 0)
-    result <- list()
-    if (times == 0) return(result)
-    for (i in 1:times) {
-        result <- append(result, object)
-    }
-    return(result)
-}
-
-.runFunctionInParallel <- function(inputList, functionToRun, ...) {
-    bpParam <- BiocParallel::bpparam()
+.runFunctionInParallel <- function(inputList, functionToRun, ..., BPPARAM=NULL) {
+    if (is.null(BPPARAM)) bpParam <- BiocParallel::bpparam()
     BiocParallel::bpprogressbar(bpParam) <- TRUE
     resultList <- BiocParallel::bplapply(inputList, functionToRun, ...,
                                     BPPARAM=bpParam)
@@ -40,16 +8,13 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 }
 
 
-
 #' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 #' 
 #' This describes what we're doing
 #'
-#' @param mmapprParam A \links4class{MmapprParam} object containing desired parameters
-#' @param showDebug If set to \code{TRUE}, intermediate dataframe sizes are
-#'     displayed during file reading step
+#' @param mmapprParam A \linkS4class{MmapprParam} object containing desired parameters
 #'
-#' @return A \links4class{MmapprData} object containing results
+#' @return A \linkS4class{MmapprData} object containing results
 #' @export
 #'
 #' @examples
@@ -64,7 +29,7 @@ mut_list <- Rsamtools::BamFileList(bamfilem1)#, bamfilem2))#, bamfilem3))
 #'                            vepFlags)
 #' mmapprData <- mmappr(mmapprParam)
 #' }
-mmappr <- function(mmapprParam, showDebug=FALSE) {
+mmappr <- function(mmapprParam) {
     startTime <- proc.time()
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
@@ -74,7 +39,7 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
     mmapprData <- .prepareOutputFolder(mmapprData)
     
     mmapprData <- tryCatch({
-        mmapprData <- readInFiles(mmapprData, showDebug=showDebug)
+        mmapprData <- readInFiles(mmapprData)
         message("File reading successfully completed and Euclidian distance data generated")
         
         mmapprData <- loessFit(mmapprData)
@@ -85,7 +50,7 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
         if (length(mmapprData@peaks) > 0)
             message("Peak regions succesfully identified")
         else {
-            error("No peak regions identified")
+            stop("No peak regions identified")
         }
         
         mmapprData <- generateCandidates(mmapprData)
@@ -119,7 +84,7 @@ mmappr <- function(mmapprParam, showDebug=FALSE) {
     path <- bf$path
     index <- paste0(path, ".bai")
     if (!file.exists(index)){
-        indexBam(bf)
+        Rsamtools::indexBam(bf)
     }
     return(Rsamtools::BamFile(path, index = index))
 }

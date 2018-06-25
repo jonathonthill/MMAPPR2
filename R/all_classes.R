@@ -47,6 +47,19 @@ setClass("MmapprParam",
 
 
 
+#' MmapprData object
+#' 
+#' Stores data from each step of the MMAPPR pipeline.
+#'
+#' @slot param MmapprParam. TODO
+#' @slot distance list. 
+#' @slot peaks list. 
+#' @slot candidates list. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 setClass("MmapprData",
          representation(
              param="MmapprParam",

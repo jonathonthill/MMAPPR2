@@ -13,7 +13,7 @@
         }
         if (answer == "n") {
             newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
-            if (is.na(newOutputFolder)) outputFolder(param(mmapprData)) <- "DEFAULT"
+            if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- "DEFAULT"
             else outputFolder(mmapprData@param) <- newOutputFolder
         }
     }
@@ -28,8 +28,8 @@
 
 #' Title
 #'
-#' @param mmapprData 
-#' @param plotAicc 
+#' @param mmapprData description
+#' @param plotAicc description
 #'
 #' @return
 #' @export
@@ -129,10 +129,11 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     
 }
 
-WriteCandidateVCFs <- function(mmapprData) {
+.writeCandidateVCFs <- function(mmapprData) {
     for (seqname in names(mmapprData@candidates)) {
-        candidateVCF <- asVCF(mmapprData@candidates[[seqname]])
-        writeVcf(candidateVCF, paste0("mmappr_results", seqname, ".vcf"))
+        candidateVCF <- VariantAnnotation::asVCF(mmapprData@candidates[[seqname]])
+        VariantAnnotation::writeVcf(candidateVCF, 
+                                    paste0("mmappr_results", seqname, ".vcf"))
     }
 }
 
