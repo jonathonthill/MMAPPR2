@@ -12,7 +12,6 @@ test_that("ranges for peaks are prepared", {
 })
 
 
-
 test_that('.getVariantsForRange returns VRanges with sample names', {
     mockVariantCall <- mockery::mock(
         VariantAnnotation::VRanges(seqnames='chr5',
@@ -41,6 +40,7 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
                  'zy14_mut_cut_filt.bam')
 })
 
+
 test_that('.filterVariants removes variants with "LOW" impact', {
     gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300), width=1),
                                  IMPACT=c('HIGH', 'LOW', NA))
@@ -49,6 +49,7 @@ test_that('.filterVariants removes variants with "LOW" impact', {
                                        IMPACT=c('HIGH', NA))
     expect_identical(result, expected)
 })
+
 
 test_that('.densityScoreAndOrderVariants performs basic function', {
     gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300, 400, 500), width=1))
