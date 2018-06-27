@@ -20,6 +20,7 @@ generateCandidates <- function(mmapprData) {
     #density score and order variants
     mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
         densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
+        stopifnot(!is.null(densityFunction))
         variants <- mmapprData@candidates[[seqname]]
         variants <- .densityScoreAndOrderVariants(variants, densityFunction)
         return(variants)
@@ -42,7 +43,7 @@ generateCandidates <- function(mmapprData) {
     return(gr)
 }
 
-.getVariantsForRange <- function(inputRange, param){
+.getVariantsForRange <- function(inputRange, param) {
     # merge mutant bam files in desired regions
     if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
     else{
@@ -53,29 +54,32 @@ generateCandidates <- function(mmapprData) {
     else{
         wtBam <- Rsamtools::mergeBam(param@wtFiles, destination="tmp_wt.bam", region=inputRange)
     }
-    
-    # create param for variant calling 
-    tallyParam <- VariantTools::TallyVariantsParam(genome=param@refGenome, 
+
+    # create param for variant calling
+    # lame fix for mockery double colon bug; normally use :: import
+    require(VariantTools, quietly=TRUE)
+    tallyParam <- TallyVariantsParam(genome=param@refGenome,
                                       which=inputRange,
                                       indels=TRUE
     )
-    
-    resultVr <- VariantTools::callSampleSpecificVariants(
+
+    resultVr <- callSampleSpecificVariants(
         mutBam, wtBam, tally.param=tallyParam)
-    
+
     if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
     if (file.exists("tmp_m.bm")) file.remove("tmp_m.bam")
-    
-    if (length(resultVr) > 0){
+
+    if (length(resultVr) > 0) {
         # need sampleNames to convert to VCF; using mutant file names
-        Biobase::sampleNames(resultVr) <- paste0(
-            sapply(param@mutFiles, Rsamtools:::path),
-            collapse=" -- ")
+        Biobase::sampleNames(resultVr) <-
+            paste0(names(param@mutFiles),
+                   collapse = " -- ")
         S4Vectors::mcols(resultVr) <- NULL
         return(resultVr)
-    } 
+    }
     else return(NULL)
 }
+
 
 .runVEPForVariants <- function(inputVariants, vepParam){
     stopifnot(is(vepParam, "VEPParam"))
@@ -91,13 +95,13 @@ generateCandidates <- function(mmapprData) {
     
     if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
     
-    #output granges
+    #output GRanges
     return(resultGRanges)
 }
 
 .filterVariants <- function(candidateGRanges) {
     filter <-
-        SummarizedExperiment::elementMetadata(candidateGRanges)$IMPACT != 'LOW'
+        GenomicRanges::mcols(candidateGRanges)$IMPACT != 'LOW'
     filter[is.na(filter)] <- TRUE
     return(candidateGRanges[filter])
 }
@@ -107,7 +111,7 @@ generateCandidates <- function(mmapprData) {
     positions <- BiocGenerics::start(candidateGRanges) + 
         ((BiocGenerics::width(candidateGRanges) - 1) / 2)
     densityCol <- sapply(positions, densityFunction)
-    S4Vectors::mcols(candidateGRanges)$peakDensity <- densityCol
+    GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
     
     #re-order
     orderVec <- order(densityCol, decreasing=TRUE)
