@@ -20,6 +20,7 @@ generateCandidates <- function(mmapprData) {
     #density score and order variants
     mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
         densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
+        stopifnot(!is.null(densityFunction))
         variants <- mmapprData@candidates[[seqname]]
         variants <- .densityScoreAndOrderVariants(variants, densityFunction)
         return(variants)
@@ -94,13 +95,13 @@ generateCandidates <- function(mmapprData) {
     
     if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
     
-    #output granges
+    #output GRanges
     return(resultGRanges)
 }
 
 .filterVariants <- function(candidateGRanges) {
     filter <-
-        SummarizedExperiment::elementMetadata(candidateGRanges)$IMPACT != 'LOW'
+        GenomicRanges::mcols(candidateGRanges)$IMPACT != 'LOW'
     filter[is.na(filter)] <- TRUE
     return(candidateGRanges[filter])
 }
@@ -110,7 +111,7 @@ generateCandidates <- function(mmapprData) {
     positions <- BiocGenerics::start(candidateGRanges) + 
         ((BiocGenerics::width(candidateGRanges) - 1) / 2)
     densityCol <- sapply(positions, densityFunction)
-    S4Vectors::mcols(candidateGRanges)$peakDensity <- densityCol
+    GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
     
     #re-order
     orderVec <- order(densityCol, decreasing=TRUE)

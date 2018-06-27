@@ -41,7 +41,21 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
                  'zy14_mut_cut_filt.bam')
 })
 
+test_that('.filterVariants removes variants with "LOW" impact', {
+    gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300), width=1),
+                                 IMPACT=c('HIGH', 'LOW', NA))
+    result <- .filterVariants(gr)
+    expected <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 300), width=1),
+                                       IMPACT=c('HIGH', NA))
+    expect_identical(result, expected)
+})
 
-# TODO: get cached variant GRanges saved
-# TODO: test filter function
-# TODO: test order function
+test_that('.densityScoreAndOrderVariants performs basic function', {
+    gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300, 400, 500), width=1))
+    densFunc <- function(pos) -(pos-310)^2
+    result <- .densityScoreAndOrderVariants(gr, densFunc)
+    expPositions <- c(300, 400, 200, 500, 100)
+    expected <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=expPositions, width=1),
+                                       peakDensity=vapply(expPositions, densFunc, 0))
+    expect_identical(result, expected)
+})
