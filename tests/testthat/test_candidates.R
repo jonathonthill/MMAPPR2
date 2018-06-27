@@ -1,38 +1,47 @@
 context("Variant calling and effect prediction")
 
-refGenFasta <- rtracklayer::FastaFile(normalizePath("./test_data/ref_genome_fastas/chr5.fa"))
-invisible(capture.output(testGenome <-
-                             gmapR::GmapGenome(refGenFasta,
-                                               name = "dan_rerio_zv9_chr5",
-                                               create = TRUE)))
+mmapprData <- readRDS("test_data/objects/post_peakref_chr5_md.RDS")
 
-mmapprData <- readRDS("test_data/intermediate_MDs/post_peak.RDS")
-mmapprData@param@vepFlags <- ensemblVEP::VEPFlags(
-    flags=list(species = "danio_rerio_merged", format = "vcf",
-                 database = TRUE)
-)
-mmapprData@param@refGenome <- testGenome
-
-
-test_that("GmapGenome was created properly", {
-    expect_s4_class(testGenome, "GmapGenome")
-})
-
-mmapprData@candidates$chr5 <- .getPeakRange(mmapprData@peaks$chr5)
 
 test_that("ranges for peaks are prepared", {
+    candList <- .getPeakRange(mmapprData@peaks$chr5)
+    expect_s4_class(candList, 'GRanges')
     chr5PeakList <- mmapprData@peaks$chr5
-    expect_equal(width(mmapprData@candidates$chr5),
+    expect_equal(BiocGenerics::width(candList),
                  chr5PeakList$end - chr5PeakList$start + 1)
 })
 
-mmapprData@candidates$chr5 <- .getVariantsForRange(mmapprData@candidates$chr5,
-                                                  mmapprData@param)
 
-test_that("variants are called for peak", {
-    expect_s4_class(mmapprData@candidates$chr5, "VRanges")
-    expect_gt(length(mmapprData@candidates$chr5), 0)
+
+test_that('.getVariantsForRange returns VRanges with sample names', {
+    mockVariantCall <- mockery::mock(
+        VariantAnnotation::VRanges(seqnames='chr5',
+                                   ranges=IRanges::IRanges(start=c(1,2,3), width=1),
+                                   sampleNames='zy14_mut_cut_filt.bam',
+                                   ref=c('A', 'A', 'A')
+        )
+    )
+    
+    inputRange <-
+        GenomicRanges::GRanges('chr5',
+                               IRanges::IRanges(start = 1, width = 75682077))
+    
+    mockery::stub(
+        .getVariantsForRange,
+        'callSampleSpecificVariants',
+        mockVariantCall
+    )
+    mockery::stub(.getVariantsForRange, 'TallyVariantsParam', 42)
+    result <- .getVariantsForRange(inputRange, mmapprData@param)
+    
+    mockery::expect_called(mockVariantCall, 1)
+    expect_s4_class(result, 'VRanges')
+    expect_equal(as.character(GenomicRanges::seqnames(result))[1], 'chr5')
+    expect_equal(as.character(Biobase::sampleNames(result))[1],
+                 'zy14_mut_cut_filt.bam')
 })
 
 
-
+# TODO: get cached variant GRanges saved
+# TODO: test filter function
+# TODO: test order function
