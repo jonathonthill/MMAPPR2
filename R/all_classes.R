@@ -11,7 +11,6 @@
 #' @slot peakIntervalWidth numeric. 
 #' @slot minDepth numeric. 
 #' @slot homozygoteCutoff numeric. 
-#' @slot numCores numeric. 
 #' @slot minBaseQuality numeric. 
 #' @slot minMapQuality numeric. 
 #' @slot loessOptResolution numeric. 
@@ -33,7 +32,6 @@ setClass("MmapprParam",
              peakIntervalWidth = "numeric",
              minDepth = "numeric",
              homozygoteCutoff = "numeric", #the maximum WT allele frequency we'll accept for candidates
-             numCores = "numeric",
              minBaseQuality = "numeric",
              minMapQuality = "numeric",
              #resolution at which AICc will be calculated to find optimum Loess fit span

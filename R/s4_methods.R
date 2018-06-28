@@ -157,7 +157,6 @@ setMethod("vepFlags", "MmapprParam", function(obj) obj@vepFlags)
 setMethod("distancePower", "MmapprParam", function(obj) obj@distancePower)
 setMethod("peakIntervalWidth", "MmapprParam", function(obj) obj@peakIntervalWidth)
 setMethod("minDepth", "MmapprParam", function(obj) obj@minDepth)
-setMethod("numCores", "MmapprParam", function(obj) obj@numCores)
 setMethod("minBaseQuality", "MmapprParam", function(obj) obj@minBaseQuality)
 setMethod("minMapQuality", "MmapprParam", function(obj) obj@minMapQuality)
 setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolution)
@@ -210,11 +209,6 @@ setMethod("peakIntervalWidth<-", "MmapprParam",
 setMethod("minDepth<-", "MmapprParam",
           function(obj, value) {
             obj@minDepth <- value 
-            obj
-          })
-setMethod("numCores<-", "MmapprParam",
-          function(obj, value) {
-            obj@numCores <- value 
             obj
           })
 setMethod("minBaseQuality<-", "MmapprParam",

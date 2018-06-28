@@ -26,8 +26,6 @@
 
 \item{\code{homozygoteCutoff}}{numeric.}
 
-\item{\code{numCores}}{numeric.}
-
 \item{\code{minBaseQuality}}{numeric.}
 
 \item{\code{minMapQuality}}{numeric.}
