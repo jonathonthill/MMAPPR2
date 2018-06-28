@@ -9,7 +9,7 @@ Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the 
     a reference genome as input, identifies loci of high sequence disparity between the
     control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
     Effect Predictor, and outputs a ranked list of candidate mutations.
-Depends: R (>= 3.3.0)
+Depends: R (>= 3.5.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
