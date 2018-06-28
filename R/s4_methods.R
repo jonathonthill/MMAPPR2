@@ -110,7 +110,7 @@ setMethod("show", "MmapprData", function(object) {
     classes <- sapply(object@distance, class)
     successes <- classes == "list"
     cat(margin, sprintf(
-        "Contains Euclidian distance data for %i sequences\n", 
+        "Contains Euclidian distance data for %i sequence(s)\n", 
         sum(successes)), sep="")
     loessFits <- 0
     try(
@@ -128,14 +128,17 @@ setMethod("show", "MmapprData", function(object) {
     
     cat("peaks:\n")
     for (peak in object@peaks){
-        cat(margin, sprintf("%s: start = %.0f, end = %.0f\n", 
-                            peak$seqname, peak$start, peak$end),sep="")
+        cat(margin, sprintf('%s: ', peak$seqname), sep='')
+        # this will fail and skip if start and end aren't calculated
+        cat(sprintf('start = %.0f, end = %.0f',
+                    peak$start, peak$end), sep="")
+        cat('\n')
         if (!is.null(peak$densityFunction))
             cat(margin, margin, "Density function calculated\n", sep="")
     }
     
     cat("candidates:\n")
-    for (i in 1:length(object@candidates)) .customPrint(object@candidates[i], margin, lineMax=5)
+    for (i in seq_along(object@candidates)) .customPrint(object@candidates[i], margin, lineMax=5)
 })
 
 .customPrint <- function(obj, margin="  ", lineMax=getOption("max.print")) {
