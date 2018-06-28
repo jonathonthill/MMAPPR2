@@ -1,8 +1,9 @@
+.defaultOutputFolder <- function()
+    paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
+            
 .prepareOutputFolder <- function(mmapprData) {
-    if (is.null(outputFolder(mmapprData@param)))
-        outputFolder(mmapprData@param) <- 
-            paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
-    
+    if (outputFolder(mmapprData@param) == 'DEFAULT')
+        outputFolder(mmapprData@param) <- .defaultOutputFolder()
     
     if(dir.exists(outputFolder(mmapprData@param))){
         cat(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
