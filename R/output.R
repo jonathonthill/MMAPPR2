@@ -1,5 +1,26 @@
+#TODO explore ggplot2 and lattice
+
+#' Title
+#'
+#' @param mmapprData The \linkS4class{MmapprData} object to be output
+#'
+#' @return
+#' @export
+#'
+#' @examples
+outputMmapprData <- function(mmapprData) {
+    stopifnot(class(mmapprData) == "MmapprData")
+    
+    .plotGenomeDistance(mmapprData)
+    .plotPeaks(mmapprData)
+    
+    .writeCandidateFiles(mmapprData@candidates)  
+}
+
+
 .defaultOutputFolder <- function()
     paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
+
             
 .prepareOutputFolder <- function(mmapprData) {
     if (outputFolder(mmapprData@param) == 'DEFAULT')
@@ -25,30 +46,8 @@
     return(mmapprData)
 }
 
-#TODO explore ggplot2 and lattice
 
-#' Title
-#'
-#' @param mmapprData description
-#' @param plotAicc description
-#'
-#' @return
-#' @export
-#'
-#' @examples
-outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
-    if (class(mmapprData) != "MmapprData"){
-        stop("Input object not of 'MmapprData' type")
-    }
-    
-    .plotGenomeDistance(mmapprData)
-    .plotPeaks(mmapprData)
-    if (plotAicc) .plotAicc(distance(mmapprData))
-    
-    .writeCandidateFiles(mmapprData@candidates)  
-}
-
-.plotGenomeDistance <- function(mmapprData, savePdf = TRUE) {
+.plotGenomeDistance <- function(mmapprData, savePdf=TRUE) {
     #generate one big dataframe for plots, along with break and label points
     tailPos <- 0
     plotDf <- NULL
@@ -92,6 +91,7 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     if (savePdf) dev.off()
 }
 
+
 .plotPeaks <- function(mmapprData) {
     pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
     par(mfrow=c(2,1))
@@ -126,9 +126,6 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     dev.off()
 }
 
-.plotAicc <- function(mmapprDataDistance) {
-    
-}
 
 .writeCandidateVCFs <- function(mmapprData) {
     for (seqname in names(mmapprData@candidates)) {
@@ -140,7 +137,6 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
 
 
 .writeCandidateFiles <- function(variantsList, outputFolder){
-    
     for(chr in names(variantsList)){
         output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
                              "Feature" = variantsList[[chr]]@elementMetadata@listData$Feature,
@@ -150,6 +146,7 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
                              "AminoAcid" = variantsList[[chr]]@elementMetadata@listData$Amino_acids,
                              "Impact" = variantsList[[chr]]@elementMetadata@listData$IMPACT,
                              "DensityScore" = variantsList[[chr]]@elementMetadata@listData$peakDensity)
-        write.table(output,file = file.path(outputFolder, paste0(chr, ".txt")), sep="\t",row.names = FALSE, quote=FALSE)
+        write.table(output, file=file.path(outputFolder, paste0(chr, '.tsv')),
+                    sep='\t', row.names = FALSE, quote=FALSE)
     }
 }
