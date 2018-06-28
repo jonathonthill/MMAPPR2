@@ -1,5 +1,5 @@
 .prepareOutputFolder <- function(mmapprData) {
-    if (outputFolder(mmapprData@param) == "DEFAULT") 
+    if (is.null(outputFolder(mmapprData@param)))
         outputFolder(mmapprData@param) <- 
             paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
     
@@ -13,7 +13,7 @@
         }
         if (answer == "n") {
             newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
-            if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- "DEFAULT"
+            if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
         }
     }
