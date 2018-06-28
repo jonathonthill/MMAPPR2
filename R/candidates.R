@@ -57,7 +57,7 @@ generateCandidates <- function(mmapprData) {
 
     # create param for variant calling
     # lame fix for mockery double colon bug; normally use :: import
-    require(VariantTools, quietly=TRUE)
+    requireNamespace(VariantTools, quietly=TRUE)
     tallyParam <- TallyVariantsParam(genome=param@refGenome,
                                       which=inputRange,
                                       indels=TRUE
