@@ -1,9 +1,10 @@
 
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
-                        distancePower=4, peakIntervalWidth=0.95, minDepth=10,
-                        homozygoteCutoff=0.95, numCores=4, minBaseQuality=20,
+                        outputFolder="DEFAULT", distancePower=4,
+                        peakIntervalWidth=0.95, minDepth=10,
+                        homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
-                        loessOptCutFactor=0.1, naCutoff=0, outputFolder="DEFAULT",
+                        loessOptCutFactor=0.1, naCutoff=0, 
                         showDebug=FALSE) {
     
     wtFiles <- .toBFList(wtFiles)
@@ -13,7 +14,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                  mutFiles=mutFiles, vepFlags=vepFlags, 
                  distancePower=distancePower, peakIntervalWidth=peakIntervalWidth,
                  minDepth=minDepth,
-                 homozygoteCutoff=homozygoteCutoff, numCores=numCores, 
+                 homozygoteCutoff=homozygoteCutoff,
                  minBaseQuality=minBaseQuality, 
                  minMapQuality=minMapQuality,
                  loessOptResolution=loessOptResolution,
@@ -21,7 +22,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                  outputFolder=outputFolder)
     
     validity <- .validMmapprParam(param)
-    if (typeof(validity) == "logical") param else stop(validity)
+    if (typeof(validity) == "logical") param else stop(paste(validity, collapse='\n  '))
 }
 
 .toBFList <- function(files) {
@@ -55,7 +56,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
     errors <- c()
     if (class(files) != "BamFileList") 
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
-    for (i in 1:length(files)) {
+    for (i in seq_along(files)) {
         file <- files[[i]]
         if (file.exists(file$path)) {
             if (length(Rsamtools::index(file)) == 0) {
@@ -64,7 +65,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                     warning(paste0(file$path), " in wtFiles has no index file")
             }
         } else {
-            errors <- c(errors, paste0(file$path, " does not exist\n"))
+            errors <- c(errors, paste0(file$path, " does not exist"))
         }
     }
     if (length(errors) == 0) TRUE else errors
@@ -157,7 +158,6 @@ setMethod("vepFlags", "MmapprParam", function(obj) obj@vepFlags)
 setMethod("distancePower", "MmapprParam", function(obj) obj@distancePower)
 setMethod("peakIntervalWidth", "MmapprParam", function(obj) obj@peakIntervalWidth)
 setMethod("minDepth", "MmapprParam", function(obj) obj@minDepth)
-setMethod("numCores", "MmapprParam", function(obj) obj@numCores)
 setMethod("minBaseQuality", "MmapprParam", function(obj) obj@minBaseQuality)
 setMethod("minMapQuality", "MmapprParam", function(obj) obj@minMapQuality)
 setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolution)
@@ -210,11 +210,6 @@ setMethod("peakIntervalWidth<-", "MmapprParam",
 setMethod("minDepth<-", "MmapprParam",
           function(obj, value) {
             obj@minDepth <- value 
-            obj
-          })
-setMethod("numCores<-", "MmapprParam",
-          function(obj, value) {
-            obj@numCores <- value 
             obj
           })
 setMethod("minBaseQuality<-", "MmapprParam",

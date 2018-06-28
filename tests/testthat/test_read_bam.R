@@ -3,13 +3,11 @@ Sys.unsetenv("R_TESTS")
 
 
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
-numCores <- ceiling(parallel::detectCores() / 2)
 param <-
     MmapprParam(
         new("GmapGenome"),
         "./test_data/bam_files/zy14_wt_cut_filt.bam",
         "./test_data/bam_files/zy14_mut_cut_filt.bam",
-        numCores = numCores,
         vepFlags = vepFlags
     )
 mmapprData <- new("MmapprData", param = param)
