@@ -38,10 +38,9 @@ outputMmapprData <- function(mmapprData) {
             if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
         }
-    }
-    
-    if (!dir.exists(outputFolder(mmapprData@param))) 
+    } else {
         dir.create(outputFolder(mmapprData@param))
+    } 
     
     return(mmapprData)
 }
@@ -131,7 +130,7 @@ outputMmapprData <- function(mmapprData) {
     for (seqname in names(mmapprData@candidates)) {
         candidateVCF <- VariantAnnotation::asVCF(mmapprData@candidates[[seqname]])
         VariantAnnotation::writeVcf(candidateVCF, 
-                                    paste0("mmappr_results", seqname, ".vcf"))
+                                    paste0("mmappr_results_", seqname, ".vcf"))
     }
 }
 
