@@ -1,12 +1,34 @@
+#TODO explore ggplot2 and lattice
+
+#' Title
+#'
+#' @param mmapprData The \linkS4class{MmapprData} object to be output
+#'
+#' @return
+#' @export
+#'
+#' @examples
+outputMmapprData <- function(mmapprData) {
+    stopifnot(class(mmapprData) == "MmapprData")
+    
+    .plotGenomeDistance(mmapprData)
+    .plotPeaks(mmapprData)
+    
+    .writeCandidateTables(mmapprData@candidates)  
+    .writeCandidateVCFs(mmapprData@candidates)
+}
+
+
 .defaultOutputFolder <- function()
     paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
+
             
 .prepareOutputFolder <- function(mmapprData) {
     if (outputFolder(mmapprData@param) == 'DEFAULT')
         outputFolder(mmapprData@param) <- .defaultOutputFolder()
     
     if(dir.exists(outputFolder(mmapprData@param))){
-        cat(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
+        message(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
         answer <- " "
         while(answer != "y" & answer != "n"){
             answer <- readline(
@@ -16,39 +38,17 @@
             newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
             if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
+            dir.create(outputFolder(mmapprData@param))
         }
-    }
-    
-    if (!dir.exists(outputFolder(mmapprData@param))) 
+    } else {
         dir.create(outputFolder(mmapprData@param))
+    } 
     
     return(mmapprData)
 }
 
-#TODO explore ggplot2 and lattice
 
-#' Title
-#'
-#' @param mmapprData description
-#' @param plotAicc description
-#'
-#' @return
-#' @export
-#'
-#' @examples
-outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
-    if (class(mmapprData) != "MmapprData"){
-        stop("Input object not of 'MmapprData' type")
-    }
-    
-    .plotGenomeDistance(mmapprData)
-    .plotPeaks(mmapprData)
-    if (plotAicc) .plotAicc(distance(mmapprData))
-    
-    .writeCandidateFiles(mmapprData@candidates)  
-}
-
-.plotGenomeDistance <- function(mmapprData, savePdf = TRUE) {
+.plotGenomeDistance <- function(mmapprData, savePdf=TRUE) {
     #generate one big dataframe for plots, along with break and label points
     tailPos <- 0
     plotDf <- NULL
@@ -92,6 +92,7 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     if (savePdf) dev.off()
 }
 
+
 .plotPeaks <- function(mmapprData) {
     pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
     par(mfrow=c(2,1))
@@ -126,30 +127,29 @@ outputMmapprData <- function(mmapprData, plotAicc = FALSE) {
     dev.off()
 }
 
-.plotAicc <- function(mmapprDataDistance) {
-    
-}
 
-.writeCandidateVCFs <- function(mmapprData) {
-    for (seqname in names(mmapprData@candidates)) {
-        candidateVCF <- VariantAnnotation::asVCF(mmapprData@candidates[[seqname]])
+.writeCandidateVCFs <- function(candList, outputFolder) {
+    for (seqname in names(candList)) {
+        candidateVCF <- VariantAnnotation::asVCF(candList[[seqname]])
+        filename <- paste0(seqname, ".vcf")
         VariantAnnotation::writeVcf(candidateVCF, 
-                                    paste0("mmappr_results", seqname, ".vcf"))
+                                    file.path(outputFolder, filename))
     }
 }
 
 
-.writeCandidateFiles <- function(variantsList, outputFolder){
-    
-    for(chr in names(variantsList)){
-        output <- data.frame("Position" = variantsList[[chr]]@ranges@start, 
-                             "Feature" = variantsList[[chr]]@elementMetadata@listData$Feature,
-                             "Symbol" = variantsList[[chr]]@elementMetadata@listData$SYMBOL, 
-                             "Allele" = variantsList[[chr]]@elementMetadata@listData$Allele, 
-                             "Consequence" = variantsList[[chr]]@elementMetadata@listData$Consequence,
-                             "AminoAcid" = variantsList[[chr]]@elementMetadata@listData$Amino_acids,
-                             "Impact" = variantsList[[chr]]@elementMetadata@listData$IMPACT,
-                             "DensityScore" = variantsList[[chr]]@elementMetadata@listData$peakDensity)
-        write.table(output,file = file.path(outputFolder, paste0(chr, ".txt")), sep="\t",row.names = FALSE, quote=FALSE)
+.writeCandidateTables <- function(candList, outputFolder){
+    for (seqname in names(candList)) {
+        output <- data.frame("Position" = candList[[seqname]]@ranges@start, 
+                             "Feature" = candList[[seqname]]@elementMetadata@listData$Feature,
+                             "Symbol" = candList[[seqname]]@elementMetadata@listData$SYMBOL, 
+                             "Allele" = candList[[seqname]]@elementMetadata@listData$Allele, 
+                             "Consequence" = candList[[seqname]]@elementMetadata@listData$Consequence,
+                             "AminoAcid" = candList[[seqname]]@elementMetadata@listData$Amino_acids,
+                             "Impact" = candList[[seqname]]@elementMetadata@listData$IMPACT,
+                             "DensityScore" = candList[[seqname]]@elementMetadata@listData$peakDensity)
+        filename <- paste0(seqname, '.tsv')
+        write.table(output, file=file.path(outputFolder, filename),
+                    sep='\t', row.names=FALSE, quote=FALSE)
     }
 }
