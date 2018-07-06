@@ -5,7 +5,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
                         loessOptCutFactor=0.1, naCutoff=0, 
-                        showDebug=FALSE) {
+                        countAggregation=TRUE) {
     
     wtFiles <- .toBFList(wtFiles)
     mutFiles <- .toBFList(mutFiles)
@@ -19,7 +19,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                  minMapQuality=minMapQuality,
                  loessOptResolution=loessOptResolution,
                  loessOptCutFactor=loessOptCutFactor, naCutoff=naCutoff, 
-                 outputFolder=outputFolder)
+                 outputFolder=outputFolder,
+                 countAggregation=countAggregation)
     
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param else stop(paste(validity, collapse='\n  '))
@@ -164,6 +165,7 @@ setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolut
 setMethod("loessOptCutFactor", "MmapprParam", function(obj) obj@loessOptCutFactor)
 setMethod("naCutoff", "MmapprParam", function(obj) obj@naCutoff)
 setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
+setMethod("countAggregation", "MmapprParam", function(obj) obj@countAggregaion)
 setMethod("param", "MmapprData", function(obj) obj@param)
 setMethod("distance", "MmapprData", function(obj) obj@distance)
 setMethod("peaks", "MmapprData", function(obj) obj@peaks)
@@ -240,5 +242,10 @@ setMethod("outputFolder<-", "MmapprParam",
 setMethod("minMapQuality<-", "MmapprParam",
           function(obj, value) {
             obj@minMapQuality <- value 
+            obj
+          })
+setMethod("countAggregation<-", "MmapprParam",
+          function(obj, value) {
+            obj@countAggregation <- value 
             obj
           })

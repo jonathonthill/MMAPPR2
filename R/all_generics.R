@@ -12,6 +12,7 @@ setGeneric("loessOptResolution", function(obj) standardGeneric("loessOptResoluti
 setGeneric("loessOptCutFactor", function(obj) standardGeneric("loessOptCutFactor"))
 setGeneric("naCutoff", function(obj) standardGeneric("naCutoff"))
 setGeneric("outputFolder", function(obj) standardGeneric("outputFolder"))
+setGeneric("countAggregation", function(obj) standardGeneric("countAggregation"))
 
 setGeneric("refGenome<-",function(obj,value) standardGeneric("refGenome<-"))
 setGeneric("wtFiles<-",function(obj,value) standardGeneric("wtFiles<-"))
@@ -27,6 +28,7 @@ setGeneric("loessOptResolution<-",function(obj,value) standardGeneric("loessOptR
 setGeneric("loessOptCutFactor<-",function(obj,value) standardGeneric("loessOptCutFactor<-"))
 setGeneric("naCutoff<-",function(obj,value) standardGeneric("naCutoff<-"))
 setGeneric("outputFolder<-",function(obj,value) standardGeneric("outputFolder<-"))
+setGeneric("countAggregation<-",function(obj,value) standardGeneric("countAggregation<-"))
 
 setGeneric("param", function(obj) standardGeneric("param"))
 setGeneric("distance", function(obj) standardGeneric("distance"))
