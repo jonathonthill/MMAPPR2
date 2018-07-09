@@ -35,7 +35,7 @@ loessFit <- function(mmapprData) {
 
 #returns a list of aicc and span values as well as the time it took
 #define needed functions
-.aiccOpt <- function(distanceDf, spans, resolution, cutFactor, showDebug = FALSE){
+.aiccOpt <- function(distanceDf, spans, resolution, cutFactor) {
     aiccValues <- sapply(spans, .aicc, euc_dist = distanceDf$distance, pos = distanceDf$pos)
     if (length(spans) != length(aiccValues)) stop("AICc values and spans don't match")
     aiccDf <- data.frame(spans, aiccValues)
@@ -56,7 +56,6 @@ loessFit <- function(mmapprData) {
             newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
             newSpans <- round(newSpans, digits = .numDecimals(resolution))
             newSpans <- unique(newSpans)
-            if (showDebug) message("# new spans = ", length(newSpans))
             #recursive call
             aiccDf <- rbind(aiccDf, .aiccOpt(distanceDf, spans = newSpans, 
                                              resolution = resolution, cutFactor = cutFactor))
@@ -109,9 +108,7 @@ loessFit <- function(mmapprData) {
 #the function that gets run for each chromosome
 #takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
 #outputs complete element of mmapprData@distance (mutcounts, wtCounts, loess, aicc)
-.loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor,
-                            showDebug = FALSE){
-    
+.loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor) {
     startTime <- proc.time()
     tryCatch({
         if(class(resultList) == 'character') stop('--Loess fit failed')
@@ -121,8 +118,7 @@ loessFit <- function(mmapprData) {
         resultList$aicc <- .aiccOpt(distanceDf = resultList$distanceDf, 
                                               spans = startSpans,
                                               resolution = loessOptResolution,
-                                              cutFactor = loessOptCutFactor,
-                                              showDebug = showDebug)
+                                              cutFactor = loessOptCutFactor)
         
         #now get loess for best aicc
         bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans'],
