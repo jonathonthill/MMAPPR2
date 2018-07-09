@@ -16,6 +16,7 @@ bioc_packages:
 before_script:
   # so NAMESPACE is up-to-date
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
+  - R -e 'devtools::test()'
 
 script:
   - R CMD build .
