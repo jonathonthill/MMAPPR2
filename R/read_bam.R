@@ -42,8 +42,8 @@ readInFiles <- function(mmapprData) {
                 .makeDfForChromsome() %>%
                 .depthFilter(minDepth=minDepth(param)) %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
-                .avgFiles() %>%
-                tidyr::spread(key='nucleotide', value='avg_count') %>%
+                .avgFiles(fileAggregation=fileAggregation(param)) %>%
+                tidyr::spread(key='nucleotide', value='avgCount') %>%
                 #homoz filter only on wt pool
                 .homozygoteFilter(homozygoteCutoff=homozygoteCutoff(param)),
             
@@ -63,8 +63,8 @@ readInFiles <- function(mmapprData) {
                 .makeDfForChromsome() %>%
                 .depthFilter(minDepth=minDepth(param)) %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
-                .avgFiles() %>%
-                tidyr::spread(key='nucleotide', value='avg_count'),
+                .avgFiles(fileAggregation=fileAggregation(param)) %>%
+                tidyr::spread(key='nucleotide', value='avgCount'),
             
             error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
@@ -215,17 +215,27 @@ readInFiles <- function(mmapprData) {
 }
 
 ###Get averages between files and divides by coverage
-#function takes dataframe with pos, nuc (ACGTcvg), file1, file2...returns it with files combined into one mean column
-#so output should be df with pos, nuc (ACGT), avg_count -- also removes coverage
-#by adding each file together then dividing by total coverage, we are essentially weighting each file by coverage
-.avgFiles <- function(chrDf){
-    chrDf$avg_count <- rowSums(chrDf[,3:length(chrDf), drop = FALSE], na.rm = TRUE)
-    #takes non-cvg rows and divides them by cvg
-    chrDf[-seq(5, nrow(chrDf), by=5), "avg_count"] <- 
-        chrDf[-seq(5, nrow(chrDf), by=5), "avg_count"] / chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), "avg_count"]
-    
+#function takes dataframe with pos, nuc (ACGTcvg--with counts),
+#  file1, file2...returns it with files combined into one mean column
+#so output should be df with pos, nuc (ACGTcvg--with base proportions), avgCount
+.avgFiles <- function(chrDf, fileAggregation) {
+    stopifnot(fileAggregation %in% c('sum', 'mean'))
     #throw away non-mean columns and return
-    return(chrDf[, c("pos", "nucleotide", "avg_count")])
+    if (fileAggregation == 'sum') {
+        chrDf$avgCount <- rowSums(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
+        #takes non-cvg rows and divides them by cvg
+        chrDf[-seq(5, nrow(chrDf), by=5), 'avgCount'] <- 
+            chrDf[-seq(5, nrow(chrDf), by=5), 'avgCount'] /
+                chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), 'avgCount']
+    }
+    else if (fileAggregation == 'mean') {
+        #takes non-cvg rows and divides them by cvg
+        chrDf[-seq(5, nrow(chrDf), by=5), 3:length(chrDf)] <- 
+            chrDf[-seq(5, nrow(chrDf), by=5), 3:length(chrDf)] /
+                chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), 3:length(chrDf)]
+        chrDf$avgCount <- rowMeans(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
+    }
+    return(chrDf[, c("pos", "nucleotide", 'avgCount')])
 }
 
 #filter homozygotes wt pool, so when later inner_joined,
