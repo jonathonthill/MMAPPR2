@@ -44,15 +44,14 @@ generateCandidates <- function(mmapprData) {
 }
 
 .getVariantsForRange <- function(inputRange, param) {
-    # merge mutant bam files in desired regions
-    if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
-    else{
-        mutBam <- Rsamtools::mergeBam(param@mutFiles, destination="tmp_m.bam", region=inputRange)
-    }
-    #merge wt files
+    # merge files in desired region if there are multiple
     if (length(param@wtFiles) < 2) wtBam <- param@wtFiles[[1]]
     else{
-        wtBam <- Rsamtools::mergeBam(param@wtFiles, destination="tmp_wt.bam", region=inputRange)
+        wtBam <- mergeBam(param@wtFiles, destination="tmp_wt.bam", region=inputRange)
+    }
+    if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
+    else{
+        mutBam <- mergeBam(param@mutFiles, destination="tmp_m.bam", region=inputRange)
     }
 
     # create param for variant calling

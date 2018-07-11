@@ -16,5 +16,6 @@ NULL
 #' @importFrom utils capture.output object.size str write.table
 #' @importFrom gmapR GmapGenome
 #' @importFrom ensemblVEP VEPFlags
-#' @importFrom Rsamtools BamFileList
+#' @importFrom Rsamtools BamFileList mergeBam
+#' @importFrom VariantTools TallyVariantsParam callSampleSpecificVariants
 NULL
