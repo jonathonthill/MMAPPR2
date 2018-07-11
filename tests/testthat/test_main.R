@@ -76,9 +76,9 @@ test_that("MmapprParam takes character, BamFile, or BamFileList of real files", 
 })
 
 test_that('file setters for param can change format automatically', {
+    fn <- "test_data/bam_files/zy14_mut_cut_filt.bam"
     param <- MmapprParam(new("GmapGenome"), fn, fn, vepFlags)
     
-    fn <- "test_data/bam_files/zy14_mut_cut_filt.bam"
     wtFiles(param) <- c(fn, fn)
     mutFiles(param) <- c(fn, fn)
     expect_s4_class(param@wtFiles, "BamFileList")
