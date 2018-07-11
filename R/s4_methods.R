@@ -7,8 +7,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         loessOptCutFactor=0.1, naCutoff=0, 
                         fileAggregation=c('sum', 'mean')) {
     
-    wtFiles <- .toBFList(wtFiles)
-    mutFiles <- .toBFList(mutFiles)
+    wtFiles <- Rsamtools::BamFileList(wtFiles)
+    mutFiles <- Rsamtools::BamFileList(mutFiles)
     
     param <- new("MmapprParam", refGenome=refGenome, wtFiles=wtFiles, 
                  mutFiles=mutFiles, vepFlags=vepFlags, 
@@ -24,11 +24,6 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
     
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param else stop(paste(validity, collapse='\n  '))
-}
-
-.toBFList <- function(files) {
-    if (class(files) == "character" | class(files) == "BamFile") files <- Rsamtools::BamFileList(files)
-    return(files)
 }
 
 
@@ -179,13 +174,13 @@ setMethod("refGenome<-", "MmapprParam",
           })
 setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
-              obj@wtFiles <- .toBFList(value)
+              obj@wtFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else v
           })
 setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
-              obj@mutFiles <- .toBFList(value)
+              obj@mutFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else v
           })

@@ -50,21 +50,44 @@ test_that("MmapprParam takes character, BamFile, or BamFileList of real files", 
     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut', vepFlags))
 
     # existing filename, just character, should work
-    param1 <- MmapprParam(new("GmapGenome"), fn_wt, fn_mut, vepFlags)
-    expect_s4_class(param1, "MmapprParam")
-    expect_s4_class(param1@wtFiles, "BamFileList")
-    expect_s4_class(param1@mutFiles, "BamFileList")
+    param <- MmapprParam(new("GmapGenome"), fn_wt, fn_mut, vepFlags)
+    expect_s4_class(param, "MmapprParam")
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
+    
+    # character with length>1
+    param <- MmapprParam(new("GmapGenome"), c(fn_wt, fn_wt), fn_mut, vepFlags)
+    expect_s4_class(param, "MmapprParam")
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
 
     bf <- Rsamtools::BamFile("test_data/bam_files/zy14_mut_cut_filt.bam")
-    param2 <- MmapprParam(new("GmapGenome"), bf, bf, vepFlags=vepFlags)
-    expect_s4_class(param2, "MmapprParam")
-    expect_s4_class(param2@wtFiles, "BamFileList")
-    expect_s4_class(param2@mutFiles, "BamFileList")
+    param <- MmapprParam(new("GmapGenome"), bf, bf, vepFlags=vepFlags)
+    expect_s4_class(param, "MmapprParam")
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
 
     bfl <- Rsamtools::BamFileList("test_data/bam_files/zy14_mut_cut_filt.bam")
-    param3 <- MmapprParam(new("GmapGenome"), bfl, bfl, vepFlags=vepFlags)
-    expect_s4_class(param3, "MmapprParam")
-    expect_s4_class(param3@wtFiles, "BamFileList")
-    expect_s4_class(param3@mutFiles, "BamFileList")
+    param <- MmapprParam(new("GmapGenome"), bfl, bfl, vepFlags=vepFlags)
+    expect_s4_class(param, "MmapprParam")
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
 
+})
+
+test_that('file setters for param can change format automatically', {
+    fn <- "test_data/bam_files/zy14_mut_cut_filt.bam"
+    param <- MmapprParam(new("GmapGenome"), fn, fn, vepFlags)
+    
+    wtFiles(param) <- c(fn, fn)
+    mutFiles(param) <- c(fn, fn)
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
+
+    bf <- Rsamtools::BamFile(fn)
+    wtFiles(param) <- c(bf, bf)
+    mutFiles(param) <- c(bf, bf)
+    expect_s4_class(param@wtFiles, "BamFileList")
+    expect_s4_class(param@mutFiles, "BamFileList")
+    
 })
