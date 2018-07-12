@@ -41,6 +41,37 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
 })
 
 
+test_that('.getVariantsForRange handles replicates', {
+    skip_if_not_installed('mockery')
+    
+    mockVariantCall <- mockery::mock(
+        VariantAnnotation::VRanges(seqnames='chr5',
+                                   ranges=IRanges::IRanges(start=c(1), width=1),
+                                   ref=c('A')
+        )
+    )
+    param <- mmapprData@param
+    bf <- Rsamtools::BamFile('test_data/bam_files/zy14_dummy.bam')
+    mockMergeBam <- mockery::mock(Rsamtools::BamFile('tmp_wt.bam'),
+                                  Rsamtools::BamFile('tmp_mut.bam'))
+    wtFiles(param) <- c(bf, bf)
+    mutFiles(param) <- c(bf, bf)
+    inputRange <-
+        GenomicRanges::GRanges('chr5',
+                               IRanges::IRanges(start = 1, width = 75682077))
+    mockery::stub(
+        .getVariantsForRange,
+        'callSampleSpecificVariants',
+        mockVariantCall
+    )
+    mockery::stub(.getVariantsForRange, 'mergeBam', mockMergeBam)
+    mockery::stub(.getVariantsForRange, 'TallyVariantsParam', 42)
+    result <- .getVariantsForRange(inputRange, param)
+    mockery::expect_called(mockVariantCall, 1)
+    mockery::expect_called(mockMergeBam, 2)
+})
+
+
 test_that('.filterVariants removes variants with "LOW" impact', {
     gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300), width=1),
                                  IMPACT=c('HIGH', 'LOW', NA))
@@ -51,7 +82,7 @@ test_that('.filterVariants removes variants with "LOW" impact', {
 })
 
 
-test_that('.densityScoreAndOrderVariants performs basic function', {
+test_that('.densityScoreAndOrderVariants works', {
     gr <- GenomicRanges::GRanges('chr5', IRanges::IRanges(start=c(100, 200, 300, 400, 500), width=1))
     densFunc <- function(pos) -(pos-310)^2
     result <- .densityScoreAndOrderVariants(gr, densFunc)
