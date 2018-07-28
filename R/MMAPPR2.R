@@ -17,5 +17,5 @@ NULL
 #' @importFrom gmapR GmapGenome
 #' @importFrom ensemblVEP VEPFlags
 #' @importFrom Rsamtools BamFileList mergeBam
-#' @importFrom VariantTools TallyVariantsParam callSampleSpecificVariants
+#' @importFrom VariantTools TallyVariantsParam callVariants
 NULL
