@@ -1,0 +1,47 @@
+# An Introduction to MMAPPR2
+
+Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill
+
+Brigham Young University, Provo, Utah, USA
+
+
+## Getting Started
+
+#### Installing Dependencies
+You must first install Ensembl VEP. Use cache.
+```{bash installVEP}
+git clone
+...
+```
+
+This installs VEP and sets up the cache for your desired species, which is what MMAPPR2 expects by default.
+If you depart from the installation shown here, make sure any differences are accounted for in the
+[`VEPFlags`](#Configure-VEPFlags-Object) object.
+
+#### Reference Genome
+Variant calling requires a reference genome, which you can create from your reference file like this:
+```{r refGenome eval=FALSE}
+refGenome <- gmapR::GmapGenome('file', create=TRUE)
+```
+
+## Advanced Configuration
+
+#### Configure VEPFlags Object
+MMAPPR2 uses the ensemblVEP Bioconductor package to predict the effect of variants in the peak region. 
+To customize this process, you'll need to configure a `VEPFlags` object. The following is what MMAPPR2 uses if
+the user doesn't provide their own `VEPFlags` object:
+Note that 
+```{r vepFlags}
+library(ensemblVEP)
+vepFlags <- VEPFlags(flags = list(
+    format = 'vcf',  # <-- this is necessary
+    vcf = FALSE,  # <-- as well as this
+    species = 'danio_rerio',
+    database = FALSE,
+    cache = TRUE,
+    filter_common = TRUE,
+    coding_only = TRUE,  # assuming RNA-seq data
+    most_severe = TRUE  # only keeps worst consequence per variant
+))
+  
+```
