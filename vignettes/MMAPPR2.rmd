@@ -45,3 +45,6 @@ vepFlags <- VEPFlags(flags = list(
 ))
   
 ```
+
+#### Whole-genome Sequencing (WGS)
+It would probably work. Mess with parameters like minDepth.
