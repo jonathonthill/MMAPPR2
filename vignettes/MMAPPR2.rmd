@@ -1,28 +1,39 @@
-# An Introduction to MMAPPR2
+An Introduction to MMAPPR2
+============================================================
 
 Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill
 
 Brigham Young University, Provo, Utah, USA
+____________________________________________________________
 
 
 ## Getting Started
 
 #### Installing Dependencies
-You must first install Ensembl VEP. Use cache.
+You must first install Ensembl VEP like so:
 ```{bash installVEP}
-git clone
-...
+git clone https://github.com/Ensembl/ensembl-vep.git
+cd ensembl-vep
+perl INSTALL.pl -a ac -s my_species
 ```
 
-This installs VEP and sets up the cache for your desired species, which is what MMAPPR2 expects by default.
-If you depart from the installation shown here, make sure any differences are accounted for in the
-[`VEPFlags`](#Configure-VEPFlags-Object) object.
+This installs the most recent VEP and cache for your desired species, which is what MMAPPR2 expects by default.
+If you depart from the installation shown here, see [Ensembl's instructions](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#installer)
+and make sure any differences are accounted for in the
+[`VEPFlags`](#configure-vepflags-object) object.
 
 #### Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
 ```{r refGenome eval=FALSE}
 refGenome <- gmapR::GmapGenome('file', create=TRUE)
 ```
+
+**Make sure your reference genome is the one installed by VEP, i.e., the most recent one on Ensembl**
+
+## Running MMAPPR2
+
+Do stuff
+
 
 ## Advanced Configuration
 
