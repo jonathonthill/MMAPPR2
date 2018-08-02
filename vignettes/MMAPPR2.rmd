@@ -52,7 +52,7 @@ vepFlags <- VEPFlags(flags = list(
     cache = TRUE,
     filter_common = TRUE,
     coding_only = TRUE,  # assuming RNA-seq data
-    most_severe = TRUE  # only keeps worst consequence per variant
+    most_severe = TRUE  # only keeps worst consequence per variant TODO: not working?
 ))
   
 ```
