@@ -1,6 +1,4 @@
 readInFiles <- function(mmapprData) {
-    message("Reading BAM files")
-    
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
     mmapprData@distance <-
