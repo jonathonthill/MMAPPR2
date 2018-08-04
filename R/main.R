@@ -40,7 +40,7 @@ mmappr <- function(mmapprParam) {
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
-    .messageAndLog(paste('Output folder:', file.path(getwd(), oF)), oF)
+    .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
     
     mmapprData <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
@@ -72,7 +72,6 @@ mmappr <- function(mmapprParam) {
         return(mmapprData)
     }, 
     error = function(e) {
-        traceback()
         .messageAndLog(paste('ERROR:', e$message), oF)
         .messageAndLog("MmapprData object up to the failing step is returned.", oF)
         .messageAndLog(paste0("You can also recover this object ",
@@ -82,10 +81,15 @@ mmappr <- function(mmapprParam) {
         return(mmapprData)
     })
     
-    runtime <- format(Sys.time() - startTime)
+    endTime <- Sys.time()
+    .messageAndLog(paste('\nEnd time:', endTime), oF)
+    runtime <- format(endTime - startTime)
     .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
+    
+    .log('\nsessionInfo()', oF)
     .log(sessionInfo(), oF)
+    
     return(mmapprData)
 }
 
