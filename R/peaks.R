@@ -97,8 +97,6 @@ prePeak <- function(mmapprData) {
     distanceMedian <- median(distanceMedian,na.rm=TRUE) #median of list of chr medians
     cutoff <- 3*combinedStDev + distanceMedian
     
-    message("Using", round(cutoff, digits=4), "as cutoff.\n")
-    
     #get which peaks have values above cutoff, initialize them in mmapprData
     for(i in seq_along(mmapprData@distance)){
         if(class(mmapprData@distance[[i]]) != "list"){
@@ -110,7 +108,6 @@ prePeak <- function(mmapprData) {
         chrName <- names(mmapprData@distance)[[i]]
         if (containsPeak) {
             mmapprData@peaks[[chrName]] <- list(seqname = chrName)
-            message("Sequence", chrName, "contains peak.\n")
         }
     }
     
