@@ -74,17 +74,16 @@ mmappr <- function(mmapprParam) {
     error = function(e) {
         traceback()
         .messageAndLog(paste('ERROR:', e$message), oF)
-        .messageAndLog("MmapprData object is returned up until the failing step", oF)
-        .messageAndLog(paste0("You can also recover the object after the latest ",
-                              "successful step from 'mmappr_data.RDS' in the '", 
+        .messageAndLog("MmapprData object up to the failing step is returned.", oF)
+        .messageAndLog(paste0("You can also recover this object ",
+                              "from 'mmappr_data.RDS' in the '", 
                               outputFolder(param(mmapprData)),
                               "' output folder"), oF)
         return(mmapprData)
     })
     
-    # TODO: time failing
     runtime <- format(Sys.time() - startTime)
-    .messageAndLog(paste("Mmappr runtime:", runtime), oF)
+    .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
     .log(sessionInfo(), oF)
     return(mmapprData)
@@ -96,7 +95,6 @@ mmappr <- function(mmapprParam) {
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file=logFile, sep='\n', append=TRUE)
     msg <- paste(msg, collapse='\n')
-    # TODO: needs to be message here
     message(msg)
 }
 
