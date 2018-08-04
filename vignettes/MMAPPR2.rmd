@@ -57,5 +57,15 @@ vepFlags <- VEPFlags(flags = list(
   
 ```
 
+#### BiocParallel Configuration
+MMAPPR2 simply uses the default `bpparam` registered. You can change this (for example, if BiocParallel isn't working correctly) with the `BiocParallel::register` command. For example:
+```{r bpparam}
+library(BiocParallel)
+register(SerialParam())
+register(MultiCoreParam())
+```
+
+The last param registered becomes the default.
+
 #### Whole-genome Sequencing (WGS)
 It would probably work. Mess with parameters like minDepth.
