@@ -30,55 +30,85 @@
 #' mmapprData <- mmappr(mmapprParam)
 #' }
 mmappr <- function(mmapprParam) {
-    startTime <- proc.time()
+    startTime <- Sys.time()
+    oF <- mmapprParam@outputFolder
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------")
+    message('')
     
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
+    .messageAndLog(paste('Start time:', Sys.time()), oF)
+    .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
     
     mmapprData <- tryCatch({
+        .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
         mmapprData <- readInFiles(mmapprData)
-        message("File reading successfully completed and Euclidian distance data generated")
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Generating optimal Loess curves for each chromosome...", oF)
         mmapprData <- loessFit(mmapprData)
-        message("Loess regression successfully completed")
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Identifying chromosome(s) harboring linkage region...", oF)
         mmapprData <- prePeak(mmapprData)
-        mmapprData <- peakRefinement(mmapprData)
         if (length(mmapprData@peaks) > 0)
-            message("Peak regions succesfully identified")
+            .messageAndLog("Peak regions succesfully identified", oF)
         else {
             stop("No peak regions identified")
         }
-        
+        .messageAndLog("Refining peak characterization using SNP resampling...", oF)
+        mmapprData <- peakRefinement(mmapprData)
+        .messageAndLog("Done", oF)
+
+        .messageAndLog('Generating, analyzing, and ranking candidate variants...', oF)        
         mmapprData <- generateCandidates(mmapprData)
-        if (length(mmapprData@candidates) > 0)
-            message("Candidate variants generated, analyzed, and ranked")
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Output files generated", oF)
         outputMmapprData(mmapprData)
-        message("Output PDF files generated")
         
         return(mmapprData)
     }, 
     error = function(e) {
-        traceback()
-        message(e$message)
-        message("MmapprData object is returned up until the failing step")
-        message(paste0("You can also recover the object after the latest successful step from 'mmappr_data.RDS' in the '", 
-                outputFolder(param(mmapprData)),
-                "' output folder"))
+        .messageAndLog(paste('ERROR:', e$message), oF)
+        .messageAndLog("MmapprData object up to the failing step is returned.", oF)
+        .messageAndLog(paste0("You can also recover this object ",
+                              "from 'mmappr_data.RDS' in the '", 
+                              outputFolder(param(mmapprData)),
+                              "' output folder"), oF)
         return(mmapprData)
     })
     
-    
-    
-    message("Mmappr runtime:")
-    print(proc.time() - startTime)
+    endTime <- Sys.time()
+    .messageAndLog(paste('\nEnd time:', endTime), oF)
+    runtime <- format(endTime - startTime)
+    .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
+    
+    .log('\nsessionInfo()', oF)
+    .log(sessionInfo(), oF)
+    
     return(mmapprData)
 }
+
+
+.messageAndLog <- function(msg, outputFolder) {
+    logFile <- file.path(outputFolder, 'mmappr2.log')
+    if (!is.character(msg)) msg <- capture.output(msg)
+    cat(msg, file=logFile, sep='\n', append=TRUE)
+    msg <- paste(msg, collapse='\n')
+    message(msg)
+}
+
+
+.log <- function(msg, outputFolder) {
+    logFile <- file.path(outputFolder, 'mmappr2.log')
+    if (!is.character(msg)) msg <- capture.output(msg)
+    cat(msg, file=logFile, sep='\n', append=TRUE)
+}
+
 
 .addBamFileIndex <- function(bf) {
     path <- bf$path

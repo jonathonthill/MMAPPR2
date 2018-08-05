@@ -42,7 +42,9 @@ outputMmapprData <- function(mmapprData) {
         }
     } else {
         dir.create(outputFolder(mmapprData@param))
-    } 
+    }
+    
+    file.create(file.path(outputFolder(mmapprData@param), 'mmappr2.log'))
     
     return(mmapprData)
 }
