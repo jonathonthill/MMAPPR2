@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/kjohnsen/MMAPPR2.svg?branch=master)](https://travis-ci.org/kjohnsen/MMAPPR2)
 
 ## Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-### Jonathon Hill, Kyle Johnsen, Nathan Jenkins
+### Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill
 
 MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
 cross of forward genetic screens. Its predecessor is described in a paper published
