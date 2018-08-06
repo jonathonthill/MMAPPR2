@@ -2,11 +2,11 @@
 [![Build Status](https://travis-ci.org/kjohnsen/MMAPPR2.svg?branch=master)](https://travis-ci.org/kjohnsen/MMAPPR2)
 
 ## Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-### Jonathon Hill, Kyle Johnsen, Nathan Jenkins
+### Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill
 
 MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
 cross of forward genetic screens. Its predecessor is described in a paper published
-in Gennome Research (Hill et al. 2013). MMAPPR2 accepts aligned BAM files as well as
+in Genome Research (Hill et al. 2013). MMAPPR2 accepts aligned BAM files as well as
 a reference genome as input, identifies loci of high sequence disparity between the
 control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
 Effect Predictor, and outputs a ranked list of candidate mutations.
