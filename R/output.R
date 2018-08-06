@@ -10,12 +10,12 @@
 #' @examples
 outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
+    oF <- outputFolder(param(mmapprData))
     
     .plotGenomeDistance(mmapprData)
     .plotPeaks(mmapprData)
     
-    .writeCandidateTables(mmapprData@candidates)  
-    .writeCandidateVCFs(mmapprData@candidates)
+    .writeCandidateTables(mmapprData@candidates, oF)  
 }
 
 
@@ -117,7 +117,7 @@ outputMmapprData <- function(mmapprData) {
                     chrLoess$fitted[chrLoess$x >= start & chrLoess$x <= end & 
                                         !is.na(chrLoess$fitted)],
                     -5)
-        polygon(shadeX/1000000, shadeY, col=rgb(0,1,1,.75), border=NA)
+        polygon(shadeX/1000000, shadeY, col='#2ecc71', border=NA)
         
         plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
              ylim=c(min(chrLoess$y, na.rm=T),
@@ -130,26 +130,16 @@ outputMmapprData <- function(mmapprData) {
 }
 
 
-.writeCandidateVCFs <- function(candList, outputFolder) {
-    for (seqname in names(candList)) {
-        candidateVCF <- VariantAnnotation::asVCF(candList[[seqname]])
-        filename <- paste0(seqname, ".vcf")
-        VariantAnnotation::writeVcf(candidateVCF, 
-                                    file.path(outputFolder, filename))
-    }
-}
-
-
 .writeCandidateTables <- function(candList, outputFolder){
     for (seqname in names(candList)) {
         output <- data.frame("Position" = candList[[seqname]]@ranges@start, 
-                             "Feature" = candList[[seqname]]@elementMetadata@listData$Feature,
                              "Symbol" = candList[[seqname]]@elementMetadata@listData$SYMBOL, 
-                             "Allele" = candList[[seqname]]@elementMetadata@listData$Allele, 
-                             "Consequence" = candList[[seqname]]@elementMetadata@listData$Consequence,
-                             "AminoAcid" = candList[[seqname]]@elementMetadata@listData$Amino_acids,
                              "Impact" = candList[[seqname]]@elementMetadata@listData$IMPACT,
-                             "DensityScore" = candList[[seqname]]@elementMetadata@listData$peakDensity)
+                             "Consequence" = candList[[seqname]]@elementMetadata@listData$Consequence,
+                             "DensityScore" = candList[[seqname]]@elementMetadata@listData$peakDensity,
+                             "Allele" = candList[[seqname]]@elementMetadata@listData$Allele, 
+                             "AminoAcid" = candList[[seqname]]@elementMetadata@listData$Amino_acids,
+                             "Feature" = candList[[seqname]]@elementMetadata@listData$Feature)
         filename <- paste0(seqname, '.tsv')
         write.table(output, file=file.path(outputFolder, filename),
                     sep='\t', row.names=FALSE, quote=FALSE)
