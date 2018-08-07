@@ -33,6 +33,7 @@ generateCandidates <- function(mmapprData) {
     return(mmapprData)
 }
 
+
 .getPeakRange <- function(peakList) {
     ir <- IRanges::IRanges(start=as.numeric(peakList$start),
                   end=as.numeric(peakList$end),
@@ -42,6 +43,7 @@ generateCandidates <- function(mmapprData) {
                   ranges=ir)
     return(gr)
 }
+
 
 .getVariantsForRange <- function(inputRange, param) {
     # merge files in desired region if there are multiple
@@ -89,12 +91,14 @@ generateCandidates <- function(mmapprData) {
     return(resultGRanges)
 }
 
+
 .filterVariants <- function(candidateGRanges) {
     filter <-
         GenomicRanges::mcols(candidateGRanges)$IMPACT != 'LOW'
     filter[is.na(filter)] <- TRUE
     return(candidateGRanges[filter])
 }
+
 
 .densityScoreAndOrderVariants <- function(candidateGRanges, densityFunction) {
     #density calculation
