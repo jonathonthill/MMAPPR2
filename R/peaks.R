@@ -63,7 +63,6 @@ peakRefinement <- function(mmapprData){
     
     peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
 
-    densityPlot <- plot(densityData)
     abline(v = c(peak$minPos, peak$maxPos))
     
     outputList <- list()
@@ -72,6 +71,7 @@ peakRefinement <- function(mmapprData){
     outputList$end <- peak$maxPos
     outputList$densityFunction <- densityFunction
     outputList$peakPosition <- peak$peakPos
+    outputList$densityData <- densityData
     
     return(outputList)
 }
