@@ -63,8 +63,6 @@ peakRefinement <- function(mmapprData){
     
     peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
 
-    abline(v = c(peak$minPos, peak$maxPos))
-    
     outputList <- list()
     outputList$seqname <- seqname
     outputList$start <- peak$minPos
