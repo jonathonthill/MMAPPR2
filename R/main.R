@@ -42,6 +42,10 @@ mmappr <- function(mmapprParam) {
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
     
+    .log('Parameters:', oF)
+    .log(mmapprParam, oF)
+    .log('', oF)
+    
     mmapprData <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
         mmapprData <- readInFiles(mmapprData)

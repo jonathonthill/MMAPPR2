@@ -43,6 +43,8 @@ outputMmapprData <- function(mmapprData) {
             if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
             dir.create(outputFolder(mmapprData@param))
+        } else {
+            unlink(file.path(outputFolder(param(mmapprData)), '*'))
         }
     } else {
         dir.create(outputFolder(mmapprData@param))
