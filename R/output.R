@@ -12,8 +12,12 @@ outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
     oF <- outputFolder(param(mmapprData))
     
-    .plotGenomeDistance(mmapprData)
-    .plotPeaks(mmapprData)
+    tryCatch({
+        .plotGenomeDistance(mmapprData)
+        .plotPeaks(mmapprData)
+    }, finally={
+        graphics.off()
+    })
     
     .writeCandidateTables(mmapprData@candidates, oF)  
 }
@@ -39,6 +43,8 @@ outputMmapprData <- function(mmapprData) {
             if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
             dir.create(outputFolder(mmapprData@param))
+        } else {
+            unlink(file.path(outputFolder(param(mmapprData)), '*'))
         }
     } else {
         dir.create(outputFolder(mmapprData@param))
@@ -97,18 +103,22 @@ outputMmapprData <- function(mmapprData) {
 
 .plotPeaks <- function(mmapprData) {
     pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
-    par(mfrow=c(2,1))
+    par(mfrow=c(2,1), mar=c(5, 4, 4, 4))
     
     for (seqname in names(mmapprData@peaks)){
         chrLoess <- mmapprData@distance[[seqname]]$loess
         start <- mmapprData@peaks[[seqname]]$start
         end <- mmapprData@peaks[[seqname]]$end
+        densityData <- mmapprData@peaks[[seqname]]$densityData
         
         plot(chrLoess$x/1000000, chrLoess$fitted, type='l', 
              ylim=c(min(chrLoess$fitted, na.rm=T),
-                    1.1*max(chrLoess$fitted, na.rm=T)), 
-             ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
-             xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
+                    1.1*max(chrLoess$fitted, na.rm=T)),
+             xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)) * 1E-6,
+             xlab=paste(seqname,"Base Position (MB)"),
+             ylab=NA, xaxs='i')
+        mtext(substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)),
+              side=2, line=2)
         shadeX <- c(start, 
                     chrLoess$x[chrLoess$x >= start & chrLoess$x <= end & 
                                    !is.na(chrLoess$fitted)],
@@ -119,6 +129,23 @@ outputMmapprData <- function(mmapprData) {
                     -5)
         polygon(shadeX/1000000, shadeY, col='#2ecc71', border=NA)
         
+        # overlay density curve
+        posMatch <- (densityData$x >= chrLoess$x[1]) &
+            densityData$x <= chrLoess$x[length(chrLoess$x)]
+        densityData$x <- densityData$x[posMatch]
+        densityData$y <- densityData$y[posMatch]
+        par(new=TRUE)
+        plot(densityData, type='l',
+             ylim=c(min(densityData$y, na.rm=T), 1.1*max(densityData$y, na.rm=T)),
+             xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
+             ann=F, xaxs='i',
+             xaxt='n', yaxt='n', col='#502ecc')
+        axis(side=4, col='#502ecc')
+        mtext(side=4, line=2, 'Probability', col='#502ecc')
+        legend('topright', legend=c("Fitted Distance Curve", "Peak Resampling Distribution"),
+               col=c("black", "#502ecc"), lty=c(1, 1), cex=0.8, lwd=3)
+        
+        # SNPs plot
         plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
              ylim=c(min(chrLoess$y, na.rm=T),
                     1.1*max(chrLoess$y, na.rm=T)),
