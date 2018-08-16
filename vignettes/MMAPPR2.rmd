@@ -25,10 +25,10 @@ and make sure any differences are accounted for in the
 #### Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
 ```{r refGenome eval=FALSE}
-refGenome <- gmapR::GmapGenome('file', create=TRUE)
+refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 ```
 
-**Make sure your reference genome is the one installed by VEP, i.e., the most recent one on Ensembl**
+**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl**
 
 ## Running MMAPPR2
 
