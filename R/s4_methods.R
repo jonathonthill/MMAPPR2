@@ -29,7 +29,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', VEPFlags())
+#' }
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         outputFolder="DEFAULT", distancePower=4,
                         peakIntervalWidth=0.95, minDepth=10,
