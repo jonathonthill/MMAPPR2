@@ -31,7 +31,6 @@
 #' }
 mmappr <- function(mmapprParam) {
     startTime <- Sys.time()
-    oF <- mmapprParam@outputFolder
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------")
@@ -39,6 +38,7 @@ mmappr <- function(mmapprParam) {
     
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
+    oF <- outputFolder(mmapprData@param)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
     
