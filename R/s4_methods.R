@@ -1,4 +1,37 @@
-
+#' \strong{Constructor}
+#' @rdname MmapprParam
+#'
+#' @param refGenome 
+#' @param wtFiles 
+#' @param mutFiles 
+#' @param vepFlags 
+#' @param outputFolder 
+#' @param distancePower 
+#' @param peakIntervalWidth 
+#' @param minDepth 
+#' @param homozygoteCutoff 
+#' @param minBaseQuality 
+#' @param minMapQuality 
+#' @param loessOptResolution 
+#' @param loessOptCutFactor 
+#' @param naCutoff 
+#' @param fileAggregation A length-one character vector determining strategy
+#'   for aggregating base calls when multiple wild-type or multiple mutant
+#'   files are provided.
+#'   When 'sum', average base call proportions are computed using
+#'   the read counts from each file, effectively weighting files
+#'   with higher counts at a given position. When equal to 'mean', the
+#'   base call proportions as well as read depths, rather than the absolute count,
+#'   are averaged across files, which is useful when you want to weight each
+#'   replicate evenly without regards to differing depth.
+#'
+#' @return A MmapprParam object
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', VEPFlags())
+#' }
 MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
                         outputFolder="DEFAULT", distancePower=4,
                         peakIntervalWidth=0.95, minDepth=10,

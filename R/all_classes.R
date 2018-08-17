@@ -1,7 +1,7 @@
 
-#' MmapprParam object
+#' MmapprParam Class
 #' 
-#' \code{MmapprParam} stores options for running MMAPPR
+#' \code{MmapprParam} stores parameters running \code{\link{mmappr}}
 #'
 #' @slot refGenome GmapGenome. 
 #' @slot wtFiles BamFileList. 
@@ -17,21 +17,10 @@
 #' @slot loessOptCutFactor numeric. 
 #' @slot naCutoff numeric. 
 #' @slot outputFolder character. 
-#' @slot fileAggregation A length-one character vector determining strategy for
-#'   aggregating base calls when multiple wild-type or multiple mutant files are provided.
-#'   When 'sum', average base call proportions are computed using
-#'   the read counts from
-#'   each file, effectively weighting files
-#'   with higher counts at a given position. When equal to 'mean', the
-#'   base call proportions as well as read depths, rather than the absolute count,
-#'   are averaged across files, which is useful when you want to weight each
-#'   replicate evenly without
-#'   regards to differing depth.
+#' @slot fileAggregation character.
 #'
-#' @return
+#' @rdname MmapprParam
 #' @export
-#'
-#' @examples
 setClass("MmapprParam",
          representation(
              refGenome = "GmapGenome",
@@ -65,10 +54,7 @@ setClass("MmapprParam",
 #' @slot peaks list. 
 #' @slot candidates list. 
 #'
-#' @return
 #' @export
-#'
-#' @examples
 setClass("MmapprData",
          representation(
              param="MmapprParam",
