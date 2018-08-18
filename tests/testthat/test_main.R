@@ -91,3 +91,17 @@ test_that('file setters for param can change format automatically', {
     expect_s4_class(param@mutFiles, "BamFileList")
     
 })
+
+test_that('log writes to default folder', {
+    skip_if_not_installed('mockery')
+    newParam <- param
+    unlink('/tmp/m2', recursive=TRUE)
+    dir.create('/tmp/m2')
+    newParam@outputFolder <- '/tmp/m2'
+    mockery::stub(mmappr, '.prepareOutputFolder', new('MmapprData', param=newParam))
+    mockery::stub(mmappr, 'tryCatch', function(...) stop('expected failure'))
+    expect_error(mmappr(param), 'expected failure')
+    expect_true(file.exists('/tmp/m2/mmappr2.log'))
+    unlink('/tmp/m2', recursive=TRUE)
+    
+})
