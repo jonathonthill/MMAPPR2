@@ -24,7 +24,7 @@ outputMmapprData <- function(mmapprData) {
 
 
 .defaultOutputFolder <- function()
-    paste0("mmappr_results_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
+    paste0("mmappr2_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
 
             
 .prepareOutputFolder <- function(mmapprData) {
