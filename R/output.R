@@ -1,5 +1,3 @@
-#TODO explore ggplot2 and lattice
-
 #' Title
 #'
 #' @param mmapprData The \linkS4class{MmapprData} object to be output
