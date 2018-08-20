@@ -70,10 +70,11 @@ mmappr <- function(mmapprParam) {
         mmapprData <- generateCandidates(mmapprData)
         .messageAndLog("Done", oF)
         
-        .messageAndLog("Output files generated", oF)
+        .messageAndLog("Writing output plots and tables...", oF)
         outputMmapprData(mmapprData)
+        .messageAndLog("Done", oF)
         
-        return(mmapprData)
+        mmapprData  # return for use after block
     }, 
     error = function(e) {
         .messageAndLog(paste('ERROR:', e$message), oF)
