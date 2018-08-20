@@ -1,8 +1,10 @@
-#' Title
+#' Generate plots and tables from MMAPPR2 data
 #'
 #' @param mmapprData The \linkS4class{MmapprData} object to be output
 #'
-#' @return
+#' @return A \linkS4class{MmapprData} object after writing output files
+#'   to the folder specified in the \code{outputFolder} slot of the
+#'   \linkS4class{MmappprParam} used.
 #' @export
 #'
 #' @examples

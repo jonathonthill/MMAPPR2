@@ -1,3 +1,12 @@
+#' Perform optimized Loess regression for each chromosome
+#'
+#' @param mmapprData 
+#'
+#' @return A \linkS4class{MmapprData} object with the \code{$loess} element
+#'   of the \code{distance} slot list filled.
+#' @export
+#'
+#' @examples
 loessFit <- function(mmapprData) {
     loessOptResolution <- mmapprData@param@loessOptResolution
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor

@@ -1,6 +1,14 @@
 # take peak region dataframe and run VEP for each region
 # peak region df has cols chr, starts, and stops
 
+#' Generate potential causative mutations in peak regions
+#'
+#' @param mmapprData 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 generateCandidates <- function(mmapprData) {
     
     #get GRanges representation of peak

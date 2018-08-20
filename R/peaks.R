@@ -1,3 +1,12 @@
+#' Characterize Euclidean distance peaks using resampling simulation
+#'
+#' @param mmapprData 
+#'
+#' @return A \linkS4class{MmapprData} object with the \code{peaks}
+#'   slot filled and populated.
+#' @export
+#'
+#' @examples
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
         .runFunctionInParallel(mmapprData@peaks,
@@ -75,6 +84,15 @@ peakRefinement <- function(mmapprData){
 }
 
 
+#' Identify chromosomes containing peaks
+#'
+#' @param mmapprData 
+#'
+#' @return A \linkS4class{MmapprData} object with the \code{peaks}
+#'   slot filled.
+#' @export
+#'
+#' @examples
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     

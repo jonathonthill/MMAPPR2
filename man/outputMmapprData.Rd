@@ -2,13 +2,18 @@
 % Please edit documentation in R/output.R
 \name{outputMmapprData}
 \alias{outputMmapprData}
-\title{Title}
+\title{Generate plots and tables from MMAPPR2 data}
 \usage{
 outputMmapprData(mmapprData)
 }
 \arguments{
 \item{mmapprData}{The \linkS4class{MmapprData} object to be output}
 }
+\value{
+A \linkS4class{MmapprData} object after writing output files
+  to the folder specified in the \code{outputFolder} slot of the
+  \linkS4class{MmappprParam} used.
+}
 \description{
-Title
+Generate plots and tables from MMAPPR2 data
 }

@@ -1,3 +1,12 @@
+#' Read BAM files and generate Euclidean distance data
+#'
+#' @param mmapprData 
+#'
+#' @return A \linkS4class{MmapprData} object with the \code{distance}
+#'   slot filled.
+#' @export
+#'
+#' @examples
 readInFiles <- function(mmapprData) {
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
