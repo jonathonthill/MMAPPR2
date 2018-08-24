@@ -130,6 +130,7 @@ readInFiles <- function(mmapprData) {
     #cut to standard chromosomes
     chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges, pruning.mode='coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM', pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT', pruning.mode='coarse')
     
     chrList <- list()
     # store range for each chromosome as list item
