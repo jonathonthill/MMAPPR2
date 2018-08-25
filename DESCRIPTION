@@ -1,6 +1,6 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.98.5
+Version: 0.98.6
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Maintainer: Jonathon Hill <jhill@byu.edu>
 Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
