@@ -134,9 +134,13 @@ readInFiles <- function(mmapprData) {
     
     chrList <- list()
     # store range for each chromosome as list item
-    for (i in suppressWarnings(GenomeInfoDb::orderSeqlevels(names(chrRanges)))) {
+    for (i in suppressWarnings(
+        GenomeInfoDb::orderSeqlevels(
+            as.character(GenomeInfoDb::seqnames(chrRanges))))) {
+        
         chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- chrRanges[i]
     }
+
     
     return(chrList)
 })}
