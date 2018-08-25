@@ -36,6 +36,27 @@ test_that("correct ranges are being read", {
     rm(chrList)
 })
 
+test_that('chrM and MT are dropped and sequences are reordered', {
+    skip_if_not_installed('mockery')
+    ucscNames <- c('chr1', 'chr2', 'chrM')
+    ensemblNames <- c('1', '2', 'MT')
+    mockGR <- mockery::mock(GenomicRanges::GRanges(ucscNames,
+                                                   IRanges::IRanges(0, 1)
+                            ),
+                            GenomicRanges::GRanges(ensemblNames,
+                                                   IRanges::IRanges(0, 1)
+                            )
+    )
+    mockery::stub(.getFileReadChrList, 'as', mockGR)
+    chrList <- .getFileReadChrList(mmapprData)
+    expect_equal(names(chrList), c('chr1', 'chr2'))
+    
+    chrList <- .getFileReadChrList(mmapprData)
+    expect_equal(names(chrList), c('1', '2'))
+    
+    mockery::expect_called(mockGR, 2)
+})
+
 
 test_that("single chromosome is read correctly", {
     skip_if_not_installed('mockery')
