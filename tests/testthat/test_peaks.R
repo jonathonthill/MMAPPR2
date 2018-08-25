@@ -8,6 +8,13 @@ test_that("no peaks are found for dummy files", {
     expect_equal(length(names(md@peaks)), 0)
 })
 
+test_that('prePeak handles failed Loess', {
+    md <- readRDS('test_data/objects/post_loess_dummy_md.RDS')
+    md@distance$chr1 = list(wtCounts=data.frame(), mutCounts=data.frame(),
+                            loess=structure('loess failed', class='try-error'))
+    expect_equal(length(names(md@peaks)), 0)
+})
+
 md <- readRDS("test_data/objects/post_loess_chr5_md.RDS")
 md <- prePeak(md)
 
