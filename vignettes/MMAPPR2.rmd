@@ -28,7 +28,7 @@ Variant calling requires a reference genome, which you can create from your refe
 refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 ```
 
-**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl**
+**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl!**
 
 ## Running MMAPPR2
 
@@ -39,22 +39,23 @@ Do stuff
 
 #### Configure VEPFlags Object
 MMAPPR2 uses the ensemblVEP Bioconductor package to predict the effect of variants in the peak region. 
-To customize this process, you'll need to configure a `VEPFlags` object. The following is what MMAPPR2 uses if
-the user doesn't provide their own `VEPFlags` object:
-Note that 
+To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
 ```{r vepFlags}
 library(ensemblVEP)
 vepFlags <- VEPFlags(flags = list(
+    ### DEFAULT SETTINGS
     format = 'vcf',  # <-- this is necessary
     vcf = FALSE,  # <-- as well as this
     species = 'danio_rerio',
     database = FALSE,
     cache = TRUE,
     filter_common = TRUE,
-    coding_only = TRUE,  # assuming RNA-seq data
-    most_severe = TRUE  # only keeps worst consequence per variant TODO: not working?
+    coding_only = TRUE  # assuming RNA-seq data
+    ### YOU MAY FIND THESE INTERESTING:
+    # everything = TRUE  # enables many optional analyses, such as Polyphen and SIFT
+    # per_gene = TRUE  # will output only the worst variant per gene
+    # pick = TRUE  # will output only one consequence per variant
 ))
-  
 ```
 
 #### BiocParallel Configuration
