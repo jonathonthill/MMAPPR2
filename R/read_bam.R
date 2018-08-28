@@ -110,7 +110,6 @@ readInFiles <- function(mmapprData) {
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
         
         stopifnot(nrow(distanceDf) > 0)
-        #print(proc.time() - startTime)
         
         resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts, 
                            distanceDf = distanceDf)

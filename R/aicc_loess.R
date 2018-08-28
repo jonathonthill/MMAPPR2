@@ -137,7 +137,6 @@ loessFit <- function(mmapprData) {
                                                 resultList$distanceDf$distance, surface = "direct")
         
         precision <- .numDecimals(loessOptResolution)
-        message(sprintf(paste0("%s: LoessFit complete with optimized span of %.", precision, "f"), resultList$seqname, bestSpan))
         
         #no longer needed
         resultList$distanceDf <- NULL
