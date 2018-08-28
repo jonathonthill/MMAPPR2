@@ -26,6 +26,24 @@ test_that("whole genome is read correctly", {
 })
 
 
+test_that("files get indexed automatically if needed", {
+    skip_if_not_installed('mockery')
+    mockery::stub(readInFiles, '.getFileReadChrList', function(...) stop('fail'))
+    mockery::stub(readInFiles, 'Rsamtools::indexBam',
+                  function(...) write.table(matrix(), '/tmp/test.bam.bai'))
+    
+    file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
+    
+    expect_false(file.exists('/tmp/test.bam.bai'))
+    wtFiles(mmapprData@param) <- '/tmp/test.bam'
+    mutFiles(mmapprData@param) <- '/tmp/test.bam'
+    expect_error(readInFiles(mmapprData), 'fail')
+    expect_true(file.exists('/tmp/test.bam.bai'))
+    
+    unlink('/tmp/test.bam*')
+})
+
+
 test_that("correct ranges are being read", {
     skip_if_not_travis_or_bioc()
     chrList <- .getFileReadChrList(mmapprData)
@@ -50,10 +68,10 @@ test_that('chrM and MT are dropped and sequences are reordered', {
     mockery::stub(.getFileReadChrList, 'as', mockGR)
     chrList <- .getFileReadChrList(mmapprData)
     expect_equal(names(chrList), c('chr1', 'chr2'))
-    
+
     chrList <- .getFileReadChrList(mmapprData)
     expect_equal(names(chrList), c('1', '2'))
-    
+
     mockery::expect_called(mockGR, 2)
 })
 

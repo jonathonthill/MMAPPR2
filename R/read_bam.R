@@ -8,10 +8,15 @@
 #'
 #' @examples
 readInFiles <- function(mmapprData) {
+    if (is.na(Rsamtools::index(wtFiles(param(mmapprData)))))
+        Rsamtools::indexBam(wtFiles(param(mmapprData)))
+    if (is.na(Rsamtools::index(mutFiles(param(mmapprData)))))
+        Rsamtools::indexBam(mutFiles(param(mmapprData)))
+    
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
     mmapprData@distance <-
-    .runFunctionInParallel(chrList, .readFilesForChr, param=mmapprData@param)
+        .runFunctionInParallel(chrList, .readFilesForChr, param=mmapprData@param)
     
     return(mmapprData)
 }
