@@ -6,6 +6,7 @@
 #' @slot refGenome GmapGenome. 
 #' @slot wtFiles BamFileList. 
 #' @slot mutFiles BamFileList. 
+#' @slot species character.
 #' @slot vepFlags VEPFlags. 
 #' @slot distancePower numeric. 
 #' @slot peakIntervalWidth numeric. 
@@ -26,6 +27,7 @@ setClass("MmapprParam",
              refGenome = "GmapGenome",
              wtFiles = "BamFileList",
              mutFiles = "BamFileList",
+             species = "character",
              vepFlags = "VEPFlags",
              distancePower = "numeric",
              peakIntervalWidth = "numeric",
@@ -39,7 +41,7 @@ setClass("MmapprParam",
              loessOptCutFactor = "numeric",
              naCutoff = "numeric", # the most NAs we'll accept, that is, the number of files without data for that position
              outputFolder = "character",
-             fileAggregation='character'
+             fileAggregation ='character'
          )
 )
 

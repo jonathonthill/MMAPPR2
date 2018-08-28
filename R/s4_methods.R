@@ -4,6 +4,7 @@
 #' @param refGenome 
 #' @param wtFiles 
 #' @param mutFiles 
+#' @param species
 #' @param vepFlags 
 #' @param outputFolder 
 #' @param distancePower 
@@ -30,10 +31,10 @@
 #'
 #' @examples
 #' \dontrun{
-#' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', VEPFlags())
+#' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', 'danio_rerio')
 #' }
-MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
-                        outputFolder="DEFAULT", distancePower=4,
+MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
+                        outputFolder=NULL, distancePower=4,
                         peakIntervalWidth=0.95, minDepth=10,
                         homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
@@ -43,9 +44,23 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, vepFlags,
     wtFiles <- Rsamtools::BamFileList(wtFiles)
     mutFiles <- Rsamtools::BamFileList(mutFiles)
     
+    if (is.null(vepFlags))
+        vepFlags <- ensemblVEP::VEPFlags(flags = list(
+            format = 'vcf',  # <-- this is necessary
+            vcf = FALSE,  # <-- as well as this
+            species = species,
+            database = FALSE,
+            cache = TRUE,
+            filter_common = TRUE,
+            coding_only = TRUE  # assuming RNA-seq data
+        ))    
+    
+    if (is.null(outputFolder)) outputFolder <- 'DEFAULT'
+    
     param <- new("MmapprParam", refGenome=refGenome, wtFiles=wtFiles, 
-                 mutFiles=mutFiles, vepFlags=vepFlags, 
-                 distancePower=distancePower, peakIntervalWidth=peakIntervalWidth,
+                 mutFiles=mutFiles, species=species, vepFlags=vepFlags, 
+                 distancePower=distancePower,
+                 peakIntervalWidth=peakIntervalWidth,
                  minDepth=minDepth,
                  homozygoteCutoff=homozygoteCutoff,
                  minBaseQuality=minBaseQuality, 
