@@ -8,7 +8,8 @@ param <-
         new("GmapGenome"),
         "./test_data/bam_files/zy14_wt_cut_filt.bam",
         "./test_data/bam_files/zy14_mut_cut_filt.bam",
-        vepFlags = vepFlags
+        species='danio_rerio',
+        vepFlags=vepFlags
     )
 mmapprData <- new("MmapprData", param = param)
 
