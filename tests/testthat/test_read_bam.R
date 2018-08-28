@@ -146,7 +146,6 @@ test_that('.avgFiles works as expected with mean fileAggregation', {
 
 
 test_that("single chromosome is read correctly with replicates", {
-    # TODO: fix this
     skip_if_not_installed('mockery')
 
     inputRange <-
@@ -157,9 +156,9 @@ test_that("single chromosome is read correctly with replicates", {
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
     mockAP <- mockery::mock(
         list(list(pos=1:10, # WT
-             info=matrix(infoVec, ncol=1))),
+             info=matrix(rep(infoVec, 2), ncol=2))),
         list(list(pos=2:11, # MUT
-             info=matrix(infoVec, ncol=1)))
+             info=matrix(rep(infoVec, 3), ncol=3)))
     )
     mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
     result <- .readFilesForChr(inputRange, param=param)
