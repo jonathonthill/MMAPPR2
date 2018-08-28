@@ -4,7 +4,7 @@
 #'
 #' @return A \linkS4class{MmapprData} object after writing output files
 #'   to the folder specified in the \code{outputFolder} slot of the
-#'   \linkS4class{MmappprParam} used.
+#'   \linkS4class{MmapprParam} used.
 #' @export
 #'
 #' @examples
