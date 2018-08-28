@@ -1,7 +1,9 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 Version: 0.98.8
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R: c(
+    person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role = c("aut")),
+    person('Jonathon', 'Hill', email='jhill@byu.edu', role=c('cre')))
 Maintainer: Jonathon Hill <jhill@byu.edu>
 Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
     cross of forward genetic screens. Its predecessor is described in a paper published
