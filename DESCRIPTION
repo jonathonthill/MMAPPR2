@@ -36,10 +36,8 @@ Imports: ensemblVEP (>= 1.20.0),
     magrittr,
     methods
 SystemRequirements: Ensembl VEP
-biocViews: RNASeqData,
-    RNASeq,
+biocViews: RNASeq,
     PooledScreens,
-    DNASeqData,
     DNASeq,
     VariantDetection
 URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3613585/,
