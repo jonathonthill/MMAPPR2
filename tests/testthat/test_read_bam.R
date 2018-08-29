@@ -1,4 +1,4 @@
-context("BAM file reading")
+context("Calculate distance data from BAM files")
 Sys.unsetenv("R_TESTS")
 
 
@@ -18,7 +18,7 @@ test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
     wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
-    mmapprData <- readInFiles(mmapprData)
+    mmapprData <- calculateDistance(mmapprData)
     expect_known_value(
         mmapprData@distance,
         "test_data/objects/post_file_read_dummy_distance.RDS",
@@ -29,8 +29,8 @@ test_that("whole genome is read correctly", {
 
 test_that("files get indexed automatically if needed", {
     skip_if_not_installed('mockery')
-    mockery::stub(readInFiles, '.getFileReadChrList', function(...) stop('fail'))
-    mockery::stub(readInFiles, 'Rsamtools::indexBam',
+    mockery::stub(calculateDistance, '.getFileReadChrList', function(...) stop('fail'))
+    mockery::stub(calculateDistance, 'Rsamtools::indexBam',
                   function(...) write.table(matrix(), '/tmp/test.bam.bai'))
     
     file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
@@ -38,7 +38,7 @@ test_that("files get indexed automatically if needed", {
     expect_false(file.exists('/tmp/test.bam.bai'))
     wtFiles(mmapprData@param) <- '/tmp/test.bam'
     mutFiles(mmapprData@param) <- '/tmp/test.bam'
-    expect_error(readInFiles(mmapprData), 'fail')
+    expect_error(calculateDistance(mmapprData), 'fail')
     expect_true(file.exists('/tmp/test.bam.bai'))
     
     unlink('/tmp/test.bam*')
@@ -92,8 +92,8 @@ test_that("single chromosome is read correctly", {
         list(list(pos=2:11, # MUT
              info=matrix(infoVec, ncol=1)))
     )
-    mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
-    result <- .readFilesForChr(inputRange, param=param)
+    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    result <- .calcDistForChr(inputRange, param=param)
     mockery::expect_called(mockAP, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
@@ -160,8 +160,8 @@ test_that("single chromosome is read correctly with replicates", {
         list(list(pos=2:11, # MUT
              info=matrix(rep(infoVec, 3), ncol=3)))
     )
-    mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
-    result <- .readFilesForChr(inputRange, param=param)
+    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    result <- .calcDistForChr(inputRange, param=param)
     mockery::expect_called(mockAP, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
