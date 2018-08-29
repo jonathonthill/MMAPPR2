@@ -237,99 +237,216 @@ setMethod("show", "MmapprData", function(object) {
   cat(lines[1:lineMax], sep="\n")
 }
 
+
+### GETTERS
+#' MmapprParam Getters and Setters
+#' 
+#' Access and assign slots of \code{\link{MmapprParam}} object.
+#' 
+#' @name MmapprParam-functions
+#' @aliases fileAggregation
+#'   refGenome
+#'   wtFiles
+#'   mutFiles
+#'   species
+#'   vepFlags
+#'   homozygoteCutoff
+#'   distancePower
+#'   peakIntervalWidth
+#'   minDepth
+#'   minBaseQuality
+#'   loessOptResolution
+#'   loessOptCutFactor
+#'   naCutoff
+#'   outputFolder
+#'   fileAggregation
+#'   
+#' @seealso \code{\link{MmapprParam}}
+NULL
+
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("refGenome", "MmapprParam", function(obj) obj@refGenome)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("wtFiles", "MmapprParam", function(obj) obj@wtFiles)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("mutFiles", "MmapprParam", function(obj) obj@mutFiles)
-setMethod("homozygoteCutoff", "MmapprParam", function(obj) obj@homozygoteCutoff)
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("species", "MmapprParam", function(obj) obj@species)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("vepFlags", "MmapprParam", function(obj) obj@vepFlags)
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("homozygoteCutoff", "MmapprParam", function(obj) obj@homozygoteCutoff)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("distancePower", "MmapprParam", function(obj) obj@distancePower)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("peakIntervalWidth", "MmapprParam", function(obj) obj@peakIntervalWidth)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minDepth", "MmapprParam", function(obj) obj@minDepth)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minBaseQuality", "MmapprParam", function(obj) obj@minBaseQuality)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minMapQuality", "MmapprParam", function(obj) obj@minMapQuality)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("loessOptResolution", "MmapprParam", function(obj) obj@loessOptResolution)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("loessOptCutFactor", "MmapprParam", function(obj) obj@loessOptCutFactor)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("naCutoff", "MmapprParam", function(obj) obj@naCutoff)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
+
+#' MmapprData Getters
+#' 
+#' Access slots of \code{\linkS4class{MmapprData}} object.
+#' 
+#' @name MmapprDataGetters
+#' @aliases param distance peaks candidates
+#' @seealso \code{\linkS4class{MmapprData}}
+NULL
+
+#' @rdname MmapprDataGetters
+#' @export
 setMethod("param", "MmapprData", function(obj) obj@param)
+#' @rdname MmapprDataGetters
+#' @export
 setMethod("distance", "MmapprData", function(obj) obj@distance)
+#' @rdname MmapprDataGetters
+#' @export
 setMethod("peaks", "MmapprData", function(obj) obj@peaks)
+#' @rdname MmapprDataGetters
+#' @export
 setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 
 
+### SETTERS
+
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("refGenome<-", "MmapprParam",
           function(obj, value) {
             obj@refGenome <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
               obj@wtFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else v
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
               obj@mutFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else v
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("vepFlags<-", "MmapprParam",
           function(obj, value) {
             obj@vepFlags <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("species<-", "MmapprParam",
+          function(obj, value) {
+            obj@species <- value 
+            obj
+          })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("homozygoteCutoff<-", "MmapprParam",
           function(obj, value) {
             obj@homozygoteCutoff <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("distancePower<-", "MmapprParam",
           function(obj, value) {
             obj@distancePower <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("peakIntervalWidth<-", "MmapprParam",
           function(obj, value) {
             obj@peakIntervalWidth <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minDepth<-", "MmapprParam",
           function(obj, value) {
             obj@minDepth <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minBaseQuality<-", "MmapprParam",
           function(obj, value) {
             obj@minBaseQuality <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("loessOptResolution<-", "MmapprParam",
           function(obj, value) {
             obj@loessOptResolution <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("loessOptCutFactor<-", "MmapprParam",
           function(obj, value) {
             obj@loessOptCutFactor <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("naCutoff<-", "MmapprParam",
           function(obj, value) {
             obj@naCutoff <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("outputFolder<-", "MmapprParam",
           function(obj, value) {
             obj@outputFolder <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("minMapQuality<-", "MmapprParam",
           function(obj, value) {
             obj@minMapQuality <- value 
             obj
           })
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("fileAggregation<-", "MmapprParam",
           function(obj, value) {
             obj@fileAggregation <- value 
