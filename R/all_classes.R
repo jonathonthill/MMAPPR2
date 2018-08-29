@@ -35,7 +35,7 @@ setClass("MmapprParam",
 #' @slot param \code{\linkS4class{MmapprParam}} object storing parameters
 #'   used in analysis.
 #' @slot distance List containing raw counts and Euclidean distance data for
-#'   each chromosome. After \code{\link{readInFiles}}, chromosomes with
+#'   each chromosome. After \code{\link{calculateDistance}}, chromosomes with
 #'   sufficient data should have \code{$wtCounts},
 #'   \code{$mutCounts}, and \code{$distanceDf} populated. After
 #'   \code{\link{loessFit}}, the \code{$distanceDf} element for each chromosome
@@ -49,6 +49,7 @@ setClass("MmapprParam",
 #'   included in metacolumns.
 #'
 #' @aliases MmapprData
+#' @export
 #' @seealso \link{MmapprDataGetters}
 setClass("MmapprData",
          representation(

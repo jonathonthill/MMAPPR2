@@ -48,7 +48,7 @@ mmappr <- function(mmapprParam) {
     
     mmapprData <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
-        mmapprData <- readInFiles(mmapprData)
+        mmapprData <- calculateDistance(mmapprData)
         .messageAndLog("Done", oF)
         
         .messageAndLog("Generating optimal Loess curves for each chromosome...", oF)
