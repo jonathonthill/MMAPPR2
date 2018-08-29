@@ -1,6 +1,6 @@
 context('Output functions')
 
-mmapprData <- readRDS('test_data/objects/post_candidates_chr5_md.RDS')
+mmapprData <- postCandidatesMD
 
 test_that('default output folder is prepared correctly', {
     skip_if_not_installed('mockery')

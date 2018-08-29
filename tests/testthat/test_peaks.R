@@ -15,7 +15,7 @@ test_that('prePeak handles failed Loess', {
     expect_equal(length(names(md@peaks)), 0)
 })
 
-md <- readRDS("test_data/objects/post_loess_chr5_md.RDS")
+md <- postLoessMD
 md <- prePeak(md)
 
 test_that('peak is identified for chromosome 5', {

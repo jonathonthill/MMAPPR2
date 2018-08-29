@@ -56,7 +56,7 @@ test_that(".localResolution works right", {
 
 test_that("peak chromosome is fit correctly", {
     SkipDebug()
-    mdChr5 <- readRDS('test_data/objects/post_file_read_chr5_md.RDS')
+    mdChr5 <- postCalcDistMD
     chr5list <- mdChr5@distance$chr5
     chr5list <- expect_warning(.loessFitForChr(
         chr5list,

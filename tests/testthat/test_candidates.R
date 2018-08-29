@@ -1,6 +1,6 @@
 context("Variant calling and effect prediction")
 
-mmapprData <- readRDS("test_data/objects/post_peakref_chr5_md.RDS")
+mmapprData <- postPeakRefMD
 
 
 test_that("ranges for peaks are prepared", {
