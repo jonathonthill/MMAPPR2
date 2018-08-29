@@ -35,3 +35,15 @@ Imports: ensemblVEP (>= 1.20.0),
     VariantTools,
     magrittr,
     methods
+SystemRequirements: Ensembl VEP
+biocViews: RNASeqData,
+    RNASeq,
+    PooledScreens,
+    DNASeqData,
+    DNASeq,
+    VariantDetection
+URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3613585/,
+    https://github.com/kjohnsen/MMAPPR2
+BugReports: Use the issues feature of the source GitHub repository:
+    https://github.com/kjohnsen/MMAPPR2/issues
+OS_type: unix
