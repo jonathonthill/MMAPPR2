@@ -1,15 +1,18 @@
 #' Read BAM files and generate Euclidean distance data
+#' 
+#' Initalizes the MMAPPR2 pipeline and precedes the \code{\link{loessFit}}
+#' step.
 #'
-#' @param mmapprData The \linkS4class{MmapprData} object to be analyzed.
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
-#' @return A \linkS4class{MmapprData} object with the \code{distance}
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{distance}
 #'   slot filled.
 #' @export
 #'
 #' @examples
-#'   \dontrun{
-#'     md <- calculateDistance(md)
-#'   }
+#' \dontrun{
+#' md <- calculateDistance(md)
+#' }
 calculateDistance <- function(mmapprData) {
     if (is.na(Rsamtools::index(wtFiles(param(mmapprData)))))
         Rsamtools::indexBam(wtFiles(param(mmapprData)))

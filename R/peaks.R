@@ -1,12 +1,18 @@
 #' Characterize Euclidean distance peaks using resampling simulation
+#' 
+#' Follows the \code{\link{prePeak}} step and precedes
+#' \code{\link{generateCandidates}}.
 #'
-#' @param mmapprData 
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
-#' @return A \linkS4class{MmapprData} object with the \code{peaks}
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{peaks}
 #'   slot filled and populated.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' md <- peakRefinement(md)
+#' }
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
         .runFunctionInParallel(mmapprData@peaks,
@@ -85,14 +91,20 @@ peakRefinement <- function(mmapprData){
 
 
 #' Identify chromosomes containing peaks
+#' 
+#' Follows the \code{\link{loessFit}} step and precedes
+#' \code{\link{peakRefinement}}.
 #'
-#' @param mmapprData 
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
 #' @return A \linkS4class{MmapprData} object with the \code{peaks}
-#'   slot filled.
+#'   slot initalized.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' md <- prePeak(md)
+#' }
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     

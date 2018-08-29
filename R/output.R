@@ -4,10 +4,13 @@
 #'
 #' @return A \linkS4class{MmapprData} object after writing output files
 #'   to the folder specified in the \code{outputFolder} slot of the
-#'   \linkS4class{MmapprParam} used.
+#'   \code{link{MmapprParam}} used.
 #' @export
 #'
 #' @examples
+#'   \dontrun{
+#'     outputMmapprData(md)
+#'   }
 outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
     oF <- outputFolder(param(mmapprData))

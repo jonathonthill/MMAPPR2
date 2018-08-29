@@ -69,7 +69,7 @@
 #'   are averaged across files, which is useful when you want to weight each
 #'   replicate evenly without regards to differing depth.
 #'
-#' @return A \code{MmapprParam} object
+#' @return A \code{MmapprParam} object.
 #' @export
 #'
 #' @examples
@@ -260,6 +260,9 @@ setMethod("show", "MmapprData", function(object) {
 #'   naCutoff
 #'   outputFolder
 #'   fileAggregation
+#'
+#' @param obj Desired \code{\link{MmapprParam}} object.
+#' @param value Value to replace desired attribute.
 #'   
 #' @seealso \code{\link{MmapprParam}}
 NULL
@@ -316,6 +319,8 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' MmapprData Getters
 #' 
 #' Access slots of \code{\linkS4class{MmapprData}} object.
+#' 
+#' @param obj Desired \code{\linkS4class{MmapprData}} object.
 #' 
 #' @name MmapprDataGetters
 #' @aliases param distance peaks candidates

@@ -1,12 +1,18 @@
 #' Perform optimized Loess regression for each chromosome
+#' 
+#' Called after the \code{\link{calculateDistance}} step and before
+#' \code{\link{prePeak}}.
 #'
-#' @param mmapprData 
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
-#' @return A \linkS4class{MmapprData} object with the \code{$loess} element
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{$loess} element
 #'   of the \code{distance} slot list filled.
+#'   
+#' @examples 
+#' \dontrun{
+#' md <- loessFit(md)
+#' }
 #' @export
-#'
-#' @examples
 loessFit <- function(mmapprData) {
     loessOptResolution <- mmapprData@param@loessOptResolution
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor
