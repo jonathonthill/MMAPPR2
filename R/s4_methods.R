@@ -244,22 +244,22 @@ setMethod("show", "MmapprData", function(object) {
 #' Access and assign slots of \code{\link{MmapprParam}} object.
 #' 
 #' @name MmapprParam-functions
-#' @aliases fileAggregation
-#'   refGenome
-#'   wtFiles
-#'   mutFiles
-#'   species
-#'   vepFlags
-#'   homozygoteCutoff
-#'   distancePower
-#'   peakIntervalWidth
-#'   minDepth
-#'   minBaseQuality
-#'   loessOptResolution
-#'   loessOptCutFactor
-#'   naCutoff
-#'   outputFolder
-#'   fileAggregation
+#' @aliases fileAggregation fileAggregation<-
+#'   refGenome refGenome<-
+#'   wtFiles wtFiles<-
+#'   mutFiles mutFiles<-
+#'   species species<-
+#'   vepFlags vepFlags<-
+#'   homozygoteCutoff homozygoteCutoff<-
+#'   distancePower distancePower<-
+#'   peakIntervalWidth peakIntervalWidth<-
+#'   minDepth minDepth<-
+#'   minBaseQuality minBaseQuality<-
+#'   loessOptResolution loessOptResolution<-
+#'   loessOptCutFactor loessOptCutFactor<-
+#'   naCutoff naCutoff<-
+#'   outputFolder outputFolder<-
+#'   fileAggregation fileAggregation<-
 #'
 #' @param obj Desired \code{\link{MmapprParam}} object.
 #' @param value Value to replace desired attribute.
