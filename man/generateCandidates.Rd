@@ -2,13 +2,26 @@
 % Please edit documentation in R/candidates.R
 \name{generateCandidates}
 \alias{generateCandidates}
-\title{Generate potential causative mutations in peak regions}
+\title{Generate potential causative mutations and consequences in peak regions}
 \usage{
 generateCandidates(mmapprData)
 }
 \arguments{
-\item{mmapprData}{}
+\item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
+}
+\value{
+A \code{\linkS4class{MmapprData}} object with the \code{candidates}
+  slot filled with a \code{\link[GenomicRanges]{GRanges}} object for each
+  peak chromosome containing variants and predicted consequences from
+  Ensembl's Variant Effect Predictor.
 }
 \description{
-Generate potential causative mutations in peak regions
+Follows the \code{\link{peakRefinement}} step and produces a
+\code{\linkS4class{MmapprData}} object ready for
+\code{\link{outputMmapprData}}.
+}
+\examples{
+\dontrun{
+md <- generateCandidates(md)
+}
 }
