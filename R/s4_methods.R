@@ -255,6 +255,7 @@ setMethod("show", "MmapprData", function(object) {
 #'   peakIntervalWidth peakIntervalWidth<-
 #'   minDepth minDepth<-
 #'   minBaseQuality minBaseQuality<-
+#'   minMapQuality minMapQuality<-
 #'   loessOptResolution loessOptResolution<-
 #'   loessOptCutFactor loessOptCutFactor<-
 #'   naCutoff naCutoff<-
