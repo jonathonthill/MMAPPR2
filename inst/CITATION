@@ -1,0 +1,15 @@
+citHeader("To cite MMAPPR2 in publications use:")
+
+citEntry(entry = "Unpublished",
+  title        = "MMAPPR2",
+  author       = personList(as.person("Kyle Johnsen"),
+                   as.person("Nathaniel Jenkins"),
+                   as.person("Jonathon Hill")),
+  url          = "https://github.com/kjohnsen/MMAPPR2",
+  note         = "pending publication",
+
+  textVersion  =
+  paste("Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill (2018).",
+        "MMAPPR2: Mutation Mapping Analysis Pipeline for Pooled RNA-seq.",
+        "URL https://github.com/kjohnsen/MMAPPR2.")
+)
