@@ -83,7 +83,7 @@ test_that("loessFit runs properly for whole mmapprData", {
     expect_equal(length(successes), 25)
     expect_equal(sum(successes), 0)
     
-    expect_known_value(md@distance,
-                       "test_data/objects/post_loess_dummy_distance.RDS",
-                       update = FALSE)
+    expected <- readRDS('test_data/objects/post_loess_dummy_md.RDS')
+    
+    expect_identical(md@distance, expected@distance)
 })

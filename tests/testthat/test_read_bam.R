@@ -19,10 +19,9 @@ test_that("whole genome is read correctly", {
     wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mmapprData <- calculateDistance(mmapprData)
-    expect_known_value(
+    expect_identical(
         mmapprData@distance,
-        "test_data/objects/post_file_read_dummy_distance.RDS",
-        update = FALSE
+        readRDS('test_data/objects/post_file_read_dummy_md.RDS')@distance
     )
 })
 
