@@ -1,21 +1,64 @@
-#' \strong{Constructor}
-#' @rdname MmapprParam
+#' @name MmapprParam
 #'
-#' @param refGenome 
-#' @param wtFiles 
-#' @param mutFiles 
-#' @param species
-#' @param vepFlags 
-#' @param outputFolder 
-#' @param distancePower 
-#' @param peakIntervalWidth 
-#' @param minDepth 
-#' @param homozygoteCutoff 
-#' @param minBaseQuality 
-#' @param minMapQuality 
-#' @param loessOptResolution 
-#' @param loessOptCutFactor 
-#' @param naCutoff 
+#' @param refGenome \code{\link[gmapR]{GmapGenome}}
+#'   object storing reference genome to be used in variant calling.
+#'   Make sure it is the same genome aligned to and used installed with VEP.
+#' @param wtFiles Character vector,
+#'   \code{\link[Rsamtools]{BamFile}}, or
+#'   \code{\link[Rsamtools]{BamFileList}} containing
+#'   BAM files for the wild-type pool to be analyzed.
+#' @param mutFiles Character vector,
+#'   \code{\link[Rsamtools]{BamFile}}, or
+#'   \code{\link[Rsamtools]{BamFileList}} containing
+#'   BAM files for the mutant pool to be analyzed.
+#' @param species Length-one character vector of name of species under
+#'   analysis. Used only in generating default
+#'   \code{\link[ensemblVEP]{VEPFlags}} object.
+#' @param vepFlags Optional \code{\link[ensemblVEP]{VEPFlags}}
+#'   object containing runtime options for Ensembl's Variant Effect Predictor.
+#'   See vignette for details.
+#' @param outputFolder Length-one character vector specifying where to save
+#'   output, including a \code{\linkS4class{MmapprData}} stored as
+#'   \code{mmappr_data.RDS}, \code{mmappr2.log}, a \code{.tsv} file
+#'   for each peak chromosome containing candidate mutations, and PDF plots
+#'   of both the entire genome and peak chromosomes. Defaults to an
+#'   automatically generated \code{mmappr2_<timestamp>}.
+#' @param distancePower Length-one numeric vector determing to what power
+#'   Euclidean distance values are raised before fitting. Higher powers tend
+#'   to increase high values and decrease low values, exaggerating the
+#'   variation in the data. Default of 4.
+#' @param peakIntervalWidth Length-one numeric vector between \code{0} and
+#'   \code{1} specifying desired width of linkage region(s). The default value
+#'   of \code{0.95}, for example, yields peak regions defined as including the
+#'   top 95\% of SNPs in the peak region, as determined by the peak
+#'   resampling distribution.
+#' @param minDepth Length-one integer vector determining minimum depth
+#'   required for a position to
+#'   be considered in the analysis. Defaults to 10.
+#' @param homozygoteCutoff Length-one numeric vector between \code{0} and
+#'   \code{1} specifying threshold for throwing out base pairs on account
+#'   of homozygosity. Positions with high major allele frequency in the
+#'   wild-type pool are unlikely to exhibit polymorphism and are thus thrown
+#'   out when they exceed this cutoff. Defaults to \code{0.95}.
+#' @param minBaseQuality Length-one numeric vector indicating minimum base
+#'   call quality to consider in analysis. Read positions with qualities
+#'   below this score will be thrown out. Defaults to 20.
+#' @param minMapQuality Length-one numeric vector indicating minimum read
+#'   mapping quality to consider in analysis. Reads with qualities below
+#'   this score will be thrown out. Defaults to 30.
+#' @param loessOptResolution Length-one numeric vector between \code{0} and
+#'   \code{1} specifying
+#'   desired resolution for Loess fit optimization. The default of \code{0.001},
+#'   for example, indicates that the span ultimately chosen will perform better
+#'   than its neighbor values at \code{+-0.001}.
+#' @param loessOptCutFactor Length-one numeric vector between \code{0} and
+#'   \code{1} specifying how aggressively the Loess
+#'   optimization algorithm proceeds. For example, with a default of \code{0.1}
+#'   different spans at intervals of \code{0.001} would be evaluated after
+#'   intervals of \code{0.01}.
+#' @param naCutoff Integer specifying the most NAs to accept at a given
+#'   position--that is, the number of files without data for that position.
+#'   Defaults to 0.
 #' @param fileAggregation A length-one character vector determining strategy
 #'   for aggregating base calls when multiple wild-type or multiple mutant
 #'   files are provided.
@@ -26,7 +69,7 @@
 #'   are averaged across files, which is useful when you want to weight each
 #'   replicate evenly without regards to differing depth.
 #'
-#' @return A MmapprParam object
+#' @return A \code{MmapprParam} object
 #' @export
 #'
 #' @examples
