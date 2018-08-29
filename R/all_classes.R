@@ -30,7 +30,7 @@ setClass("MmapprParam",
 
 #' MmapprData Class
 #' 
-#' Stores data from each step of the MMAPPR pipeline.
+#' Stores data from each step of the MMAPPR2 pipeline.
 #'
 #' @slot param \code{\linkS4class{MmapprParam}} object storing parameters
 #'   used in analysis.
@@ -40,11 +40,16 @@ setClass("MmapprParam",
 #'   \code{$mutCounts}, and \code{$distanceDf} populated. After
 #'   \code{\link{loessFit}}, the \code{$distanceDf} element for each chromosome
 #'   list is replaced with a \code{$loess} element.
-#' @slot peaks list. 
-#' @slot candidates list. 
+#' @slot peaks List of chromosomes containing peak regions. Initialized after
+#'   \code{\link{prePeak}} and populated with density function after
+#'   \code{\link{peakRefinement}}.
+#' @slot candidates List containing \code{\link[GenomicRanges]{GRanges}} object
+#'   for each peak, resulting from \code{\link{generateCandidates}} function.
+#'   VEP data, including gene symbol and consequence for each variant, are
+#'   included in metacolumns.
 #'
 #' @aliases MmapprData
-#' @export
+#' @seealso \link{MmapprDataGetters}
 setClass("MmapprData",
          representation(
              param="MmapprParam",
