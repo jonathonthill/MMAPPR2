@@ -7,24 +7,42 @@
 mmappr(mmapprParam)
 }
 \arguments{
-\item{mmapprParam}{A \linkS4class{MmapprParam} object containing desired parameters}
+\item{mmapprParam}{A \code{\linkS4class{MmapprParam}} object containing
+desired parameters.}
 }
 \value{
-A \linkS4class{MmapprData} object containing results
+A \code{\linkS4class{MmapprData}} object containing results
+  as well as intermediate data.
 }
 \description{
-This describes what we're doing
+MMAPPR2 is designed to map the causative mutation in a forward genetics
+screen. It analyzes aligned sequence files, calculates the per-base
+Euclidean distance between the mutant and wild-type pools, performs
+a Loess regression on that distance, and generates candidate variants
+in regions of peak distance.
 }
 \examples{
 \dontrun{
-vepFlags <- ensemblVEP::VEPFlags(
-                 flags=list(species = "danio_rerio_merged", 
-                            format = "vcf",
-                            database = TRUE))
-mmapprParam <- MmapprParam(GmapGenome("danio_rerio_10"),
-                           "wild_type.sorted.bam",
-                           "mutant.sorted.bam",
-                           vepFlags)
+mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
+                           wtFiles = "wild_type.sorted.bam",
+                           mutFiles = "mutant.sorted.bam",
+                           species = "danio_rerio")
 mmapprData <- mmappr(mmapprParam)
+
+### Alternately, you can navigate the pipeline step by step.
+### This may be helpful for debugging.
+md <- new('MmapprData', param = mmapprParam)
+md <- calculateDistance(md)
+md <- loessFit(md)
+md <- prePeak(md)
+md <- peakRefinement(md)
+md <- generateCandidates(md)
+md <- outputMmapprData(md)
 }
+
+}
+\seealso{
+\code{\link{calculateDistance}}, \code{\link{loessFit}},
+  \code{\link{prePeak}}, \code{\link{peakRefinement}},
+  \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
 }

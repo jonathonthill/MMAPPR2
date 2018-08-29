@@ -7,12 +7,18 @@
 peakRefinement(mmapprData)
 }
 \arguments{
-\item{mmapprData}{}
+\item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
 }
 \value{
-A \linkS4class{MmapprData} object with the \code{peaks}
+A \code{\linkS4class{MmapprData}} object with the \code{peaks}
   slot filled and populated.
 }
 \description{
-Characterize Euclidean distance peaks using resampling simulation
+Follows the \code{\link{prePeak}} step and precedes
+\code{\link{generateCandidates}}.
+}
+\examples{
+\dontrun{
+md <- peakRefinement(md)
+}
 }

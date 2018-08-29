@@ -7,12 +7,18 @@
 prePeak(mmapprData)
 }
 \arguments{
-\item{mmapprData}{}
+\item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
 }
 \value{
 A \linkS4class{MmapprData} object with the \code{peaks}
-  slot filled.
+  slot initalized.
 }
 \description{
-Identify chromosomes containing peaks
+Follows the \code{\link{loessFit}} step and precedes
+\code{\link{peakRefinement}}.
+}
+\examples{
+\dontrun{
+md <- prePeak(md)
+}
 }

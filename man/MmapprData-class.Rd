@@ -3,19 +3,34 @@
 \docType{class}
 \name{MmapprData-class}
 \alias{MmapprData-class}
-\title{MmapprData object}
+\alias{MmapprData}
+\title{MmapprData Class}
 \description{
-Stores data from each step of the MMAPPR pipeline.
+Stores data from each step of the MMAPPR2 pipeline.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{param}}{MmapprParam. TODO}
+\item{\code{param}}{\code{\linkS4class{MmapprParam}} object storing parameters
+used in analysis.}
 
-\item{\code{distance}}{list.}
+\item{\code{distance}}{List containing raw counts and Euclidean distance data for
+each chromosome. After \code{\link{calculateDistance}}, chromosomes with
+sufficient data should have \code{$wtCounts},
+\code{$mutCounts}, and \code{$distanceDf} populated. After
+\code{\link{loessFit}}, the \code{$distanceDf} element for each chromosome
+list is replaced with a \code{$loess} element.}
 
-\item{\code{peaks}}{list.}
+\item{\code{peaks}}{List of chromosomes containing peak regions. Initialized after
+\code{\link{prePeak}} and populated with density function after
+\code{\link{peakRefinement}}.}
 
-\item{\code{candidates}}{list.}
+\item{\code{candidates}}{List containing \code{\link[GenomicRanges]{GRanges}} object
+for each peak, resulting from \code{\link{generateCandidates}} function.
+VEP data, including gene symbol and consequence for each variant, are
+included in metacolumns.}
 }}
 
+\seealso{
+\code{\link{mmappr}}, \link{MmapprDataGetters}
+}

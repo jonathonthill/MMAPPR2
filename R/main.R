@@ -10,25 +10,41 @@
 
 #' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 #' 
-#' This describes what we're doing
+#' MMAPPR2 is designed to map the causative mutation in a forward genetics
+#' screen. It analyzes aligned sequence files, calculates the per-base
+#' Euclidean distance between the mutant and wild-type pools, performs
+#' a Loess regression on that distance, and generates candidate variants
+#' in regions of peak distance.
 #'
-#' @param mmapprParam A \linkS4class{MmapprParam} object containing desired parameters
+#' @param mmapprParam A \code{\linkS4class{MmapprParam}} object containing
+#'   desired parameters.
 #'
-#' @return A \linkS4class{MmapprData} object containing results
+#' @return A \code{\linkS4class{MmapprData}} object containing results
+#'   as well as intermediate data.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' vepFlags <- ensemblVEP::VEPFlags(
-#'                  flags=list(species = "danio_rerio_merged", 
-#'                             format = "vcf",
-#'                             database = TRUE))
-#' mmapprParam <- MmapprParam(GmapGenome("danio_rerio_10"),
-#'                            "wild_type.sorted.bam",
-#'                            "mutant.sorted.bam",
-#'                            vepFlags)
+#' mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
+#'                            wtFiles = "wild_type.sorted.bam",
+#'                            mutFiles = "mutant.sorted.bam",
+#'                            species = "danio_rerio")
 #' mmapprData <- mmappr(mmapprParam)
+#' 
+#' ### Alternately, you can navigate the pipeline step by step.
+#' ### This may be helpful for debugging.
+#' md <- new('MmapprData', param = mmapprParam)
+#' md <- calculateDistance(md)
+#' md <- loessFit(md)
+#' md <- prePeak(md)
+#' md <- peakRefinement(md)
+#' md <- generateCandidates(md)
+#' md <- outputMmapprData(md)
 #' }
+#' 
+#' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
+#'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
+#'   \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
 mmappr <- function(mmapprParam) {
     startTime <- Sys.time()
     message("------------------------------------")
@@ -48,7 +64,7 @@ mmappr <- function(mmapprParam) {
     
     mmapprData <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
-        mmapprData <- readInFiles(mmapprData)
+        mmapprData <- calculateDistance(mmapprData)
         .messageAndLog("Done", oF)
         
         .messageAndLog("Generating optimal Loess curves for each chromosome...", oF)

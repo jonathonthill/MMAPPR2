@@ -7,12 +7,18 @@
 loessFit(mmapprData)
 }
 \arguments{
-\item{mmapprData}{}
+\item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
 }
 \value{
-A \linkS4class{MmapprData} object with the \code{$loess} element
+A \code{\linkS4class{MmapprData}} object with the \code{$loess} element
   of the \code{distance} slot list filled.
 }
 \description{
-Perform optimized Loess regression for each chromosome
+Called after the \code{\link{calculateDistance}} step and before
+\code{\link{prePeak}}.
+}
+\examples{
+\dontrun{
+md <- loessFit(md)
+}
 }

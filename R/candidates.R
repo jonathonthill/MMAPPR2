@@ -1,14 +1,21 @@
-# take peak region dataframe and run VEP for each region
-# peak region df has cols chr, starts, and stops
-
-#' Generate potential causative mutations in peak regions
+#' Generate potential causative mutations and consequences in peak regions
+#' 
+#' Follows the \code{\link{peakRefinement}} step and produces a
+#' \code{\linkS4class{MmapprData}} object ready for
+#' \code{\link{outputMmapprData}}.
 #'
-#' @param mmapprData 
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
-#' @return
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{candidates}
+#'   slot filled with a \code{\link[GenomicRanges]{GRanges}} object for each
+#'   peak chromosome containing variants and predicted consequences from
+#'   Ensembl's Variant Effect Predictor.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' md <- generateCandidates(md)
+#' }
 generateCandidates <- function(mmapprData) {
     
     #get GRanges representation of peak

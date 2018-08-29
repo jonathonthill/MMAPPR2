@@ -1,15 +1,17 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.98.8
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Maintainer: Jonathon Hill <jhill@byu.edu>
+Version: 0.98.9
+Authors@R: c(
+    person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role=c("aut")),
+    person('Nathaniel', 'Jenkins', role=c('aut')),
+    person('Jonathon', 'Hill', email='jhill@byu.edu', role=c('cre')))
 Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
     cross of forward genetic screens. Its predecessor is described in a paper published
     in Genome Research (Hill et al. 2013). MMAPPR2 accepts aligned BAM files as well as
     a reference genome as input, identifies loci of high sequence disparity between the
     control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
     Effect Predictor, and outputs a ranked list of candidate mutations.
-Depends: R (>= 3.3.0)
+Depends: R (>= 3.5.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -29,8 +31,16 @@ Imports: ensemblVEP (>= 1.20.0),
     GenomicRanges,
     IRanges,
     S4Vectors,
-    SummarizedExperiment,
     tidyr,
     VariantTools,
     magrittr,
     methods
+SystemRequirements: Ensembl VEP
+biocViews: RNASeq,
+    PooledScreens,
+    DNASeq,
+    VariantDetection
+URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3613585/,
+    https://github.com/kjohnsen/MMAPPR2
+BugReports: https://github.com/kjohnsen/MMAPPR2/issues
+OS_type: unix
