@@ -75,7 +75,7 @@ test_that("peak chromosome is fit correctly", {
 
 test_that("loessFit runs properly for whole mmapprData", {
     SkipDebug()
-    md <- readRDS('test_data/objects/post_file_read_dummy_md.RDS')
+    md <- readRDS('test_data/objects/post_calcdist_dummy_md.RDS')
     md <- loessFit(md)
     successes <-
         sapply(md@distance, function(seq)

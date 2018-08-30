@@ -21,7 +21,7 @@ test_that("whole genome is read correctly", {
     mmapprData <- calculateDistance(mmapprData)
     expect_identical(
         mmapprData@distance,
-        readRDS('test_data/objects/post_file_read_dummy_md.RDS')@distance
+        readRDS('test_data/objects/post_calcdist_dummy_md.RDS')@distance
     )
 })
 
