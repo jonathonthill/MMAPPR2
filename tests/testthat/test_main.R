@@ -6,13 +6,13 @@ param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.
                      species='danio_rerio',
                      vepFlags=vepFlags)
 
-test_that(".runFunctionInParallel works on single core", {
+test_that(".runFunctionInParallel works on list with single item", {
   input <- list(a='test')
   output <- .runFunctionInParallel(input, function(x) paste(x, x))
   expect_identical(output, list(a='test test'))
 })
 
-test_that(".runFunctionInParllel works on multiple cores", {
+test_that(".runFunctionInParallel works on list with multiple items", {
     input <- list(a='test', b='test')
     expected <- list(a='test test', b='test test')
     output <- .runFunctionInParallel(input, function(x) paste(x, x))
