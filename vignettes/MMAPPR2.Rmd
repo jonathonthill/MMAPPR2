@@ -1,20 +1,20 @@
-  ---
-  title: "An Introduction to MMAPPR2"
-  author:
-  - name: Kyle Johnsen
-    affiliation: Brigham Young University, Provo, UT
-  package: MMAPPR2
-  output: 
-    BiocStyle::html_document:
-      toc_float: true
-    BiocStyle::pdf_document: default
-  abstract: |
-    Instructions on mapping mutations from forward genetic screens using MMAPPR2.
-  vignette: |
-    %\VignetteIndexEntry{An Introduction to MMAPPR2}
-    %\VignetteEngine{knitr::rmarkdown}
-    %\VignetteEncoding{UTF-8}  
-  ---
+---
+title: "An Introduction to MMAPPR2"
+author:
+- name: Kyle Johnsen
+  affiliation: Brigham Young University, Provo, UT
+package: MMAPPR2
+output: 
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
+abstract: |
+  Instructions on mapping mutations from forward genetic screens using MMAPPR2.
+vignette: |
+  %\VignetteIndexEntry{An Introduction to MMAPPR2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
 
 
 An Introduction to MMAPPR2
