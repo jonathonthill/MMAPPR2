@@ -22,10 +22,12 @@ a Loess regression on that distance, and generates candidate variants
 in regions of peak distance.
 }
 \examples{
-\dontrun{
-mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
-                           wtFiles = "wild_type.sorted.bam",
-                           mutFiles = "mutant.sorted.bam",
+## Ignore this line:
+.insertFakeVEPintoPath()
+
+mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
+                           wtFiles = "tests/testthat/test_data/bam_files/zy14_wt_cut_filt.bam",
+                           mutFiles = "tests/testthat/test_data/bam_files/zy14_mut_cut_filt.bam",
                            species = "danio_rerio")
 mmapprData <- mmappr(mmapprParam)
 
@@ -36,9 +38,10 @@ md <- calculateDistance(md)
 md <- loessFit(md)
 md <- prePeak(md)
 md <- peakRefinement(md)
+\dontrun{
 md <- generateCandidates(md)
-md <- outputMmapprData(md)
 }
+md <- outputMmapprData(md)
 
 }
 \seealso{
