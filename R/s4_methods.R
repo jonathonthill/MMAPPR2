@@ -182,7 +182,8 @@ setMethod("show", "MmapprParam", function(object) {
     .customPrint(object@vepFlags, margin)
     
     cat("Other parameters:\n")
-    slotNames <- slotNames("MmapprParam")[5:length(slotNames("MmapprParam"))]
+    slotNames <- slotNames("MmapprParam")[6:length(slotNames("MmapprParam"))]
+    slotNames <- c('species', slotNames)
     slotValues <- sapply(slotNames, function(name) slot(object, name))
     names(slotValues) <- slotNames
     print(slotValues, quote=FALSE)
