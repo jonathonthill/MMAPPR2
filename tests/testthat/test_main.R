@@ -1,8 +1,9 @@
 context("Main and helper functions")
 
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
-param <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
-                     "test_data/bam_files/zy14_mut_cut_filt.bam",
+param <- MmapprParam(new("GmapGenome"),
+                     system.file('extdata', 'zy14_wt.bam', package='MMAPPR2'),
+                     system.file('extdata', 'zy14_mut.bam', package='MMAPPR2'),
                      species='danio_rerio',
                      vepFlags=vepFlags)
 
@@ -49,8 +50,10 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
     originalPath <- Sys.getenv('PATH')
     Sys.setenv('PATH'=paste0(originalPath, ':', '/tmp/ensembl-vep'))
     
-    mp <- MmapprParam(new("GmapGenome"), "./test_data/bam_files/zy14_wt_cut_filt.bam",
-                      "test_data/bam_files/zy14_mut_cut_filt.bam", species='danio_rerio')
+    mp <- MmapprParam(new("GmapGenome"),
+                      system.file('extdata', 'zy14_wt.bam', package='MMAPPR2'),
+                      system.file('extdata', 'zy14_mut.bam', package='MMAPPR2'),
+                      species='danio_rerio')
     expect_false(is.null(mp@vepFlags))
     expect_true(ensemblVEP::flags(vepFlags(mp))$database == FALSE)
     expect_true(ensemblVEP::flags(vepFlags(mp))$species == 'danio_rerio')
@@ -62,8 +65,8 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
 
 
 test_that("MmapprParam takes character, BamFile, or BamFileList of real files", {
-    fn_wt <- "test_data/bam_files/zy14_wt_cut_filt.bam"
-    fn_mut <- "test_data/bam_files/zy14_mut_cut_filt.bam"
+    fn_wt <- system.file('extdata', 'zy14_wt.bam', package='MMAPPR2')
+    fn_mut <- system.file('extdata', 'zy14_mut.bam', package='MMAPPR2')
 
     # non-existing filename shouldn't work
     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut',
@@ -83,13 +86,13 @@ test_that("MmapprParam takes character, BamFile, or BamFileList of real files", 
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
 
-    bf <- Rsamtools::BamFile("test_data/bam_files/zy14_mut_cut_filt.bam")
+    bf <- Rsamtools::BamFile(fn_mut)
     param <- MmapprParam(new("GmapGenome"), bf, bf, 'danio_rerio', vepFlags)
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
 
-    bfl <- Rsamtools::BamFileList("test_data/bam_files/zy14_mut_cut_filt.bam")
+    bfl <- Rsamtools::BamFileList(fn_mut)
     param <- MmapprParam(new("GmapGenome"), bfl, bfl, 'danio_rerio', vepFlags)
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
@@ -98,7 +101,7 @@ test_that("MmapprParam takes character, BamFile, or BamFileList of real files", 
 })
 
 test_that('file setters for param can change format automatically', {
-    fn <- "test_data/bam_files/zy14_mut_cut_filt.bam"
+    fn <- system.file('extdata', 'zy14_mut.bam', package='MMAPPR2')
     param <- MmapprParam(new("GmapGenome"), fn, fn, 'danio_rerio', vepFlags)
     
     wtFiles(param) <- c(fn, fn)

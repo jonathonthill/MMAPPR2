@@ -24,8 +24,7 @@
 #' @export
 #'
 #' @examples
-#' ## Ignore this line:
-#' .insertFakeVEPintoPath()
+#' MMAPPR2:::.insertFakeVEPintoPath() ## Ignore this line
 #' 
 #' mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
 #'                            wtFiles = "tests/testthat/test_data/bam_files/zy14_wt_cut_filt.bam",

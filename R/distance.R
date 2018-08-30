@@ -133,10 +133,12 @@ calculateDistance <- function(mmapprData) {
 
 
 .getFileReadChrList <- function(mmapprData) {suppressWarnings({
-    wtFiles <- mmapprData@param@wtFiles
-    mutFiles <- mmapprData@param@mutFiles
+    bams <- Rsamtools::BamFileList(c(mmapprData@param@wtFiles,
+                                     mmapprData@param@mutFiles))
     
-    chrRanges <- as(GenomeInfoDb::seqinfo(Rsamtools::BamFileList(c(wtFiles, mutFiles))), "GRanges")
+    bamInfo <- Rsamtools::seqinfo(bams)
+    Sys.which('hello-there')
+    chrRanges <- as(bamInfo, "GRanges")
     #cut to standard chromosomes
     chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges, pruning.mode='coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM', pruning.mode='coarse')

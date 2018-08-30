@@ -6,8 +6,8 @@ vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 param <-
     MmapprParam(
         new("GmapGenome"),
-        "./test_data/bam_files/zy14_wt_cut_filt.bam",
-        "./test_data/bam_files/zy14_mut_cut_filt.bam",
+        system.file('extdata', "zy14_wt.bam", package='MMAPPR2'),
+        system.file('extdata', "zy14_mut.bam", package='MMAPPR2'),
         species='danio_rerio',
         vepFlags=vepFlags
     )
@@ -31,28 +31,28 @@ test_that("files get indexed automatically if needed", {
     mockery::stub(calculateDistance, '.getFileReadChrList', function(...) stop('fail'))
     mockery::stub(calculateDistance, 'Rsamtools::indexBam',
                   function(...) write.table(matrix(), '/tmp/test.bam.bai'))
-    
+
     file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
-    
+
     expect_false(file.exists('/tmp/test.bam.bai'))
     wtFiles(mmapprData@param) <- '/tmp/test.bam'
     mutFiles(mmapprData@param) <- '/tmp/test.bam'
     expect_error(calculateDistance(mmapprData), 'fail')
     expect_true(file.exists('/tmp/test.bam.bai'))
-    
+
     unlink('/tmp/test.bam*')
 })
 
 
 test_that("correct ranges are being read", {
-    skip_if_not_travis_or_bioc()
+    Sys.which('hello-there')
     chrList <- .getFileReadChrList(mmapprData)
+    Sys.which('hello-there')
     expect_equal(length(chrList), 25)
     expect_type(chrList, "list")
-    expect_s4_class(chrList$chr5, "GRanges")
-
-    rm(chrList)
+    expect_s4_class(chrList$`5`, "GRanges")
 })
+
 
 test_that('chrM and MT are dropped and sequences are reordered', {
     skip_if_not_installed('mockery')
