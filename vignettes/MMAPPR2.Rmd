@@ -1,3 +1,22 @@
+  ---
+  title: "An Introduction to MMAPPR2"
+  author:
+  - name: Kyle Johnsen
+    affiliation: Brigham Young University, Provo, UT
+  package: MMAPPR2
+  output: 
+    BiocStyle::html_document:
+      toc_float: true
+    BiocStyle::pdf_document: default
+  abstract: |
+    Instructions on mapping mutations from forward genetic screens using MMAPPR2.
+  vignette: |
+    %\VignetteIndexEntry{An Introduction to MMAPPR2}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}  
+  ---
+
+
 An Introduction to MMAPPR2
 ============================================================
 
@@ -34,8 +53,13 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 
 Setting up MmapprParam
 ```{r param}
-## Don't worry about this line:
-dir.create('/tmp/bin'); file.create('/tmp/bin/vep'); system('chmod 777 /tmp/bin/vep'); Sys.setenv('PATH'=paste(Sys.getenv('PATH'), '/tmp/bin', sep=':'))
+library(MMAPPR2)
+
+MMAPPR2:::.insertFakeVEPintoPath() ## Don't worry about this line
+param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
+                     wtFiles = 'tests/testthat/test_data/bam_files/zy14_wt_cut_filt.bam',
+                     mutFiles = 'tests/testthat/test_data/bam_files/zy14_mut_cut_filt.bam',
+                     
 ```
 
 Do stuff
