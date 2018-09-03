@@ -16,19 +16,9 @@ vignette: |
   %\VignetteEncoding{UTF-8}  
 ---
 
+# Getting Started
 
-An Introduction to MMAPPR2
-============================================================
-
-Kyle Johnsen, Nathaniel Jenkins, Jonathon Hill
-
-Brigham Young University, Provo, Utah, USA
-____________________________________________________________
-
-
-## Getting Started
-
-#### Installing Dependencies
+## Installing Dependencies
 You must first install Ensembl VEP like so:
 ```{bash installVEP}
 git clone https://github.com/Ensembl/ensembl-vep.git
@@ -41,7 +31,7 @@ If you depart from the installation shown here, see [Ensembl's instructions](htt
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
 
-#### Reference Genome
+## Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
 ```{r refGenome eval=FALSE}
 refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
