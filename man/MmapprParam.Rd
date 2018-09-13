@@ -9,8 +9,9 @@
 MmapprParam(refGenome, wtFiles, mutFiles, species, vepFlags = NULL,
   outputFolder = NULL, distancePower = 4, peakIntervalWidth = 0.95,
   minDepth = 10, homozygoteCutoff = 0.95, minBaseQuality = 20,
-  minMapQuality = 30, loessOptResolution = 0.001, loessOptCutFactor = 0.1,
-  naCutoff = 0, fileAggregation = c("sum", "mean"))
+  minMapQuality = 30, loessOptResolution = 0.001,
+  loessOptCutFactor = 0.1, naCutoff = 0, fileAggregation = c("sum",
+  "mean"))
 }
 \arguments{
 \item{refGenome}{\code{\link[gmapR]{GmapGenome}}

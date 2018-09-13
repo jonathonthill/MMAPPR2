@@ -1,6 +1,6 @@
 #' Read BAM files and generate Euclidean distance data
 #' 
-#' Initalizes the MMAPPR2 pipeline and precedes the \code{\link{loessFit}}
+#' First step in the MMAPPR2 pipeline. Precedes the \code{\link{loessFit}}
 #' step.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
@@ -10,9 +10,18 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' md <- calculateDistance(md)
-#' }
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE) {
+#'     MMAPPR2:::.insertFakeVEPintoPath() ## Ignore this line
+#'     MMAPPR2data::downloadAll()
+#'     
+#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
+#'                                wtFiles = MMAPPR2data::zy13wt(),
+#'                                mutFiles = MMAPPR2data::zy13mut(),
+#'                                species = "danio_rerio")
+#'
+#'     md <- new('MmapprData', param = mmapprParam)
+#'     postCalcDistMD <- calculateDistance(md)
+#' })
 calculateDistance <- function(mmapprData) {
     if (is.na(Rsamtools::index(wtFiles(param(mmapprData)))))
         Rsamtools::indexBam(wtFiles(param(mmapprData)))
