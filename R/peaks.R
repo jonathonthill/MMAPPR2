@@ -10,9 +10,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' md <- peakRefinement(md)
-#' }
+#' postPeakRefMD <- peakRefinement(postPrePeakMD)
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
         .runFunctionInParallel(mmapprData@peaks,
@@ -102,9 +100,7 @@ peakRefinement <- function(mmapprData){
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' md <- prePeak(md)
-#' }
+#' postPrePeakMD <- prePeak(postLoessMD)
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     

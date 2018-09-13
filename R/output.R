@@ -8,9 +8,7 @@
 #' @export
 #'
 #' @examples
-#'   \dontrun{
-#'     outputMmapprData(md)
-#'   }
+#' outputMmapprData(postCandidatesMD)
 outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
     oF <- outputFolder(param(mmapprData))

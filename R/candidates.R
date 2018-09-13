@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' md <- generateCandidates(md)
+#' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' }
 generateCandidates <- function(mmapprData) {
     
