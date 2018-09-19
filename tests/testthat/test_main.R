@@ -2,8 +2,8 @@ context("Main and helper functions")
 
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 param <- MmapprParam(new("GmapGenome"),
-                     system.file('extdata', 'zy14_wt.bam', package='MMAPPR2'),
-                     system.file('extdata', 'zy14_mut.bam', package='MMAPPR2'),
+                     'test_data/bam_files/zy14_dummy.bam',
+                     'test_data/bam_files/zy14_dummy.bam',
                      species='danio_rerio',
                      vepFlags=vepFlags)
 
@@ -51,8 +51,8 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
     Sys.setenv('PATH'=paste0(originalPath, ':', '/tmp/ensembl-vep'))
     
     mp <- MmapprParam(new("GmapGenome"),
-                      system.file('extdata', 'zy14_wt.bam', package='MMAPPR2'),
-                      system.file('extdata', 'zy14_mut.bam', package='MMAPPR2'),
+                      'test_data/bam_files/zy14_dummy.bam',
+                      'test_data/bam_files/zy14_dummy.bam',
                       species='danio_rerio')
     expect_false(is.null(mp@vepFlags))
     expect_true(ensemblVEP::flags(vepFlags(mp))$database == FALSE)
@@ -65,8 +65,8 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
 
 
 test_that("MmapprParam takes character, BamFile, or BamFileList of real files", {
-    fn_wt <- system.file('extdata', 'zy14_wt.bam', package='MMAPPR2')
-    fn_mut <- system.file('extdata', 'zy14_mut.bam', package='MMAPPR2')
+    fn_wt <- 'test_data/bam_files/zy14_dummy.bam'
+    fn_mut <- 'test_data/bam_files/zy14_dummy.bam'
 
     # non-existing filename shouldn't work
     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut',
@@ -101,7 +101,7 @@ test_that("MmapprParam takes character, BamFile, or BamFileList of real files", 
 })
 
 test_that('file setters for param can change format automatically', {
-    fn <- system.file('extdata', 'zy14_mut.bam', package='MMAPPR2')
+    fn <- 'test_data/bam_files/zy14_dummy.bam'
     param <- MmapprParam(new("GmapGenome"), fn, fn, 'danio_rerio', vepFlags)
     
     wtFiles(param) <- c(fn, fn)

@@ -6,8 +6,8 @@ vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 param <-
     MmapprParam(
         new("GmapGenome"),
-        system.file('extdata', "zy14_wt.bam", package='MMAPPR2'),
-        system.file('extdata', "zy14_mut.bam", package='MMAPPR2'),
+        'test_data/bam_files/zy14_dummy.bam',
+        'test_data/bam_files/zy14_dummy.bam',
         species='danio_rerio',
         vepFlags=vepFlags
     )
@@ -16,8 +16,6 @@ mmapprData <- new("MmapprData", param = param)
 # with dummy files
 test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
-    wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
-    mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mmapprData <- calculateDistance(mmapprData)
     expect_identical(
         mmapprData@distance,
@@ -41,6 +39,11 @@ test_that("files get indexed automatically if needed", {
     expect_true(file.exists('/tmp/test.bam.bai'))
 
     unlink('/tmp/test.bam*')
+})
+
+
+test_that('files in BamFileList also got indexed automatically if needed', {
+    expect_true(FALSE)
 })
 
 
@@ -78,11 +81,10 @@ test_that('chrM and MT are dropped and sequences are reordered', {
 
 test_that("single chromosome is read correctly", {
     skip_if_not_installed('mockery')
-
+    
     inputRange <-
-        GenomicRanges::GRanges('chr5',
-                               IRanges::IRanges(start=1, width=75682077))
-    expect_s4_class(inputRange, "GRanges")
+        GenomicRanges::GRanges('7',
+                               IRanges::IRanges(start=1, width=999))
 
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
     mockAP <- mockery::mock(
@@ -148,9 +150,8 @@ test_that("single chromosome is read correctly with replicates", {
     skip_if_not_installed('mockery')
 
     inputRange <-
-        GenomicRanges::GRanges('chr5',
-                               IRanges::IRanges(start=1, width=75682077))
-    expect_s4_class(inputRange, "GRanges")
+        GenomicRanges::GRanges('7',
+                               IRanges::IRanges(start=1, width=999))
 
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
     mockAP <- mockery::mock(
