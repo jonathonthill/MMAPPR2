@@ -16,7 +16,7 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
     mockVariantCall <- mockery::mock(
         VariantAnnotation::VRanges(seqnames='chr5',
                                    ranges=IRanges::IRanges(start=c(1,2,3), width=1),
-                                   sampleNames='zy14_mut.bam',
+                                   sampleNames='zy13mut.bam',
                                    ref=c('A', 'A', 'A')
         )
     )
@@ -37,7 +37,7 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
     expect_s4_class(result, 'VRanges')
     expect_equal(as.character(GenomicRanges::seqnames(result))[1], 'chr5')
     expect_equal(as.character(Biobase::sampleNames(result))[1],
-                 'zy14_mut.bam')
+                 'zy13mut.bam')
 })
 
 

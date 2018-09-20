@@ -56,20 +56,20 @@ test_that(".localResolution works right", {
 
 test_that("peak chromosome is fit correctly", {
     SkipDebug()
-    mdChr5 <- postCalcDistMD
-    chr5list <- mdChr5@distance$chr5
-    chr5list <- expect_warning(.loessFitForChr(
-        chr5list,
+    mdChr7 <- postCalcDistMD
+    chr7list <- mdChr7@distance$`7`
+    chr7list <- expect_warning(.loessFitForChr(
+        chr7list,
         loessOptResolution = .001,
         loessOptCutFactor = 0.01
     ))
-    expect_type(chr5list, "list")
+    expect_type(chr7list, "list")
     expect_true(all(
         c("wtCounts", "mutCounts", "loess", "aicc") %in%
-            names(chr5list)
+            names(chr7list)
     ))
-    expect_gt(length(chr5list$loess$x), 4000)
-    expect_equal(chr5list$loess$pars$span, 0.101)
+    expect_gt(length(chr7list$loess$x), 4000)
+    expect_equal(chr7list$loess$pars$span, 0.101)
 })
 
 

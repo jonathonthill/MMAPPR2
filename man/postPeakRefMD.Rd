@@ -12,9 +12,9 @@
 postPeakRefMD
 }
 \description{
-Produced originally from BAM files of the zy14 mutant
-and wild-type pools, aligned to the zv9 reference genome
-using HISAT2. Sequencing data is from the original MMAPPR
-publication.
+Produced originally from BAM files of the zy13 mutant
+and wild-type pools, aligned to the GRCz11 reference genome
+using HISAT2, as available in the \link[MMAPPR2data]{MMAPPR2data}
+package.
 }
 \keyword{datasets}

@@ -53,7 +53,7 @@ test_that("correct ranges are being read", {
     Sys.which('hello-there')
     expect_equal(length(chrList), 25)
     expect_type(chrList, "list")
-    expect_s4_class(chrList$`5`, "GRanges")
+    expect_s4_class(chrList$chr5, "GRanges")
 })
 
 
