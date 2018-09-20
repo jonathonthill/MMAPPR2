@@ -358,7 +358,7 @@ setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
               obj@wtFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
-              if (typeof(v) == 'logical') obj else v
+              if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
 #' @export
@@ -366,7 +366,7 @@ setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
               obj@mutFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
-              if (typeof(v) == 'logical') obj else v
+              if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
 #' @export
