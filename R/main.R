@@ -139,15 +139,6 @@ mmappr <- function(mmapprParam) {
 }
 
 
-.addBamFileIndex <- function(bf) {
-    path <- bf$path
-    index <- paste0(path, ".bai")
-    if (!file.exists(index)){
-        Rsamtools::indexBam(bf)
-    }
-    return(Rsamtools::BamFile(path, index = index))
-}
-
 .insertFakeVEPintoPath <- function() {
     unlink('/tmp/bin', recursive=TRUE)
     dir.create('/tmp/bin')

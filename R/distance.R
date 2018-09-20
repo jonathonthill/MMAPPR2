@@ -23,10 +23,8 @@
 #'     postCalcDistMD <- calculateDistance(md)
 #' })
 calculateDistance <- function(mmapprData) {
-    if (is.na(Rsamtools::index(wtFiles(param(mmapprData)))))
-        Rsamtools::indexBam(wtFiles(param(mmapprData)))
-    if (is.na(Rsamtools::index(mutFiles(param(mmapprData)))))
-        Rsamtools::indexBam(mutFiles(param(mmapprData)))
+    .indexBamFileList(wtFiles(param(mmapprData)))
+    .indexBamFileList(mutFiles(param(mmapprData)))
     
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
@@ -34,6 +32,15 @@ calculateDistance <- function(mmapprData) {
         .runFunctionInParallel(chrList, .calcDistForChr, param=mmapprData@param)
     
     return(mmapprData)
+}
+
+
+.indexBamFileList <- function(bfl) {
+    for (i in seq_along(bfl)) {
+        bamFile <- bfl[[i]]
+        if (is.na(Rsamtools::index(bamFile)))
+            Rsamtools::indexBam(bamFile)
+    }
 }
 
 

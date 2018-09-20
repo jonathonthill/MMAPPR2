@@ -42,8 +42,24 @@ test_that("files get indexed automatically if needed", {
 })
 
 
-test_that('files in BamFileList also got indexed automatically if needed', {
-    expect_true(FALSE)
+test_that('files in BamFileList also get indexed automatically if needed', {
+    skip_if_not_installed('mockery')
+    mockery::stub(calculateDistance, '.getFileReadChrList', function(...) stop('fail'))
+    mockery::stub(calculateDistance, 'Rsamtools::indexBam',
+                  function(...) write.table(matrix(), '/tmp/test.bam.bai'))
+    
+    file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
+    file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test2.bam')
+    
+    expect_false(file.exists('/tmp/test.bam.bai'))
+    wtFiles(mmapprData@param) <- c('/tmp/test.bam', '/tmp/test2.bam')
+    mutFiles(mmapprData@param) <- '/tmp/test.bam'
+    expect_error(calculateDistance(mmapprData), 'fail')
+    expect_true(file.exists('/tmp/test.bam.bai'))
+    expect_true(file.exists('/tmp/test2.bam.bai'))
+    
+    unlink('/tmp/test*.bam*')
+    
 })
 
 
