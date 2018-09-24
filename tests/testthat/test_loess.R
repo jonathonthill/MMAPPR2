@@ -1,11 +1,6 @@
 context("Loess fit/AICc optimization")
 
 
-SkipDebug <- function()
-    if (F)
-        skip("skipping to save time")
-
-
 test_that(".minTwo works right", {
     x <- c(1, 2, 3)
     expect_equal(.minTwo(x), c(1, 2))
@@ -55,7 +50,6 @@ test_that(".localResolution works right", {
 })
 
 test_that("peak chromosome is fit correctly", {
-    SkipDebug()
     mdChr7 <- postCalcDistMD
     chr7list <- mdChr7@distance$`7`
     chr7list <- expect_warning(.loessFitForChr(
@@ -74,7 +68,6 @@ test_that("peak chromosome is fit correctly", {
 
 
 test_that("loessFit runs properly for whole mmapprData", {
-    SkipDebug()
     md <- readRDS('test_data/objects/post_calcdist_dummy_md.RDS')
     md <- loessFit(md)
     successes <-
