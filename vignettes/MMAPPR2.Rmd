@@ -18,7 +18,7 @@ vignette: |
 
 # Getting Started
 
-## Installing Dependencies
+### Installing Dependencies
 You must first install Ensembl VEP like so:
 ```{bash installVEP}
 git clone https://github.com/Ensembl/ensembl-vep.git
@@ -31,33 +31,34 @@ If you depart from the installation shown here, see [Ensembl's instructions](htt
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
 
-## Reference Genome
+### Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
 ```{r refGenome eval=FALSE}
 refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 ```
 
-**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl!**
+**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl! You should use this same genome in aligning your sequencing data as well.**
 
-## Running MMAPPR2
+# Running MMAPPR2
 
 Setting up MmapprParam
 ```{r param}
 library(MMAPPR2)
+library(MMAPPR2data)
 
 MMAPPR2:::.insertFakeVEPintoPath() ## Don't worry about this line
 param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
-                     wtFiles = 'tests/testthat/test_data/bam_files/zy14_wt_cut_filt.bam',
-                     mutFiles = 'tests/testthat/test_data/bam_files/zy14_mut_cut_filt.bam',
-                     
+                     wtFiles = zy13wtBam(),
+                     mutFiles = zy13mutBam(),
+                     species = 'danio_rerio')
 ```
 
-Do stuff
+Do stuff. TODO
 
 
-## Advanced Configuration
+# Advanced Configuration
 
-#### Configure VEPFlags Object
+### Configure VEPFlags Object
 MMAPPR2 uses the ensemblVEP Bioconductor package to predict the effect of variants in the peak region. 
 To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
 ```{r vepFlags}
@@ -78,15 +79,16 @@ vepFlags <- VEPFlags(flags = list(
 ))
 ```
 
-#### BiocParallel Configuration
+### BiocParallel Configuration
 MMAPPR2 simply uses the default `bpparam` registered. You can change this (for example, if BiocParallel isn't working correctly) with the `BiocParallel::register` command. For example:
 ```{r bpparam}
 library(BiocParallel)
 register(SerialParam())
 register(MultiCoreParam())
+registered()
 ```
 
 The last param registered becomes the default.
 
-#### Whole-genome Sequencing (WGS)
+### Whole-genome Sequencing (WGS)
 It would probably work. Mess with parameters like minDepth.
