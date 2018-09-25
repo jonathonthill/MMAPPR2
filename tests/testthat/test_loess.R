@@ -63,7 +63,7 @@ test_that("peak chromosome is fit correctly", {
             names(chr7list)
     ))
     expect_gt(length(chr7list$loess$x), 4000)
-    expect_equal(chr7list$loess$pars$span, 0.101)
+    expect_equal(chr7list$loess$pars$span, 0.069)
 })
 
 

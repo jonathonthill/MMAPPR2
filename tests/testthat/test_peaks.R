@@ -20,7 +20,7 @@ md <- prePeak(md)
 
 test_that('peak is identified for chromosome 5', {
     expect_equal(length(names(md@peaks)), 1)
-    expect_equal(names(md@peaks)[1], 'chr5')
+    expect_equal(names(md@peaks)[1], '7')
 })
 
 test_that('.getPeakFromTopP works on double peak', {
@@ -59,15 +59,15 @@ test_that('.getPeakFromTopP works on edge peak', {
 test_that(".peakRefinementChr works right on chr 5", {
     skip_if_not_installed('mockery')
     
-    inputList <- list(seqname='chr5')
+    inputList <- list(seqname='7')
     
     mockery::stub(.peakRefinementChr, '.getSubsampleLoessMax', .mockSubsampleLoessMax)
     mockery::stub(.peakRefinementChr, '.getPeakFromTopP', .mockPeakFromTopP)
-    chr5list <- .peakRefinementChr(inputList, md)
+    chr7list <- .peakRefinementChr(inputList, md)
     
     expect_true(all(c('start', 'end', 'densityFunction',
                       'peakPosition', 'seqname') %in%
-                        names(chr5list)))
-    expect_true(chr5list$peakPosition > 19000000)
-    expect_true(chr5list$peakPosition < 25000000)
+                        names(chr7list)))
+    expect_true(chr7list$peakPosition > 6.4E7)
+    expect_true(chr7list$peakPosition < 6.6E7)
 })
