@@ -46,7 +46,7 @@ test_that(".runFunctionInParellel works with extra inputs", {
 test_that("MmapprParam has default VEPFlags when one isn't provided", {
     # put fake vep in path since VEPFlags requires it
     dir.create('/tmp/ensembl-vep')
-    system('touch /tmp/ensembl-vep/vep; chmod 777 /tmp/ensembl-vep/vep')
+    system2('touch /tmp/ensembl-vep/vep; chmod 777 /tmp/ensembl-vep/vep')
     originalPath <- Sys.getenv('PATH')
     Sys.setenv('PATH'=paste0(originalPath, ':', '/tmp/ensembl-vep'))
     

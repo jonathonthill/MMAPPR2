@@ -140,6 +140,6 @@ mmappr <- function(mmapprParam) {
     unlink('/tmp/bin', recursive=TRUE)
     dir.create('/tmp/bin')
     file.create('/tmp/bin/vep')
-    system('chmod 777 /tmp/bin/vep')
+    system2('chmod 777 /tmp/bin/vep')
     Sys.setenv('PATH'=paste(Sys.getenv('PATH'), '/tmp/bin', sep=':'))
 }
