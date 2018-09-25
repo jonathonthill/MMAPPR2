@@ -10,13 +10,12 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE) {
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
 #'     MMAPPR2:::.insertFakeVEPintoPath() ## Ignore this line
-#'     MMAPPR2data::downloadAll()
 #'     
 #'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
-#'                                wtFiles = MMAPPR2data::zy13wt(),
-#'                                mutFiles = MMAPPR2data::zy13mut(),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
 #'                                species = "danio_rerio")
 #'
 #'     md <- new('MmapprData', param = mmapprParam)
