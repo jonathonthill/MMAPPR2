@@ -28,5 +28,5 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
 
     md <- new('MmapprData', param = mmapprParam)
     postCalcDistMD <- calculateDistance(md)
-})
+}
 }

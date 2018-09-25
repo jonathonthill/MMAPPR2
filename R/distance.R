@@ -20,7 +20,7 @@
 #'
 #'     md <- new('MmapprData', param = mmapprParam)
 #'     postCalcDistMD <- calculateDistance(md)
-#' })
+#' }
 calculateDistance <- function(mmapprData) {
     .indexBamFileList(wtFiles(param(mmapprData)))
     .indexBamFileList(mutFiles(param(mmapprData)))
