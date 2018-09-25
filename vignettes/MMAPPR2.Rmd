@@ -41,7 +41,7 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 
 # Running MMAPPR2
 
-Setting up MmapprParam
+### Setting Parameters
 ```{r param}
 library(MMAPPR2)
 library(MMAPPR2data)
@@ -53,7 +53,13 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
                      species = 'danio_rerio')
 ```
 
-Do stuff. TODO
+### Running
+```{r mmappr}
+mmapprData <- mmappr(param)
+```
+
+### Alternate Workflow
+MMAPPR2 can be broken up TODO
 
 
 # Advanced Configuration
