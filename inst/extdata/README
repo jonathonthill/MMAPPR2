@@ -1,2 +1,0 @@
-Files are of zy14 mutation, aligned to GRCz11 with STAR, then filtered
-by mapping quality of >=30 and cut to only chr5:5Mbp-50Mbp
