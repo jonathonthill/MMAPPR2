@@ -146,10 +146,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
     for (i in seq_along(files)) {
         file <- files[[i]]
         if (file.exists(file$path)) {
-            if (length(Rsamtools::index(file)) == 0) {
-                file <- .addBamFileIndex(file)
-                if (length(Rsamtools::index(file)) == 0)
-                    warning(paste0(file$path), " in wtFiles has no index file")
+            if (is.na(Rsamtools::index(file))) {
+                warning(paste0(file$path), " in wtFiles has no index file")
             }
         } else {
             errors <- c(errors, paste0(file$path, " does not exist"))
