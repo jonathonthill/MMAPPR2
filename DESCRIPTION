@@ -18,7 +18,8 @@ VignetteBuilder: knitr
 Suggests: testthat,
     mockery,
     roxygen2,
-    knitr
+    knitr,
+    rmarkdown
 Imports: ensemblVEP (>= 1.20.0),
     gmapR,
     Rsamtools,
