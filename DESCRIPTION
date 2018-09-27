@@ -19,7 +19,8 @@ Suggests: testthat,
     mockery,
     roxygen2,
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocStyle
 Imports: ensemblVEP (>= 1.20.0),
     gmapR,
     Rsamtools,
