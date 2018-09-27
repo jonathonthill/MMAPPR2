@@ -117,3 +117,10 @@ The last param registered becomes the default.
 
 ### Whole-genome Sequencing (WGS)
 MMAPPR2, like its predecessor, was designed for and tested using RNA-Seq data. However, the principles at work should still apply for WGS data.
+
+
+-----------------
+#### Session Info
+```{r sessionInfo}
+sessionInfo()
+```
