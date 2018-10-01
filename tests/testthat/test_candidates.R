@@ -27,7 +27,7 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
     
     mockery::stub(
         .getVariantsForRange,
-        'callSampleSpecificVariants',
+        'callVariants',
         mockVariantCall
     )
     mockery::stub(.getVariantsForRange, 'TallyVariantsParam', 42)
@@ -61,14 +61,34 @@ test_that('.getVariantsForRange handles replicates', {
                                IRanges::IRanges(start = 1, width = 75682077))
     mockery::stub(
         .getVariantsForRange,
-        'callSampleSpecificVariants',
+        'callVariants',
         mockVariantCall
     )
     mockery::stub(.getVariantsForRange, 'mergeBam', mockMergeBam)
     mockery::stub(.getVariantsForRange, 'TallyVariantsParam', 42)
     result <- .getVariantsForRange(inputRange, param)
     mockery::expect_called(mockVariantCall, 1)
-    mockery::expect_called(mockMergeBam, 2)
+    mockery::expect_called(mockMergeBam, 1)
+})
+
+
+test_that('.runVEPForVariants will remove temporary file if ensemblVEP fails', {
+    skip_if_not_installed('mockery')
+    
+    vr <- VariantAnnotation::VRanges(seqnames='chr5',
+                               ranges=IRanges::IRanges(start=c(1), width=1),
+                               ref=c('A')
+    )
+    vepFlags <- mmapprData@param@vepFlags
+    
+    mockery::stub(.runVEPForVariants, 'ensemblVEP::ensemblVEP',
+                  function(d1, d2) stop('ensemblVEP failed'))
+    mockery::stub(.runVEPForVariants, 'VariantAnnotation::writeVcf',
+                  function(x, filename) write.table(matrix(), '/tmp/peak.vcf'))
+    
+    expect_error(.runVEPForVariants(vr, vepFlags), regexp='ensemblVEP failed')
+    
+    expect_false(file.exists('/tmp/peak.vcf'))
 })
 
 

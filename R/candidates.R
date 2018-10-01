@@ -1,6 +1,21 @@
-# take peak region dataframe and run VEP for each region
-# peak region df has cols chr, starts, and stops
-
+#' Generate potential causative mutations and consequences in peak regions
+#' 
+#' Follows the \code{\link{peakRefinement}} step and produces a
+#' \code{\linkS4class{MmapprData}} object ready for
+#' \code{\link{outputMmapprData}}.
+#'
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
+#'
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{candidates}
+#'   slot filled with a \code{\link[GenomicRanges]{GRanges}} object for each
+#'   peak chromosome containing variants and predicted consequences from
+#'   Ensembl's Variant Effect Predictor.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' md <- generateCandidates(md)
+#' }
 generateCandidates <- function(mmapprData) {
     
     #get GRanges representation of peak
@@ -12,7 +27,7 @@ generateCandidates <- function(mmapprData) {
     
     #run VEP
     mmapprData@candidates <- lapply(mmapprData@candidates, FUN=.runVEPForVariants,
-                                    vepParam=mmapprData@param@vepParam)
+                                    vepFlags=mmapprData@param@vepFlags)
     
     #filter out low impact variants
     mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
@@ -33,6 +48,7 @@ generateCandidates <- function(mmapprData) {
     return(mmapprData)
 }
 
+
 .getPeakRange <- function(peakList) {
     ir <- IRanges::IRanges(start=as.numeric(peakList$start),
                   end=as.numeric(peakList$end),
@@ -43,28 +59,23 @@ generateCandidates <- function(mmapprData) {
     return(gr)
 }
 
+
 .getVariantsForRange <- function(inputRange, param) {
     # merge files in desired region if there are multiple
-    if (length(param@wtFiles) < 2) wtBam <- param@wtFiles[[1]]
-    else{
-        wtBam <- mergeBam(param@wtFiles, destination="tmp_wt.bam", region=inputRange)
-    }
     if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
     else{
-        mutBam <- mergeBam(param@mutFiles, destination="tmp_m.bam", region=inputRange)
+        mutBam <- mergeBam(param@mutFiles, destination="tmp.bam", region=inputRange)
     }
 
     # create param for variant calling
     tallyParam <- TallyVariantsParam(genome=param@refGenome,
-                                      which=inputRange,
-                                      indels=TRUE
+                                     which=inputRange,
+                                     indels=TRUE
     )
 
-    resultVr <- callSampleSpecificVariants(
-        mutBam, wtBam, tally.param=tallyParam)
+    resultVr <- callVariants(mutBam, tally.param=tallyParam)
 
-    if (file.exists("tmp_wt.bm")) file.remove("tmp_wt.bam")
-    if (file.exists("tmp_m.bm")) file.remove("tmp_m.bam")
+    if (file.exists("tmp.bam")) file.remove("tmp.bam")
 
     if (length(resultVr) > 0) {
         # need sampleNames to convert to VCF; using mutant file names
@@ -78,23 +89,23 @@ generateCandidates <- function(mmapprData) {
 }
 
 
-.runVEPForVariants <- function(inputVariants, vepParam){
-    stopifnot(is(vepParam, "VEPParam"))
+.runVEPForVariants <- function(inputVariants, vepFlags){
+    stopifnot(is(vepFlags, "VEPFlags"))
+    stopifnot(is(inputVariants, 'VRanges'))
     
-    peakVcfFile <- "peak.vcf"
+    peakVcfFile <- "/tmp/peak.vcf"
+    tryCatch({
+        VariantAnnotation::writeVcf(inputVariants, peakVcfFile)
+        resultGRanges <- ensemblVEP::ensemblVEP(peakVcfFile, vepFlags)
+    }, error=function(e) {
+        stop(e)
+    },finally={
+        if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
+    })
     
-    #write file
-    VariantAnnotation::writeVcf(inputVariants, peakVcfFile)
-    
-    param <- vepParam
-    
-    resultGRanges <- ensemblVEP::ensemblVEP(peakVcfFile, param)
-    
-    if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
-    
-    #output GRanges
     return(resultGRanges)
 }
+
 
 .filterVariants <- function(candidateGRanges) {
     filter <-
@@ -102,6 +113,7 @@ generateCandidates <- function(mmapprData) {
     filter[is.na(filter)] <- TRUE
     return(candidateGRanges[filter])
 }
+
 
 .densityScoreAndOrderVariants <- function(candidateGRanges, densityFunction) {
     #density calculation

@@ -10,75 +10,126 @@
 
 #' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 #' 
-#' This describes what we're doing
+#' MMAPPR2 is designed to map the causative mutation in a forward genetics
+#' screen. It analyzes aligned sequence files, calculates the per-base
+#' Euclidean distance between the mutant and wild-type pools, performs
+#' a Loess regression on that distance, and generates candidate variants
+#' in regions of peak distance.
 #'
-#' @param mmapprParam A \linkS4class{MmapprParam} object containing desired parameters
+#' @param mmapprParam A \code{\linkS4class{MmapprParam}} object containing
+#'   desired parameters.
 #'
-#' @return A \linkS4class{MmapprData} object containing results
+#' @return A \code{\linkS4class{MmapprData}} object containing results
+#'   as well as intermediate data.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' vepFlags <- ensemblVEP::VEPFlags(
-#'                  flags=list(species = "danio_rerio_merged", 
-#'                             format = "vcf",
-#'                             database = TRUE))
-#' mmapprParam <- MmapprParam(GmapGenome("danio_rerio_10"),
-#'                            "wild_type.sorted.bam",
-#'                            "mutant.sorted.bam",
-#'                            vepFlags)
+#' mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
+#'                            wtFiles = "wild_type.sorted.bam",
+#'                            mutFiles = "mutant.sorted.bam",
+#'                            species = "danio_rerio")
 #' mmapprData <- mmappr(mmapprParam)
+#' 
+#' ### Alternately, you can navigate the pipeline step by step.
+#' ### This may be helpful for debugging.
+#' md <- new('MmapprData', param = mmapprParam)
+#' md <- calculateDistance(md)
+#' md <- loessFit(md)
+#' md <- prePeak(md)
+#' md <- peakRefinement(md)
+#' md <- generateCandidates(md)
+#' md <- outputMmapprData(md)
 #' }
+#' 
+#' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
+#'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
+#'   \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
 mmappr <- function(mmapprParam) {
-    startTime <- proc.time()
+    startTime <- Sys.time()
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------")
+    message('')
     
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
+    oF <- outputFolder(mmapprData@param)
+    .messageAndLog(paste('Start time:', Sys.time()), oF)
+    .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
+    
+    .log('Parameters:', oF)
+    .log(mmapprParam, oF)
+    .log('', oF)
     
     mmapprData <- tryCatch({
-        mmapprData <- readInFiles(mmapprData)
-        message("File reading successfully completed and Euclidian distance data generated")
+        .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
+        mmapprData <- calculateDistance(mmapprData)
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Generating optimal Loess curves for each chromosome...", oF)
         mmapprData <- loessFit(mmapprData)
-        message("Loess regression successfully completed")
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Identifying chromosome(s) harboring linkage region...", oF)
         mmapprData <- prePeak(mmapprData)
-        mmapprData <- peakRefinement(mmapprData)
         if (length(mmapprData@peaks) > 0)
-            message("Peak regions succesfully identified")
+            .messageAndLog("Peak regions succesfully identified", oF)
         else {
             stop("No peak regions identified")
         }
-        
+        .messageAndLog("Refining peak characterization using SNP resampling...", oF)
+        mmapprData <- peakRefinement(mmapprData)
+        .messageAndLog("Done", oF)
+
+        .messageAndLog('Generating, analyzing, and ranking candidate variants...', oF)        
         mmapprData <- generateCandidates(mmapprData)
-        if (length(mmapprData@candidates) > 0)
-            message("Candidate variants generated, analyzed, and ranked")
+        .messageAndLog("Done", oF)
         
+        .messageAndLog("Writing output plots and tables...", oF)
         outputMmapprData(mmapprData)
-        message("Output PDF files generated")
+        .messageAndLog("Done", oF)
         
-        return(mmapprData)
+        mmapprData  # return for use after block
     }, 
     error = function(e) {
-        traceback()
-        message(e$message)
-        message("MmapprData object is returned up until the failing step")
-        message(paste0("You can also recover the object after the latest successful step from 'mmappr_data.RDS' in the '", 
-                outputFolder(param(mmapprData)),
-                "' output folder"))
+        .messageAndLog(paste('ERROR:', e$message), oF)
+        .messageAndLog("MmapprData object up to the failing step is returned.", oF)
+        .messageAndLog(paste0("You can also recover this object ",
+                              "from 'mmappr_data.RDS' in the '", 
+                              outputFolder(param(mmapprData)),
+                              "' output folder"), oF)
         return(mmapprData)
     })
     
-    
-    
-    message("Mmappr runtime:")
-    print(proc.time() - startTime)
+    endTime <- Sys.time()
+    .messageAndLog(paste('\nEnd time:', endTime), oF)
+    runtime <- format(endTime - startTime)
+    .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
     saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
+    
+    .log('\nsessionInfo()', oF)
+    .log(sessionInfo(), oF)
+    
     return(mmapprData)
 }
+
+
+.messageAndLog <- function(msg, outputFolder) {
+    logFile <- file.path(outputFolder, 'mmappr2.log')
+    if (!is.character(msg)) msg <- capture.output(msg)
+    cat(msg, file=logFile, sep='\n', append=TRUE)
+    msg <- paste(msg, collapse='\n')
+    message(msg)
+}
+
+
+.log <- function(msg, outputFolder) {
+    logFile <- file.path(outputFolder, 'mmappr2.log')
+    if (!is.character(msg)) msg <- capture.output(msg)
+    cat(msg, file=logFile, sep='\n', append=TRUE)
+}
+
 
 .addBamFileIndex <- function(bf) {
     path <- bf$path

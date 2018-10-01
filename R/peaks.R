@@ -1,3 +1,18 @@
+#' Characterize Euclidean distance peaks using resampling simulation
+#' 
+#' Follows the \code{\link{prePeak}} step and precedes
+#' \code{\link{generateCandidates}}.
+#'
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
+#'
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{peaks}
+#'   slot filled and populated.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' md <- peakRefinement(md)
+#' }
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
         .runFunctionInParallel(mmapprData@peaks,
@@ -63,54 +78,66 @@ peakRefinement <- function(mmapprData){
     
     peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
 
-    densityPlot <- plot(densityData)
-    abline(v = c(peak$minPos, peak$maxPos))
-    
     outputList <- list()
     outputList$seqname <- seqname
     outputList$start <- peak$minPos
     outputList$end <- peak$maxPos
     outputList$densityFunction <- densityFunction
     outputList$peakPosition <- peak$peakPos
+    outputList$densityData <- densityData
     
     return(outputList)
 }
 
 
+#' Identify chromosomes containing peaks
+#' 
+#' Follows the \code{\link{loessFit}} step and precedes
+#' \code{\link{peakRefinement}}.
+#'
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
+#'
+#' @return A \linkS4class{MmapprData} object with the \code{peaks}
+#'   slot initalized.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' md <- prePeak(md)
+#' }
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     
     #need to calculate standard dev of all chromosomes for cutoff
     combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
-        if(class(chr) == "list"){
-            var(chr$loess$fitted)/length(chr$loess$fitted)
-        } else {
+        tryCatch({
+            return(var(chr$loess$fitted)/length(chr$loess$fitted))
+        }, error=function(e) {
             return(0)
-        }
+        })
     })
     combinedStDev <- sum(combinedStDev)^(1/2)
     distanceMedian <- sapply(mmapprData@distance, function(chr) {
-        if(class(chr)=="list"){
-            median(chr$loess$fitted)}else{
-                return(NA)
-            }})
-    distanceMedian <- median(distanceMedian,na.rm=TRUE) #median of list of chr medians
+        tryCatch({
+            return(median(chr$loess$fitted))
+        }, error=function(e) {
+            return(NA)
+        })
+    })
+    distanceMedian <- median(distanceMedian, na.rm=TRUE) #median of list of chr medians
     cutoff <- 3*combinedStDev + distanceMedian
-    
-    message("Using", round(cutoff, digits=4), "as cutoff.\n")
     
     #get which peaks have values above cutoff, initialize them in mmapprData
     for(i in seq_along(mmapprData@distance)){
-        if(class(mmapprData@distance[[i]]) != "list"){
-            next
-        }
+        if(class(mmapprData@distance[[i]]) != "list") next
+        if(class(mmapprData@distance[[i]]$loess) != "loess") next
+           
         loessForChr <- mmapprData@distance[[i]]$loess
         if (length(loessForChr$x) < 50) next
         containsPeak <- any(loessForChr$fitted > cutoff)
         chrName <- names(mmapprData@distance)[[i]]
         if (containsPeak) {
             mmapprData@peaks[[chrName]] <- list(seqname = chrName)
-            message("Sequence", chrName, "contains peak.\n")
         }
     }
     

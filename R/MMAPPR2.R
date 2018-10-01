@@ -10,12 +10,12 @@ NULL
 
 #' @import methods
 #' @importFrom magrittr %>%
-#' @importFrom graphics abline mtext par plot polygon
-#' @importFrom grDevices dev.off pdf rgb
+#' @importFrom graphics abline mtext par plot polygon axis legend
+#' @importFrom grDevices dev.off pdf rgb graphics.off
 #' @importFrom stats approxfun density.default loess median var
-#' @importFrom utils capture.output object.size str write.table
+#' @importFrom utils capture.output object.size str write.table tail sessionInfo
 #' @importFrom gmapR GmapGenome
 #' @importFrom ensemblVEP VEPFlags
 #' @importFrom Rsamtools BamFileList mergeBam
-#' @importFrom VariantTools TallyVariantsParam callSampleSpecificVariants
+#' @importFrom VariantTools TallyVariantsParam callVariants
 NULL

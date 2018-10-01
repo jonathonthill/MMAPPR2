@@ -1,7 +1,6 @@
 context('Output functions')
 
-mmapprData <- readRDS('test_data/objects/post_peakref_chr5_md.RDS')
-# TODO fix file
+mmapprData <- readRDS('test_data/objects/post_candidates_chr5_md.RDS')
 
 test_that('default output folder is prepared correctly', {
     skip_if_not_installed('mockery')
@@ -17,11 +16,14 @@ test_that('user can overwrite previous output folder when prompted', {
     skip_if_not_installed('mockery')
     unlink('tmp', recursive=TRUE)
     dir.create('tmp')
+    write.table(matrix(), file='tmp/tmp.txt')
+    expect_true(file.exists('tmp/tmp.txt'))
     outputFolder(mmapprData@param) <- 'tmp'
     mockery::stub(.prepareOutputFolder, 'readline', 'y')
     mmapprData <- .prepareOutputFolder(mmapprData)
     expect_equal(mmapprData@param@outputFolder, 'tmp')
     expect_true(dir.exists('tmp'))
+    expect_false(file.exists('tmp/tmp.txt'))
     unlink('tmp', recursive=TRUE)
 })
 

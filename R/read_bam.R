@@ -1,16 +1,34 @@
-readInFiles <- function(mmapprData) {
-    message("Reading BAM files")
+#' Read BAM files and generate Euclidean distance data
+#' 
+#' Initalizes the MMAPPR2 pipeline and precedes the \code{\link{loessFit}}
+#' step.
+#'
+#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
+#'
+#' @return A \code{\linkS4class{MmapprData}} object with the \code{distance}
+#'   slot filled.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' md <- calculateDistance(md)
+#' }
+calculateDistance <- function(mmapprData) {
+    if (is.na(Rsamtools::index(wtFiles(param(mmapprData)))))
+        Rsamtools::indexBam(wtFiles(param(mmapprData)))
+    if (is.na(Rsamtools::index(mutFiles(param(mmapprData)))))
+        Rsamtools::indexBam(mutFiles(param(mmapprData)))
     
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
     mmapprData@distance <-
-    .runFunctionInParallel(chrList, .readFilesForChr, param=mmapprData@param)
+        .runFunctionInParallel(chrList, .calcDistForChr, param=mmapprData@param)
     
     return(mmapprData)
 }
 
 
-.readFilesForChr <- function(chrRange, param){
+.calcDistForChr <- function(chrRange, param){
     startTime <- proc.time()
     tryCatch({
         #parameter check
@@ -98,7 +116,6 @@ readInFiles <- function(mmapprData) {
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
         
         stopifnot(nrow(distanceDf) > 0)
-        #print(proc.time() - startTime)
         
         resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts, 
                            distanceDf = distanceDf)
@@ -123,12 +140,17 @@ readInFiles <- function(mmapprData) {
     #cut to standard chromosomes
     chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges, pruning.mode='coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM', pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT', pruning.mode='coarse')
     
     chrList <- list()
     # store range for each chromosome as list item
-    for (i in suppressWarnings(GenomeInfoDb::orderSeqlevels(names(chrRanges)))) {
+    for (i in suppressWarnings(
+        GenomeInfoDb::orderSeqlevels(
+            as.character(GenomeInfoDb::seqnames(chrRanges))))) {
+        
         chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- chrRanges[i]
     }
+
     
     return(chrList)
 })}

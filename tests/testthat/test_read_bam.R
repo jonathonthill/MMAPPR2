@@ -1,4 +1,4 @@
-context("BAM file reading")
+context("Calculate distance data from BAM files")
 Sys.unsetenv("R_TESTS")
 
 
@@ -8,7 +8,8 @@ param <-
         new("GmapGenome"),
         "./test_data/bam_files/zy14_wt_cut_filt.bam",
         "./test_data/bam_files/zy14_mut_cut_filt.bam",
-        vepFlags = vepFlags
+        species='danio_rerio',
+        vepFlags=vepFlags
     )
 mmapprData <- new("MmapprData", param = param)
 
@@ -17,12 +18,30 @@ test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
     wtFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
     mutFiles(mmapprData@param) <- 'test_data/bam_files/zy14_dummy.bam'
-    mmapprData <- readInFiles(mmapprData)
+    mmapprData <- calculateDistance(mmapprData)
     expect_known_value(
         mmapprData@distance,
         "test_data/objects/post_file_read_dummy_distance.RDS",
         update = FALSE
     )
+})
+
+
+test_that("files get indexed automatically if needed", {
+    skip_if_not_installed('mockery')
+    mockery::stub(calculateDistance, '.getFileReadChrList', function(...) stop('fail'))
+    mockery::stub(calculateDistance, 'Rsamtools::indexBam',
+                  function(...) write.table(matrix(), '/tmp/test.bam.bai'))
+    
+    file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
+    
+    expect_false(file.exists('/tmp/test.bam.bai'))
+    wtFiles(mmapprData@param) <- '/tmp/test.bam'
+    mutFiles(mmapprData@param) <- '/tmp/test.bam'
+    expect_error(calculateDistance(mmapprData), 'fail')
+    expect_true(file.exists('/tmp/test.bam.bai'))
+    
+    unlink('/tmp/test.bam*')
 })
 
 
@@ -34,6 +53,27 @@ test_that("correct ranges are being read", {
     expect_s4_class(chrList$chr5, "GRanges")
 
     rm(chrList)
+})
+
+test_that('chrM and MT are dropped and sequences are reordered', {
+    skip_if_not_installed('mockery')
+    ucscNames <- c('chr1', 'chr2', 'chrM')
+    ensemblNames <- c('1', '2', 'MT')
+    mockGR <- mockery::mock(GenomicRanges::GRanges(ucscNames,
+                                                   IRanges::IRanges(0, 1)
+                            ),
+                            GenomicRanges::GRanges(ensemblNames,
+                                                   IRanges::IRanges(0, 1)
+                            )
+    )
+    mockery::stub(.getFileReadChrList, 'as', mockGR)
+    chrList <- .getFileReadChrList(mmapprData)
+    expect_equal(names(chrList), c('chr1', 'chr2'))
+
+    chrList <- .getFileReadChrList(mmapprData)
+    expect_equal(names(chrList), c('1', '2'))
+
+    mockery::expect_called(mockGR, 2)
 })
 
 
@@ -52,8 +92,8 @@ test_that("single chromosome is read correctly", {
         list(list(pos=2:11, # MUT
              info=matrix(infoVec, ncol=1)))
     )
-    mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
-    result <- .readFilesForChr(inputRange, param=param)
+    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    result <- .calcDistForChr(inputRange, param=param)
     mockery::expect_called(mockAP, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
@@ -106,7 +146,6 @@ test_that('.avgFiles works as expected with mean fileAggregation', {
 
 
 test_that("single chromosome is read correctly with replicates", {
-    # TODO: fix this
     skip_if_not_installed('mockery')
 
     inputRange <-
@@ -117,12 +156,12 @@ test_that("single chromosome is read correctly with replicates", {
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
     mockAP <- mockery::mock(
         list(list(pos=1:10, # WT
-             info=matrix(infoVec, ncol=1))),
+             info=matrix(rep(infoVec, 2), ncol=2))),
         list(list(pos=2:11, # MUT
-             info=matrix(infoVec, ncol=1)))
+             info=matrix(rep(infoVec, 3), ncol=3)))
     )
-    mockery::stub(.readFilesForChr, 'Rsamtools::applyPileups', mockAP)
-    result <- .readFilesForChr(inputRange, param=param)
+    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    result <- .calcDistForChr(inputRange, param=param)
     mockery::expect_called(mockAP, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
