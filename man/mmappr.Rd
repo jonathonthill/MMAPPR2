@@ -12,7 +12,7 @@ desired parameters.}
 }
 \value{
 A \code{\linkS4class{MmapprData}} object containing results
-  as well as intermediate data.
+  and/or intermediate data.
 }
 \description{
 MMAPPR2 is designed to map the causative mutation in a forward genetics
@@ -22,22 +22,27 @@ a Loess regression on that distance, and generates candidate variants
 in regions of peak distance.
 }
 \examples{
-\dontrun{
-mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
-                           wtFiles = "wild_type.sorted.bam",
-                           mutFiles = "mutant.sorted.bam",
-                           species = "danio_rerio")
-mmapprData <- mmappr(mmapprParam)
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+    MMAPPR2:::.insertFakeVEPintoPath() ## Ignore this line
 
-### Alternately, you can navigate the pipeline step by step.
-### This may be helpful for debugging.
-md <- new('MmapprData', param = mmapprParam)
-md <- calculateDistance(md)
-md <- loessFit(md)
-md <- prePeak(md)
-md <- peakRefinement(md)
-md <- generateCandidates(md)
-md <- outputMmapprData(md)
+    # Specify parameters:
+    mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
+                               wtFiles = MMAPPR2data::zy13wtBam(),
+                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               species = "danio_rerio")
+                               
+    # Run pipeline:
+    mmapprData <- mmappr(mmapprParam)
+
+    ### Alternately, you can navigate the pipeline step by step.
+    ### This may be helpful for debugging.
+    md <- new('MmapprData', param = mmapprParam)
+    postCalcDistMD <- calculateDistance(md)
+    postLoessMD <- loessFit(postCalcDistMD)
+    postPrePeakMD <- prePeak(postLoessMD)
+    postPeakRefMD <- peakRefinement(postPrePeakMD)
+    \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)}
+    outputMmapprData(postCandidatesMD)
 }
 
 }

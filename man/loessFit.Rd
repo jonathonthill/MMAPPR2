@@ -18,7 +18,5 @@ Called after the \code{\link{calculateDistance}} step and before
 \code{\link{prePeak}}.
 }
 \examples{
-\dontrun{
-md <- loessFit(md)
-}
+postLoessMD <- loessFit(postCalcDistMD)
 }

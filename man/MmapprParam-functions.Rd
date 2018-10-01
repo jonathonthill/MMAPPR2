@@ -25,6 +25,8 @@
 \alias{minDepth<-}
 \alias{minBaseQuality}
 \alias{minBaseQuality<-}
+\alias{minMapQuality}
+\alias{minMapQuality<-}
 \alias{loessOptResolution}
 \alias{loessOptResolution<-}
 \alias{loessOptCutFactor}

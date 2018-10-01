@@ -9,9 +9,7 @@
 #'   of the \code{distance} slot list filled.
 #'   
 #' @examples 
-#' \dontrun{
-#' md <- loessFit(md)
-#' }
+#' postLoessMD <- loessFit(postCalcDistMD)
 #' @export
 loessFit <- function(mmapprData) {
     loessOptResolution <- mmapprData@param@loessOptResolution

@@ -1,11 +1,6 @@
 context("Loess fit/AICc optimization")
 
 
-SkipDebug <- function()
-    if (F)
-        skip("skipping to save time")
-
-
 test_that(".minTwo works right", {
     x <- c(1, 2, 3)
     expect_equal(.minTwo(x), c(1, 2))
@@ -55,33 +50,25 @@ test_that(".localResolution works right", {
 })
 
 test_that("peak chromosome is fit correctly", {
-    SkipDebug()
-    chr5distDf <- readRDS("test_data/objects/chr5_distance.RDS")
-    chr5list <-
-        list(
-            wtCounts = NULL,
-            mutCounts = NULL,
-            distanceDf = chr5distDf,
-            seqname = 'chr5'
-        )
-    chr5list <- expect_warning(.loessFitForChr(
-        chr5list,
+    mdChr7 <- postCalcDistMD
+    chr7list <- mdChr7@distance$`7`
+    chr7list <- expect_warning(.loessFitForChr(
+        chr7list,
         loessOptResolution = .001,
         loessOptCutFactor = 0.01
     ))
-    expect_type(chr5list, "list")
+    expect_type(chr7list, "list")
     expect_true(all(
         c("wtCounts", "mutCounts", "loess", "aicc") %in%
-            names(chr5list)
+            names(chr7list)
     ))
-    expect_gt(length(chr5list$loess$x), 4000)
-    expect_equal(chr5list$loess$pars$span, 0.101)
+    expect_gt(length(chr7list$loess$x), 4000)
+    expect_equal(chr7list$loess$pars$span, 0.069)
 })
 
 
 test_that("loessFit runs properly for whole mmapprData", {
-    SkipDebug()
-    md <- readRDS('test_data/objects/post_file_read_dummy_md.RDS')
+    md <- readRDS('test_data/objects/post_calcdist_dummy_md.RDS')
     md <- loessFit(md)
     successes <-
         sapply(md@distance, function(seq)
@@ -89,7 +76,7 @@ test_that("loessFit runs properly for whole mmapprData", {
     expect_equal(length(successes), 25)
     expect_equal(sum(successes), 0)
     
-    expect_known_value(md@distance,
-                       "test_data/objects/post_loess_dummy_distance.RDS",
-                       update = FALSE)
+    expected <- readRDS('test_data/objects/post_loess_dummy_md.RDS')
+    
+    expect_identical(md@distance, expected@distance)
 })

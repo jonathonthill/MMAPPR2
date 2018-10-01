@@ -22,6 +22,6 @@ Follows the \code{\link{peakRefinement}} step and produces a
 }
 \examples{
 \dontrun{
-md <- generateCandidates(md)
+postCandidatesMD <- generateCandidates(postPeakRefMD)
 }
 }
