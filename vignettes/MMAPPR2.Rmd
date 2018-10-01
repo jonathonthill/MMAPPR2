@@ -61,8 +61,8 @@ mmapprData <- mmappr(param)
 
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
-mmapprData <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
-postCalcDistMD <- calculateDistance(mmapprData)
+md <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
+postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
 postPeakRefMD <- peakRefinement(postPrePeakMD)
@@ -81,7 +81,7 @@ and use for inspection and debugging:
 system(paste('ls', outputFolder(param(mmapprData))))
 
 mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
-mmapprData <- readRDS(mdFile)
+readRDS(mdFile)
 ```
 
 
