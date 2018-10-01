@@ -12,12 +12,14 @@ sudo: required
 bioc_packages:
   - BiocCheck
 r_github_packages:
-  - Bioconductor/ExperimentHub
   - kjohnsen/MMAPPR2data
   
 before_script:
   # so NAMESPACE is up-to-date
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
+  # ensure bioc-devel is being used
+  - R -e 'if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager"); BiocManager::install(version = "devel"); BiocManager::valid()'
+  # run tests here (can't see all output from check)
   - R -e 'devtools::test()'
 
 script:
