@@ -20,7 +20,7 @@ vignette: |
 
 ### Installing Dependencies
 You must first install Ensembl VEP like so:
-```{bash installVEP}
+```{bash installVEP, eval=FALSE}
 git clone https://github.com/Ensembl/ensembl-vep.git
 cd ensembl-vep
 perl INSTALL.pl -a ac -s my_species
@@ -33,7 +33,7 @@ and make sure any differences are accounted for in the
 
 ### Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
-```{r refGenome eval=FALSE}
+```{r refGenome, eval=FALSE}
 refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 ```
 
@@ -62,12 +62,16 @@ mmapprData <- mmappr(param)
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
 mmapprData <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
-mmapprData <- calculateDistance(mmapprData)
-mmapprData <- loessFit(mmapprData)
-mmapprData <- prePeak(mmapprData)
-mmapprData <- peakRefinement(mmapprData)
-mmapprData <- generateCandidates(mmapprData)
-outputMmapprData(mmapprData)
+postCalcDistMD <- calculateDistance(mmapprData)
+postLoessMD <- loessFit(postCalcDistMD)
+postPrePeakMD <- prePeak(postLoessMD)
+postPeakRefMD <- peakRefinement(postPrePeakMD)
+```
+```{r candidates-step, eval=FALSE}
+postCandidatesMD <- generateCandidates(postPeakRefMD)
+```
+```{r output-step}
+outputMmapprData(postCandidatesMD)
 ```
 
 If the pipeline fails midway, the `MmapprData` object is saved, which you can then load
