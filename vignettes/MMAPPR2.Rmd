@@ -42,11 +42,14 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 # Running MMAPPR2
 
 ### Setting Parameters
+```{r fake-vep, echo=FALSE}
+# hide from users, allows VEPFlags to be constructed without complaining
+MMAPPR2:::.insertFakeVEPintoPath()
+```
 ```{r param}
 library(MMAPPR2)
 library(MMAPPR2data)
 
-MMAPPR2:::.insertFakeVEPintoPath() ## Don't worry about this line
 param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
                      wtFiles = zy13wtBam(),
                      mutFiles = zy13mutBam(),
@@ -69,6 +72,9 @@ postPeakRefMD <- peakRefinement(postPrePeakMD)
 ```
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
+```
+```{r default-output-folder, echo=FALSE}
+dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
 ```
 ```{r output-step}
 outputMmapprData(postCandidatesMD)
@@ -113,7 +119,7 @@ MMAPPR2 simply uses the default `bpparam` registered. You can change this (for e
 ```{r bpparam}
 library(BiocParallel)
 register(SerialParam())
-register(MultiCoreParam())
+register(MulticoreParam())
 registered()
 ```
 
