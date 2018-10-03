@@ -19,7 +19,7 @@ before_script:
   # so NAMESPACE is up-to-date
   - R -e 'devtools::document(roclets=c("rd", "collate", "namespace"))'
   # ensure bioc-devel is being used
-  - R -e 'BiocManager::install(version = "devel")'
+  - R -e 'BiocManager::install(version = "devel", ask=FALSE)'
   - R -e 'BiocManager::valid()'
   # run tests here (can't see all output from check)
   - R -e 'devtools::test()'
