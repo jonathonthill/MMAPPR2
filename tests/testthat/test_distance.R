@@ -64,9 +64,7 @@ test_that('files in BamFileList also get indexed automatically if needed', {
 
 
 test_that("correct ranges are being read", {
-    Sys.which('hello-there')
     chrList <- .getFileReadChrList(mmapprData)
-    Sys.which('hello-there')
     expect_equal(length(chrList), 25)
     expect_type(chrList, "list")
     expect_s4_class(chrList$chr5, "GRanges")

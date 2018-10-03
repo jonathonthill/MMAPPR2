@@ -11,9 +11,11 @@
 #'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#'     MMAPPR2:::.insertFakeVEPintoPath() ## Ignore this line
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
 #'     
-#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11"),
+#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
 #'                                wtFiles = MMAPPR2data::zy13wtBam(),
 #'                                mutFiles = MMAPPR2data::zy13mutBam(),
 #'                                species = "danio_rerio")
