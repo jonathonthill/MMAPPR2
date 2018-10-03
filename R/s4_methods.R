@@ -73,8 +73,14 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', 'danio_rerio')
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+#'     ## Ignore this line:
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
 #' }
 MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
                         outputFolder=NULL, distancePower=4,
