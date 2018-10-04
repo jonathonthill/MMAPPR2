@@ -9,7 +9,7 @@
 #'
 #' @examples
 #' dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
-#' outputMmapprData(postCandidatesMD)
+#' # outputMmapprData(postCandidatesMD)
 outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
     oF <- outputFolder(param(mmapprData))
