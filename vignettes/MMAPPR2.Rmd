@@ -96,7 +96,7 @@ readRDS(mdFile)
 # Advanced Configuration
 
 ## Configure VEPFlags Object
-MMAPPR2 uses the `r Biocpkg("ensemblVEP")` Bioconductor package to predict the effect of variants in the peak region. 
+MMAPPR2 uses the `r BiocStyle::Biocpkg("ensemblVEP")` Bioconductor package to predict the effect of variants in the peak region. 
 To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
 ```{r vepFlags}
 library(ensemblVEP, quietly = TRUE)
@@ -117,7 +117,7 @@ vepFlags <- VEPFlags(flags = list(
 ```
 
 ## BiocParallel Configuration
-MMAPPR2 simply uses the default `bpparam` registered. You can change this (for example, if `r Biocpkg("BiocParallel")` isn't working correctly) with the `BiocParallel::register` command. For example:
+MMAPPR2 simply uses the default `bpparam` registered. You can change this (for example, if `r BiocStyle::Biocpkg("BiocParallel")` isn't working correctly) with the `BiocParallel::register` command. For example:
 ```{r bpparam}
 library(BiocParallel, quietly = TRUE)
 register(SerialParam())
