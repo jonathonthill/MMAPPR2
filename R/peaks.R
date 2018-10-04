@@ -100,7 +100,7 @@ peakRefinement <- function(mmapprData){
 #' @export
 #'
 #' @examples
-#' # postPrePeakMD <- prePeak(postLoessMD)
+#' postPrePeakMD <- prePeak(postLoessMD)
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     
