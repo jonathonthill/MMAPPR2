@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' postPeakRefMD <- peakRefinement(postPrePeakMD)
+#' # postPeakRefMD <- peakRefinement(postPrePeakMD)
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
         .runFunctionInParallel(mmapprData@peaks,
