@@ -42,9 +42,11 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 # Basic Use
 
 ## Setting Parameters
-```{r fake-vep, echo=FALSE}
+```{r hidden-hacks, echo=FALSE}
 # hide from users, allows VEPFlags to be constructed without complaining
 MMAPPR2:::.insertFakeVEPintoPath()
+gmapR::GmapGenomeDirectory(create=TRUE)
+dir.create('DEFAULT') ## for outputMmapprData further down
 ```
 ```{r param}
 library(MMAPPR2, quietly = TRUE)
