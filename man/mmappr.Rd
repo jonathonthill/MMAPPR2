@@ -25,7 +25,7 @@ in regions of peak distance.
 if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
     ## Ignore these lines:
     MMAPPR2:::.insertFakeVEPintoPath()
-    genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+    genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
 
     # Specify parameters:
     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),

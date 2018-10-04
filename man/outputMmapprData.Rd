@@ -18,5 +18,6 @@ A \linkS4class{MmapprData} object after writing output files
 Generate plots and tables from MMAPPR2 data
 }
 \examples{
+dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
 outputMmapprData(postCandidatesMD)
 }
