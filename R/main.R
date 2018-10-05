@@ -45,8 +45,9 @@
 #'     postLoessMD <- loessFit(postCalcDistMD)
 #'     postPrePeakMD <- prePeak(postLoessMD)
 #'     postPeakRefMD <- peakRefinement(postPrePeakMD)
-#'     \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)}
+#'     \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)
 #'     outputMmapprData(postCandidatesMD)
+#'     }
 #' }
 #' 
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
