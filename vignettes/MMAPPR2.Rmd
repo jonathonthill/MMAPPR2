@@ -48,6 +48,7 @@ MMAPPR2:::.insertFakeVEPintoPath()
 gmapR::GmapGenomeDirectory(create=TRUE)
 dir.create('DEFAULT') ## for outputMmapprData further down
 BiocParallel::register(BiocParallel::SerialParam())
+Sys.which('hello')
 ```
 ```{r param}
 library(MMAPPR2, quietly = TRUE)
@@ -57,12 +58,14 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
                      wtFiles = zy13wtBam(),
                      mutFiles = zy13mutBam(),
                      species = 'danio_rerio')
+Sys.which('hello')
 ```
 
 ## Running MMAPPR2
 With parameters set, running the pipeline should be as simple as the following:
 ```{r mmappr}
 mmapprData <- mmappr(param)
+Sys.which('hello')
 ```
 
 The MMAPPR2 pipeline can also be run a step at a time:
@@ -72,15 +75,18 @@ postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
 postPeakRefMD <- peakRefinement(postPrePeakMD)
+Sys.which('hello')
 ```
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 ```
 ```{r default-output-folder, echo=FALSE}
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
+Sys.which('hello')
 ```
 ```{r output-step}
 outputMmapprData(postCandidatesMD)
+Sys.which('hello')
 ```
 
 If the pipeline fails midway, the `MmapprData` object is saved, which you can then load
@@ -91,6 +97,7 @@ system(paste('ls', outputFolder(param(mmapprData))))
 
 mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
 readRDS(mdFile)
+Sys.which('hello')
 ```
 
 
@@ -99,7 +106,7 @@ readRDS(mdFile)
 ## Configure VEPFlags Object
 MMAPPR2 uses the `r BiocStyle::Biocpkg("ensemblVEP")` Bioconductor package to predict the effect of variants in the peak region. 
 To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
-```{r vepFlags, eval=FALSE}
+```{r vepFlags}
 library(ensemblVEP, quietly = TRUE)
 vepFlags <- VEPFlags(flags = list(
     ### DEFAULT SETTINGS
