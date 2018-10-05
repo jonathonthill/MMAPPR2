@@ -106,7 +106,8 @@ A \code{MmapprParam} object.
 }
 \examples{
 if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
-    ## Ignore this line:
+    ## Ignore these lines:
+    MMAPPR2:::.insertFakeVEPintoPath()
     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
     
     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
