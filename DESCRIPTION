@@ -17,7 +17,6 @@ Encoding: UTF-8
 LazyData: true
 LazyLoad: yes
 RoxygenNote: 6.1.0
-<<<<<<< HEAD
 VignetteBuilder: knitr
 Suggests: testthat,
     mockery,
@@ -25,11 +24,6 @@ Suggests: testthat,
     knitr,
     rmarkdown,
     BiocStyle,
-=======
-Suggests: testthat,
-    mockery,
-    roxygen2,
->>>>>>> origin
     MMAPPR2data
 Imports: ensemblVEP (>= 1.20.0),
     gmapR,
