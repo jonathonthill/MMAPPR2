@@ -99,7 +99,7 @@ readRDS(mdFile)
 ## Configure VEPFlags Object
 MMAPPR2 uses the `r BiocStyle::Biocpkg("ensemblVEP")` Bioconductor package to predict the effect of variants in the peak region. 
 To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
-```{r vepFlags}
+```{r vepFlags, eval=FALSE}
 library(ensemblVEP, quietly = TRUE)
 vepFlags <- VEPFlags(flags = list(
     ### DEFAULT SETTINGS
