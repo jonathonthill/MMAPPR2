@@ -20,26 +20,34 @@
 #'   desired parameters.
 #'
 #' @return A \code{\linkS4class{MmapprData}} object containing results
-#'   as well as intermediate data.
+#'   and/or intermediate data.
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' mmapprParam <- MmapprParam(refGenome = GmapGenome("GRCz11"),
-#'                            wtFiles = "wild_type.sorted.bam",
-#'                            mutFiles = "mutant.sorted.bam",
-#'                            species = "danio_rerio")
-#' mmapprData <- mmappr(mmapprParam)
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
 #' 
-#' ### Alternately, you can navigate the pipeline step by step.
-#' ### This may be helpful for debugging.
-#' md <- new('MmapprData', param = mmapprParam)
-#' md <- calculateDistance(md)
-#' md <- loessFit(md)
-#' md <- prePeak(md)
-#' md <- peakRefinement(md)
-#' md <- generateCandidates(md)
-#' md <- outputMmapprData(md)
+#'     # Specify parameters:
+#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
+#'                                
+#'     # Run pipeline:
+#'     mmapprData <- mmappr(mmapprParam)
+#' 
+#'     ### Alternately, you can navigate the pipeline step by step.
+#'     ### This may be helpful for debugging.
+#'     md <- new('MmapprData', param = mmapprParam)
+#'     postCalcDistMD <- calculateDistance(md)
+#'     postLoessMD <- loessFit(postCalcDistMD)
+#'     postPrePeakMD <- prePeak(postLoessMD)
+#'     postPeakRefMD <- peakRefinement(postPrePeakMD)
+#'     \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)
+#'     outputMmapprData(postCandidatesMD)
+#'     }
 #' }
 #' 
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
@@ -131,12 +139,10 @@ mmappr <- function(mmapprParam) {
 }
 
 
-.addBamFileIndex <- function(bf) {
-    path <- bf$path
-    index <- paste0(path, ".bai")
-    if (!file.exists(index)){
-        Rsamtools::indexBam(bf)
-    }
-    return(Rsamtools::BamFile(path, index = index))
+.insertFakeVEPintoPath <- function() {
+    unlink('/tmp/bin', recursive=TRUE)
+    dir.create('/tmp/bin')
+    file.create('/tmp/bin/vep')
+    system('chmod 777 /tmp/bin/vep')
+    Sys.setenv('PATH'=paste(Sys.getenv('PATH'), '/tmp/bin', sep=':'))
 }
-

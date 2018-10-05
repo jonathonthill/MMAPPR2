@@ -73,8 +73,15 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', 'danio_rerio')
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
 #' }
 MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
                         outputFolder=NULL, distancePower=4,
@@ -145,13 +152,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
     for (i in seq_along(files)) {
         file <- files[[i]]
-        if (file.exists(file$path)) {
-            if (length(Rsamtools::index(file)) == 0) {
-                file <- .addBamFileIndex(file)
-                if (length(Rsamtools::index(file)) == 0)
-                    warning(paste0(file$path), " in wtFiles has no index file")
-            }
-        } else {
+        if (!file.exists(file$path)) {
             errors <- c(errors, paste0(file$path, " does not exist"))
         }
     }
@@ -182,7 +183,8 @@ setMethod("show", "MmapprParam", function(object) {
     .customPrint(object@vepFlags, margin)
     
     cat("Other parameters:\n")
-    slotNames <- slotNames("MmapprParam")[5:length(slotNames("MmapprParam"))]
+    slotNames <- slotNames("MmapprParam")[6:length(slotNames("MmapprParam"))]
+    slotNames <- c('species', slotNames)
     slotValues <- sapply(slotNames, function(name) slot(object, name))
     names(slotValues) <- slotNames
     print(slotValues, quote=FALSE)
@@ -255,6 +257,7 @@ setMethod("show", "MmapprData", function(object) {
 #'   peakIntervalWidth peakIntervalWidth<-
 #'   minDepth minDepth<-
 #'   minBaseQuality minBaseQuality<-
+#'   minMapQuality minMapQuality<-
 #'   loessOptResolution loessOptResolution<-
 #'   loessOptCutFactor loessOptCutFactor<-
 #'   naCutoff naCutoff<-
@@ -356,7 +359,7 @@ setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
               obj@wtFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
-              if (typeof(v) == 'logical') obj else v
+              if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
 #' @export
@@ -364,7 +367,7 @@ setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
               obj@mutFiles <- Rsamtools::BamFileList(value)
               v <- .validFiles(obj@wtFiles)
-              if (typeof(v) == 'logical') obj else v
+              if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
 #' @export

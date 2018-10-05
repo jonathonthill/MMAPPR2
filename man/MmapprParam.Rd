@@ -9,8 +9,9 @@
 MmapprParam(refGenome, wtFiles, mutFiles, species, vepFlags = NULL,
   outputFolder = NULL, distancePower = 4, peakIntervalWidth = 0.95,
   minDepth = 10, homozygoteCutoff = 0.95, minBaseQuality = 20,
-  minMapQuality = 30, loessOptResolution = 0.001, loessOptCutFactor = 0.1,
-  naCutoff = 0, fileAggregation = c("sum", "mean"))
+  minMapQuality = 30, loessOptResolution = 0.001,
+  loessOptCutFactor = 0.1, naCutoff = 0, fileAggregation = c("sum",
+  "mean"))
 }
 \arguments{
 \item{refGenome}{\code{\link[gmapR]{GmapGenome}}
@@ -104,7 +105,14 @@ A \code{MmapprParam} object.
 \code{MmapprParam} stores parameters for running \code{\link{mmappr}}.
 }
 \examples{
-\dontrun{
-mp <- MmapprParam(gmapR::GmapGenome('GRCz11'), 'wt.bam', 'mut.bam', 'danio_rerio')
+if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+    ## Ignore these lines:
+    MMAPPR2:::.insertFakeVEPintoPath()
+    genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+    
+    mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+                               wtFiles = MMAPPR2data::zy13wtBam(),
+                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               species = "danio_rerio")
 }
 }

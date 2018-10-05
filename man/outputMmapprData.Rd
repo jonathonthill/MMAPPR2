@@ -18,7 +18,6 @@ A \linkS4class{MmapprData} object after writing output files
 Generate plots and tables from MMAPPR2 data
 }
 \examples{
-  \dontrun{
-    outputMmapprData(md)
-  }
+dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
+\dontrun{outputMmapprData(postCandidatesMD)}
 }

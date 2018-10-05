@@ -18,7 +18,5 @@ Follows the \code{\link{loessFit}} step and precedes
 \code{\link{peakRefinement}}.
 }
 \examples{
-\dontrun{
-md <- prePeak(md)
-}
+postPrePeakMD <- prePeak(postLoessMD)
 }
