@@ -19,5 +19,5 @@ Generate plots and tables from MMAPPR2 data
 }
 \examples{
 dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
-outputMmapprData(postCandidatesMD)
+\dontrun{outputMmapprData(postCandidatesMD)}
 }

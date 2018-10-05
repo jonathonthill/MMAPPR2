@@ -43,8 +43,9 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
     postLoessMD <- loessFit(postCalcDistMD)
     postPrePeakMD <- prePeak(postLoessMD)
     postPeakRefMD <- peakRefinement(postPrePeakMD)
-    \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)}
+    \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)
     outputMmapprData(postCandidatesMD)
+    }
 }
 
 }
