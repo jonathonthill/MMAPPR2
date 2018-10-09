@@ -71,10 +71,19 @@ Sys.which('hello')
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
 md <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
+```
+```{r}
 postCalcDistMD <- calculateDistance(md)
+```
+```{r}
 postLoessMD <- loessFit(postCalcDistMD)
+```
+```{r}
 postPrePeakMD <- prePeak(postLoessMD)
+```
+```{r}
 postPeakRefMD <- peakRefinement(postPrePeakMD)
+```
 Sys.which('hello')
 ```
 ```{r candidates-step, eval=FALSE}
