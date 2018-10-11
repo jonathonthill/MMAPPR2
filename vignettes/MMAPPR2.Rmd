@@ -71,25 +71,30 @@ Sys.which('hello')
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
 md <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
+Sys.which('hello')
 ```
 ```{r}
 postCalcDistMD <- calculateDistance(md)
+Sys.which('hello')
 ```
 ```{r}
 postLoessMD <- loessFit(postCalcDistMD)
+Sys.which('hello')
 ```
 ```{r}
 postPrePeakMD <- prePeak(postLoessMD)
+Sys.which('hello')
 ```
 ```{r}
 postPeakRefMD <- peakRefinement(postPrePeakMD)
-```
 Sys.which('hello')
+```
 ```
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 ```
 ```{r default-output-folder, echo=FALSE}
+# Could this block be breaking things?
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
 Sys.which('hello')
 ```
