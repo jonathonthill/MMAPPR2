@@ -50,7 +50,7 @@ calculateDistance <- function(mmapprData) {
     tryCatch({
         #parameter check
         stopifnot(length(GenomeInfoDb::seqnames(chrRange)) == 1)
-        stopifnot(class(param) == "MmapprParam")
+        stopifnot(is(param, "MmapprParam"))
         
         stopifnot(!is.null(chrRange))
         wtFiles <- param@wtFiles
