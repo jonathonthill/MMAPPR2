@@ -114,7 +114,6 @@ test_that('file setters for param can change format automatically', {
     mutFiles(param) <- c(bf, bf)
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
-    
 })
 
 test_that('log writes to default folder', {
@@ -128,5 +127,4 @@ test_that('log writes to default folder', {
     expect_error(mmappr(param), 'expected failure')
     expect_true(file.exists('/tmp/m2/mmappr2.log'))
     unlink('/tmp/m2', recursive=TRUE)
-    
 })
