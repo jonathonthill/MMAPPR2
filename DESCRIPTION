@@ -40,7 +40,11 @@ Imports: ensemblVEP (>= 1.20.0),
     tidyr,
     VariantTools,
     magrittr,
-    methods
+    methods,
+    grDevices,
+    graphics,
+    stats,
+    utils
 SystemRequirements: Ensembl VEP
 biocViews: RNASeq,
     PooledScreens,
