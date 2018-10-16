@@ -28,7 +28,7 @@ loessFit <- function(mmapprData) {
 
 .getLoess <- function(s, pos, euc_dist, ...){
     x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
-                   family="symmetric", ...), silent=T)
+                   family="symmetric", ...), silent=TRUE)
     return(x)
 }
 
@@ -41,7 +41,7 @@ loessFit <- function(mmapprData) {
     index <- which(spans %in% span)
     stopifnot(length(index) == 1)
     
-    result <- max(c(diff(spans)[index-1], diff(spans)[index]), na.rm = T)
+    result <- max(c(diff(spans)[index-1], diff(spans)[index]), na.rm=TRUE)
     stopifnot(is.numeric(result))
     return(result)
 }
@@ -134,7 +134,7 @@ loessFit <- function(mmapprData) {
                                               cutFactor = loessOptCutFactor)
         
         #now get loess for best aicc
-        bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans'],
+        bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm=TRUE), 'spans'],
                           digits = .numDecimals(loessOptResolution))
         bestSpan <- mean(bestSpan, na.rm = TRUE)
         resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos, 
