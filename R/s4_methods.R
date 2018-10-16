@@ -148,7 +148,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
 
 .validFiles <- function(files) {
     errors <- c()
-    if (class(files) != "BamFileList") 
+    if (!is(files, 'BamFileList')) 
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
     for (i in seq_along(files)) {
         file <- files[[i]]

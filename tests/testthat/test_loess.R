@@ -72,7 +72,7 @@ test_that("loessFit runs properly for whole mmapprData", {
     md <- loessFit(md)
     successes <-
         sapply(md@distance, function(seq)
-            class(seq) == "list")
+            is(seq, 'list'))
     expect_equal(length(successes), 25)
     expect_equal(sum(successes), 0)
     

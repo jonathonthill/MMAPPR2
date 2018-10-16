@@ -11,7 +11,7 @@
 #' dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
 #' \dontrun{outputMmapprData(postCandidatesMD)}
 outputMmapprData <- function(mmapprData) {
-    stopifnot(class(mmapprData) == "MmapprData")
+    stopifnot(is(mmapprData, "MmapprData"))
     oF <- outputFolder(param(mmapprData))
     
     tryCatch({
@@ -65,7 +65,7 @@ outputMmapprData <- function(mmapprData) {
     breaks <- tailPos
     labelpos <- NULL
     for (i in GenomeInfoDb::orderSeqlevels(names(mmapprData@distance))) {
-        if (class(mmapprData@distance[[i]]) != "list")
+        if (!is(mmapprData@distance[[i]], 'list'))
             next
         else if (!("loess" %in% names(mmapprData@distance[[i]])))
             stop("Distance list for sequence %s missing loess fit data", names(mmapprData@distance)[i])

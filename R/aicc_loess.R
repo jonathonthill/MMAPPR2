@@ -93,7 +93,7 @@ loessFit <- function(mmapprData) {
 }
 
 .numDecimals <- function(x) {
-    stopifnot(class(x)=="numeric")
+    stopifnot(is(x, "numeric"))
     if (!grepl("[.]", x)) return(0)
     x <- sub("0+$","",x)
     x <- sub("^.+[.]","",x)
@@ -103,7 +103,7 @@ loessFit <- function(mmapprData) {
 .aicc <- function (s, euc_dist, pos) {
     # extract values from loess object
     x <- .getLoess(s, pos, euc_dist)
-    if(class(x)=="try-error") return(NA)
+    if(is(x, "try-error")) return(NA)
     span <- x$pars$span
     n <- x$n
     traceL <- x$trace.hat
@@ -124,7 +124,7 @@ loessFit <- function(mmapprData) {
 .loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor) {
     startTime <- proc.time()
     tryCatch({
-        if(class(resultList) == 'character') stop('--Loess fit failed')
+        if(is(resultList, 'character')) stop('--Loess fit failed')
         
         #returns dataframe with spans and aicc values for each loess
         startSpans <- .01 * c(1:16, 1 + 10*2:9)
@@ -150,7 +150,7 @@ loessFit <- function(mmapprData) {
         return(resultList)
     },
     error = function(e) {
-        if (class(resultList) == "character")
+        if (is(resultList, "character"))
             return(paste0(resultList, e$message))
         else return(e$message)
     }

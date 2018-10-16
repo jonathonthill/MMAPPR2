@@ -125,8 +125,8 @@ prePeak <- function(mmapprData) {
     
     #get which peaks have values above cutoff, initialize them in mmapprData
     for(i in seq_along(mmapprData@distance)){
-        if(class(mmapprData@distance[[i]]) != "list") next
-        if(class(mmapprData@distance[[i]]$loess) != "loess") next
+        if(!is(mmapprData@distance[[i]], 'list')) next
+        if(!is(mmapprData@distance[[i]]$loess, 'loess')) next
            
         loessForChr <- mmapprData@distance[[i]]$loess
         if (length(loessForChr$x) < 50) next
