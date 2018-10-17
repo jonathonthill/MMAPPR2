@@ -46,7 +46,6 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 # hide from users, allows VEPFlags to be constructed without complaining
 MMAPPR2:::.insertFakeVEPintoPath()
 gmapR::GmapGenomeDirectory(create=TRUE)
-dir.create('DEFAULT') ## for outputMmapprData further down
 BiocParallel::register(BiocParallel::SerialParam())
 ```
 ```{r param}
@@ -77,7 +76,9 @@ postPeakRefMD <- peakRefinement(postPrePeakMD)
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 ```
-```{r default-output-folder, echo=FALSE}
+```{r prep-for-output, echo=FALSE}
+postCandidatesMD <- postPeakRefMD
+candidates(postCandidatesMD) <- zy13candidates # tack on from MMAPPR2data
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
 ```
 ```{r output-step}
