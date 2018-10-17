@@ -266,8 +266,27 @@ setMethod("show", "MmapprData", function(object) {
 #'
 #' @param obj Desired \code{\link{MmapprParam}} object.
 #' @param value Value to replace desired attribute.
+#' 
+#' @return The desired \code{\link{MmapprParam}} attribute.
 #'   
 #' @seealso \code{\link{MmapprParam}}
+#' 
+#' @examples
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
+#'
+#'     outputFolder(param) <- 'mmappr2_test_1'
+#'     minBaseQuality(param) <- 25
+#'     vepFlags(param)
+#' }
+
 NULL
 
 #' @rdname MmapprParam-functions
@@ -325,21 +344,29 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' 
 #' @param obj Desired \code{\linkS4class{MmapprData}} object.
 #' 
-#' @name MmapprDataGetters
+#' @return Desired attribute.
+#' 
+#' @name MmapprData-getters
 #' @aliases param distance peaks candidates
 #' @seealso \code{\linkS4class{MmapprData}}
+#' 
+#' @examples
+#' param(postCandidatesMD)
+#' distance(postCandidatesMD)
+#' peaks(postCandidatesMD)
+#' candidates(postCandidatesMD)
 NULL
 
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("param", "MmapprData", function(obj) obj@param)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("distance", "MmapprData", function(obj) obj@distance)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("peaks", "MmapprData", function(obj) obj@peaks)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 
