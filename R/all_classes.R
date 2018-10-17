@@ -50,7 +50,7 @@ setClass("MmapprParam",
 #'
 #' @aliases MmapprData
 #' @export
-#' @seealso \code{\link{mmappr}}, \link{MmapprDataGetters}
+#' @seealso \code{\link{mmappr}}, \link{MmapprData-getters}
 setClass("MmapprData",
          representation(
              param="MmapprParam",

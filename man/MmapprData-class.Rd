@@ -32,5 +32,5 @@ included in metacolumns.}
 }}
 
 \seealso{
-\code{\link{mmappr}}, \link{MmapprDataGetters}
+\code{\link{mmappr}}, \link{MmapprData-getters}
 }
