@@ -48,7 +48,6 @@ MMAPPR2:::.insertFakeVEPintoPath()
 gmapR::GmapGenomeDirectory(create=TRUE)
 dir.create('DEFAULT') ## for outputMmapprData further down
 BiocParallel::register(BiocParallel::SerialParam())
-Sys.which('hello')
 ```
 ```{r param}
 library(MMAPPR2, quietly = TRUE)
@@ -58,60 +57,41 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
                      wtFiles = zy13wtBam(),
                      mutFiles = zy13mutBam(),
                      species = 'danio_rerio')
-Sys.which('hello')
 ```
 
 ## Running MMAPPR2
 With parameters set, running the pipeline should be as simple as the following:
-```{r mmappr}
+```{r mmappr, eval=FALSE}
 mmapprData <- mmappr(param)
-Sys.which('hello')
 ```
 
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
 md <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
-Sys.which('hello')
-```
-```{r}
 postCalcDistMD <- calculateDistance(md)
 Sys.which('hello')
-```
-```{r}
 postLoessMD <- loessFit(postCalcDistMD)
-Sys.which('hello')
-```
-```{r}
 postPrePeakMD <- prePeak(postLoessMD)
-Sys.which('hello')
-```
-```{r}
 postPeakRefMD <- peakRefinement(postPrePeakMD)
-Sys.which('hello')
-```
 ```
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 ```
 ```{r default-output-folder, echo=FALSE}
-# Could this block be breaking things?
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
-Sys.which('hello')
 ```
 ```{r output-step}
 outputMmapprData(postCandidatesMD)
-Sys.which('hello')
 ```
 
 If the pipeline fails midway, the `MmapprData` object is saved, which you can then load
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-system(paste('ls', outputFolder(param(mmapprData))))
+system(paste('ls', outputFolder(param(postCandidatesMD))))
 
-mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
+mdFile <- file.path(outputFolder(param(postCandidatesMD)), 'mmappr_data.RDS')
 readRDS(mdFile)
-Sys.which('hello')
 ```
 
 
