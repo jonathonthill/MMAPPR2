@@ -94,7 +94,9 @@ and use for inspection and debugging:
 system(paste('ls', outputFolder(param(postCandidatesMD))))
 
 mdFile <- file.path(outputFolder(param(postCandidatesMD)), 'mmappr_data.RDS')
-readRDS(mdFile)
+```
+```{r read-md, eval=FALSE}
+md <- readRDS(mdFile)
 ```
 
 
