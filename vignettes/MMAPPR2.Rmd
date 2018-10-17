@@ -80,7 +80,7 @@ postCandidatesMD <- generateCandidates(postPeakRefMD)
 postCandidatesMD <- postPeakRefMD
 ## I don't know why data isn't being exported right and I have to do this...
 data("zy13candidates")
-candidates(postCandidatesMD) <- zy13candidates # tack on from MMAPPR2data
+postCandidatesMD@candidates <- zy13candidates # tack on from MMAPPR2data
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
 ```
 ```{r output-step}
