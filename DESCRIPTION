@@ -1,6 +1,6 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.98.10
+Version: 0.98.11
 Authors@R: c(
     person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role=c("aut")),
     person('Nathaniel', 'Jenkins', role=c('aut')),
@@ -17,9 +17,13 @@ Encoding: UTF-8
 LazyData: true
 LazyLoad: yes
 RoxygenNote: 6.1.0
+VignetteBuilder: knitr
 Suggests: testthat,
     mockery,
     roxygen2,
+    knitr,
+    rmarkdown,
+    BiocStyle,
     MMAPPR2data
 Imports: ensemblVEP (>= 1.20.0),
     gmapR,
