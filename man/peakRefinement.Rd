@@ -18,5 +18,7 @@ Follows the \code{\link{prePeak}} step and precedes
 \code{\link{generateCandidates}}.
 }
 \examples{
+\dontrun{
 postPeakRefMD <- peakRefinement(postPrePeakMD)
+}
 }
