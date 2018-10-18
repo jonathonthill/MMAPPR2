@@ -15,12 +15,17 @@ test_that('prePeak handles failed Loess', {
     expect_equal(length(names(md@peaks)), 0)
 })
 
-md <- postLoessMD
-md <- prePeak(md)
 
-test_that('peak is identified for chromosome 5', {
+test_that('peak is identified with prePeak', {
+    md <- readRDS('test_data/objects/post_loess_dummy_md.RDS')
+    md@distance$chr5 <- list(
+        loess=structure(
+            list(fitted=c(rep(0, 99), 100), x=seq_len(100)), class='loess'
+        )
+    )
+    md <- prePeak(md)
     expect_equal(length(names(md@peaks)), 1)
-    expect_equal(names(md@peaks)[1], '7')
+    expect_equal(names(md@peaks)[1], 'chr5')
 })
 
 test_that('.getPeakFromTopP works on double peak', {
@@ -45,29 +50,6 @@ test_that('.getPeakFromTopP works on edge peak', {
     return(tempData$pos[which.max(tempData$euclideanDistance)])
 }
 
-# saves time since the dplyr::arrange call is super slow
-.mockPeakFromTopP <- function(data, topP) {
-    names(data) <- c('x', 'y')
-    nrows <- nrow(data)
-    result <- list()
-    result$peakPos = data$x[which.max(data$y)]
-    result$minPos = result$peakPos - (nrows/15)
-    result$maxPos = result$peakPos + (nrows/15)
-    return(result)
-}
-
-test_that(".peakRefinementChr works right on chr 5", {
-    skip_if_not_installed('mockery')
-    
-    inputList <- list(seqname='7')
-    
-    mockery::stub(.peakRefinementChr, '.getSubsampleLoessMax', .mockSubsampleLoessMax)
-    mockery::stub(.peakRefinementChr, '.getPeakFromTopP', .mockPeakFromTopP)
-    chr7list <- .peakRefinementChr(inputList, md)
-    
-    expect_true(all(c('start', 'end', 'densityFunction',
-                      'peakPosition', 'seqname') %in%
-                        names(chr7list)))
-    expect_true(chr7list$peakPosition > 6.4E7)
-    expect_true(chr7list$peakPosition < 6.6E7)
-})
+### There was an integration test here, but it used big data which we
+### wanted to take out of the package. Look at
+### v0.98.10 if you want to revive it in the future.
