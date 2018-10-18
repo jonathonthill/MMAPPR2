@@ -8,8 +8,9 @@
 #' @export
 #'
 #' @examples
-#' dir.create(outputFolder(param(postCandidatesMD))) ## Ignore this line
-#' \dontrun{outputMmapprData(postCandidatesMD)}
+#' \dontrun{
+#' outputMmapprData(postCandidatesMD)
+#' }
 outputMmapprData <- function(mmapprData) {
     stopifnot(class(mmapprData) == "MmapprData")
     oF <- outputFolder(param(mmapprData))
