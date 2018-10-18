@@ -49,6 +49,17 @@
 #'     outputMmapprData(postCandidatesMD)
 #'     }
 #' }
+#' \dontrun{
+#' ### Alternately, you can navigate the pipeline step by step.
+#' ### This may be helpful for debugging.
+#' md <- new('MmapprData', param = mmapprParam)
+#' postCalcDistMD <- calculateDistance(md)
+#' postLoessMD <- loessFit(postCalcDistMD)
+#' postPrePeakMD <- prePeak(postLoessMD)
+#' postPeakRefMD <- peakRefinement(postPrePeakMD)
+#' postCandidatesMD <- generateCandidates(postPeakRefMD)
+#' outputMmapprData(postCandidatesMD)
+#' } 
 #' 
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
 #'   \code{\link{prePeak}}, \code{\link{peakRefinement}},

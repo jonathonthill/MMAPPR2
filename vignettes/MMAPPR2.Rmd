@@ -46,7 +46,6 @@ refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
 # hide from users, allows VEPFlags to be constructed without complaining
 MMAPPR2:::.insertFakeVEPintoPath()
 gmapR::GmapGenomeDirectory(create=TRUE)
-dir.create('DEFAULT') ## for outputMmapprData further down
 BiocParallel::register(BiocParallel::SerialParam())
 ```
 ```{r param}
@@ -61,7 +60,7 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
 
 ## Running MMAPPR2
 With parameters set, running the pipeline should be as simple as the following:
-```{r mmappr}
+```{r mmappr, eval=FALSE}
 mmapprData <- mmappr(param)
 ```
 
@@ -76,7 +75,11 @@ postPeakRefMD <- peakRefinement(postPrePeakMD)
 ```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 ```
-```{r default-output-folder, echo=FALSE}
+```{r prep-for-output, echo=FALSE}
+postCandidatesMD <- postPeakRefMD
+## I don't know why data isn't being exported right and I have to do this...
+data("zy13candidates")
+postCandidatesMD@candidates <- zy13candidates # tack on from MMAPPR2data
 dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
 ```
 ```{r output-step}
@@ -87,10 +90,12 @@ If the pipeline fails midway, the `MmapprData` object is saved, which you can th
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-system(paste('ls', outputFolder(param(mmapprData))))
+system(paste('ls', outputFolder(param(postCandidatesMD))))
 
-mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
-readRDS(mdFile)
+mdFile <- file.path(outputFolder(param(postCandidatesMD)), 'mmappr_data.RDS')
+```
+```{r read-md, eval=FALSE}
+md <- readRDS(mdFile)
 ```
 
 

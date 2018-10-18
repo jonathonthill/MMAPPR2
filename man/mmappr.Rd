@@ -36,17 +36,31 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
     # Run pipeline:
     mmapprData <- mmappr(mmapprParam)
 
-    ### Alternately, you can navigate the pipeline step by step.
-    ### This may be helpful for debugging.
-    md <- new('MmapprData', param = mmapprParam)
-    postCalcDistMD <- calculateDistance(md)
-    postLoessMD <- loessFit(postCalcDistMD)
-    postPrePeakMD <- prePeak(postLoessMD)
-    postPeakRefMD <- peakRefinement(postPrePeakMD)
-    \dontrun{postCandidatesMD <- generateCandidates(postPeakRefMD)
-    outputMmapprData(postCandidatesMD)
-    }
 }
+=======
+
+    # Specify parameters:
+    mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+                               wtFiles = MMAPPR2data::zy13wtBam(),
+                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               species = "danio_rerio")
+                               
+    # Run pipeline:
+    mmapprData <- mmappr(mmapprParam)
+
+}
+\dontrun{
+### Alternately, you can navigate the pipeline step by step.
+### This may be helpful for debugging.
+md <- new('MmapprData', param = mmapprParam)
+postCalcDistMD <- calculateDistance(md)
+postLoessMD <- loessFit(postCalcDistMD)
+postPrePeakMD <- prePeak(postLoessMD)
+postPeakRefMD <- peakRefinement(postPrePeakMD)
+postCandidatesMD <- generateCandidates(postPeakRefMD)
+outputMmapprData(postCandidatesMD)
+} 
+>>>>>>> origin
 
 }
 \seealso{

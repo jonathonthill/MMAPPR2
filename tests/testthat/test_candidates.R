@@ -1,14 +1,17 @@
 context("Variant calling and effect prediction")
 
-mmapprData <- postPeakRefMD
+mmapprData <- readRDS('test_data/objects/post_peakref_dummy_md.RDS')
 
 
 test_that("ranges for peaks are prepared", {
-    candList <- .getPeakRange(mmapprData@peaks$chr5)
+
+
+test_that("ranges for peaks are prepared", {
+    peakList <- list(seqname='7', start=44309092, end=67669545)
+    candList <- .getPeakRange(peakList)
     expect_s4_class(candList, 'GRanges')
-    chr5PeakList <- mmapprData@peaks$chr5
     expect_equal(BiocGenerics::width(candList),
-                 chr5PeakList$end - chr5PeakList$start + 1)
+                 peakList$end - peakList$start + 1)
 })
 
 
@@ -37,7 +40,7 @@ test_that('.getVariantsForRange returns VRanges with sample names', {
     expect_s4_class(result, 'VRanges')
     expect_equal(as.character(GenomicRanges::seqnames(result))[1], 'chr5')
     expect_equal(as.character(Biobase::sampleNames(result))[1],
-                 'zy13mut.bam')
+                 'zy14_dummy.bam')
 })
 
 
