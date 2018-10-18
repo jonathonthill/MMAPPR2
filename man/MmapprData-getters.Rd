@@ -31,10 +31,12 @@ Desired attribute.
 Access slots of \code{\linkS4class{MmapprData}} object.
 }
 \examples{
-param(postCandidatesMD)
-distance(postCandidatesMD)
-peaks(postCandidatesMD)
-candidates(postCandidatesMD)
+md <- new('MmapprData')
+
+param(md)
+distance(md)
+peaks(md)
+candidates(md)
 }
 \seealso{
 \code{\linkS4class{MmapprData}}
