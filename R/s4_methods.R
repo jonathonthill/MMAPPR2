@@ -351,10 +351,12 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' @seealso \code{\linkS4class{MmapprData}}
 #' 
 #' @examples
-#' param(postCandidatesMD)
-#' distance(postCandidatesMD)
-#' peaks(postCandidatesMD)
-#' candidates(postCandidatesMD)
+#' md <- new('MmapprData')
+#' 
+#' param(md)
+#' distance(md)
+#' peaks(md)
+#' candidates(md)
 NULL
 
 #' @rdname MmapprData-getters
