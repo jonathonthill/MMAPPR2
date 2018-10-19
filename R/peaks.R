@@ -90,6 +90,24 @@ peakRefinement <- function(mmapprData){
 }
 
 
+.stDevForChr <- function(chr) {
+    tryCatch({
+        return(var(chr$loess$fitted)/length(chr$loess$fitted))
+    }, error=function(e) {
+        return(0)
+    })
+}
+
+
+.medianForChr <- function(chr) {
+    tryCatch({
+        return(median(chr$loess$fitted))
+    }, error=function(e) {
+        return(NA)
+    })
+}
+
+
 #' Identify chromosomes containing peaks
 #' 
 #' Follows the \code{\link{loessFit}} step and precedes
@@ -109,21 +127,10 @@ prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     
     #need to calculate standard dev of all chromosomes for cutoff
-    combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
-        tryCatch({
-            return(var(chr$loess$fitted)/length(chr$loess$fitted))
-        }, error=function(e) {
-            return(0)
-        })
-    })
+    combinedStDev <- vapply(mmapprData@distance, .stDevForChr, numeric(1))
     combinedStDev <- sum(combinedStDev)^(1/2)
-    distanceMedian <- sapply(mmapprData@distance, function(chr) {
-        tryCatch({
-            return(median(chr$loess$fitted))
-        }, error=function(e) {
-            return(NA)
-        })
-    })
+    
+    distanceMedian <- vapply(mmapprData@distance, .medianForChr, numeric(1))
     distanceMedian <- median(distanceMedian, na.rm=TRUE) #median of list of chr medians
     cutoff <- 3*combinedStDev + distanceMedian
     

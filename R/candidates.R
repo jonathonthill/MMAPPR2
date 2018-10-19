@@ -119,7 +119,7 @@ generateCandidates <- function(mmapprData) {
     #density calculation
     positions <- BiocGenerics::start(candidateGRanges) + 
         ((BiocGenerics::width(candidateGRanges) - 1) / 2)
-    densityCol <- sapply(positions, densityFunction)
+    densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
     GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
     
     #re-order

@@ -51,7 +51,8 @@ loessFit <- function(mmapprData) {
 #returns a list of aicc and span values as well as the time it took
 #define needed functions
 .aiccOpt <- function(distanceDf, spans, resolution, cutFactor) {
-    aiccValues <- sapply(spans, .aicc, euc_dist = distanceDf$distance, pos = distanceDf$pos)
+    aiccValues <- vapply(spans, .aicc, FUN.VALUE=numeric(1),
+                         euc_dist=distanceDf$distance, pos=distanceDf$pos)
     if (length(spans) != length(aiccValues)) stop("AICc values and spans don't match")
     aiccDf <- data.frame(spans, aiccValues)
     

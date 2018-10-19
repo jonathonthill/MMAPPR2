@@ -185,7 +185,10 @@ setMethod("show", "MmapprParam", function(object) {
     cat("Other parameters:\n")
     slotNames <- slotNames("MmapprParam")[6:length(slotNames("MmapprParam"))]
     slotNames <- c('species', slotNames)
-    slotValues <- sapply(slotNames, function(name) slot(object, name))
+    slotValues <- vapply(slotNames,
+                         function(name) as.character(slot(object, name)),
+                         FUN.VALUE=character(1)
+    )
     names(slotValues) <- slotNames
     print(slotValues, quote=FALSE)
 })
@@ -197,17 +200,20 @@ setMethod("show", "MmapprData", function(object) {
     .customPrint(object@param, margin)
     
     cat("distance:\n")
-    classes <- sapply(object@distance, class)
+    classes <- vapply(object@distance, class, character(1))
     successes <- classes == "list"
     cat(margin, sprintf(
         "Contains Euclidian distance data for %i sequence(s)\n", 
         sum(successes)), sep="")
     loessFits <- 0
-    try(
-        loessFits <- sum(sapply(object@distance[successes], function(seq) {
-            if (!is.null(seq$loess)) return(TRUE)
-            else return(FALSE)
-        })), silent=TRUE
+    try({loessFits <- sum(vapply(object@distance[successes],
+                                 FUN.VALUE=logical(1),
+                                 FUN=function(seq) {
+                                     if (!is.null(seq$loess)) return(TRUE)
+                                     else return(FALSE)
+                                 }
+                          ))
+        }, silent=TRUE
     )
     cat(margin, sprintf(
         "and Loess regression data for %i of those\n", loessFits
@@ -234,7 +240,7 @@ setMethod("show", "MmapprData", function(object) {
 .customPrint <- function(obj, margin="  ", lineMax=getOption("max.print")) {
   lines <- capture.output(obj)
   lines <- strsplit(lines, split="\n")
-  lines <- sapply(lines, function(x) paste0(margin, x))
+  lines <- vapply(lines, function(x) paste0(margin, x), character(1))
   if (lineMax > length(lines)) lineMax=length(lines)
   cat(lines[1:lineMax], sep="\n")
 }
