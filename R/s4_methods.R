@@ -357,12 +357,23 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' @seealso \code{\linkS4class{MmapprData}}
 #' 
 #' @examples
-#' md <- new('MmapprData')
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
+#'
+#'     md <- new('MmapprData', param = param)
 #' 
-#' param(md)
-#' distance(md)
-#' peaks(md)
-#' candidates(md)
+#'     param(md)
+#'     distance(md)
+#'     peaks(md)
+#'     candidates(md)
+#' }
 NULL
 
 #' @rdname MmapprData-getters
