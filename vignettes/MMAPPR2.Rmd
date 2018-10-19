@@ -91,7 +91,7 @@ If the pipeline fails midway, the `MmapprData` object is saved, which you can th
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-system(paste('ls', outputFolder(param(postCandidatesMD))))
+system2('ls', outputFolder(param(postCandidatesMD)))
 
 mdFile <- file.path(outputFolder(param(postCandidatesMD)), 'mmappr_data.RDS')
 ```
