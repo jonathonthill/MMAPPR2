@@ -22,7 +22,7 @@ peakRefinement <- function(mmapprData){
 }
 
 .getSubsampleLoessMax <- function(rawData, loessSpan) {
-    tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
+    tempData <- rawData[sample(seq_len(nrow(rawData)), size=nrow(rawData)/2),]
     tempData <- tempData[order(tempData$pos),]
     loessData <- suppressWarnings(
         loess(euclideanDistance~pos, data=tempData,

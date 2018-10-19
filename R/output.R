@@ -87,7 +87,7 @@ outputMmapprData <- function(mmapprData) {
                 1.1*max(plotDf$fitted, na.rm=TRUE)), 
          ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
          xaxt='n', xaxs='i', xlab="Chromosome" )
-    abline(v=(breaks[1:length(breaks)-1]+2), col="grey")
+    abline(v=(breaks[seq_len(length(breaks))-1]+2), col="grey")
     mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])), 
           at = labelpos, side=1, cex=.6)
     

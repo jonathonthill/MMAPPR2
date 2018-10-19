@@ -67,7 +67,7 @@ loessFit <- function(mmapprData) {
         localResolution <- round(.localResolution(spans, minSpan), digits=.numDecimals(resolution))
         stopifnot(is.numeric(localResolution))
         if (abs(localResolution) > resolution){
-            addVector <- ((localResolution * cutFactor) * 1:9)
+            addVector <- ((localResolution * cutFactor) * seq(1, 9))
             newSpans <- c(minSpan - addVector, minSpan + addVector)
             newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
             newSpans <- round(newSpans, digits = .numDecimals(resolution))
@@ -130,7 +130,7 @@ loessFit <- function(mmapprData) {
         if(is(resultList, 'character')) stop('--Loess fit failed')
         
         #returns dataframe with spans and aicc values for each loess
-        startSpans <- .01 * c(1:16, 1 + 10*2:9)
+        startSpans <- c(seq(.01, .16, .01), seq(.21, .91, .10))
         resultList$aicc <- .aiccOpt(distanceDf = resultList$distanceDf, 
                                               spans = startSpans,
                                               resolution = loessOptResolution,

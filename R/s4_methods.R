@@ -242,7 +242,7 @@ setMethod("show", "MmapprData", function(object) {
   lines <- strsplit(lines, split="\n")
   lines <- vapply(lines, function(x) paste0(margin, x), character(1))
   if (lineMax > length(lines)) lineMax=length(lines)
-  cat(lines[1:lineMax], sep="\n")
+  cat(lines[seq_len(lineMax)], sep="\n")
 }
 
 
