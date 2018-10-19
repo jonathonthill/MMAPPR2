@@ -141,7 +141,7 @@ outputMmapprData <- function(mmapprData) {
         plot(densityData, type='l',
              ylim=c(min(densityData$y, na.rm=TRUE), 1.1*max(densityData$y, na.rm=TRUE)),
              xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
-             ann=F, xaxs='i',
+             ann=FALSE, xaxs='i',
              xaxt='n', yaxt='n', col='#502ecc')
         axis(side=4, col='#502ecc')
         mtext(side=4, line=2, 'Probability', col='#502ecc')
