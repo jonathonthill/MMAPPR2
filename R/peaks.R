@@ -22,7 +22,7 @@ peakRefinement <- function(mmapprData){
 }
 
 .getSubsampleLoessMax <- function(rawData, loessSpan) {
-    tempData <- rawData[sample(1:nrow(rawData), size=nrow(rawData)/2),]
+    tempData <- rawData[sample(seq_len(nrow(rawData)), size=nrow(rawData)/2),]
     tempData <- tempData[order(tempData$pos),]
     loessData <- suppressWarnings(
         loess(euclideanDistance~pos, data=tempData,
@@ -90,6 +90,24 @@ peakRefinement <- function(mmapprData){
 }
 
 
+.stDevForChr <- function(chr) {
+    tryCatch({
+        return(var(chr$loess$fitted)/length(chr$loess$fitted))
+    }, error=function(e) {
+        return(0)
+    })
+}
+
+
+.medianForChr <- function(chr) {
+    tryCatch({
+        return(median(chr$loess$fitted))
+    }, error=function(e) {
+        return(NA)
+    })
+}
+
+
 #' Identify chromosomes containing peaks
 #' 
 #' Follows the \code{\link{loessFit}} step and precedes
@@ -109,28 +127,17 @@ prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
     
     #need to calculate standard dev of all chromosomes for cutoff
-    combinedStDev <- sapply(mmapprData@distance, FUN = function(chr){
-        tryCatch({
-            return(var(chr$loess$fitted)/length(chr$loess$fitted))
-        }, error=function(e) {
-            return(0)
-        })
-    })
+    combinedStDev <- vapply(mmapprData@distance, .stDevForChr, numeric(1))
     combinedStDev <- sum(combinedStDev)^(1/2)
-    distanceMedian <- sapply(mmapprData@distance, function(chr) {
-        tryCatch({
-            return(median(chr$loess$fitted))
-        }, error=function(e) {
-            return(NA)
-        })
-    })
+    
+    distanceMedian <- vapply(mmapprData@distance, .medianForChr, numeric(1))
     distanceMedian <- median(distanceMedian, na.rm=TRUE) #median of list of chr medians
     cutoff <- 3*combinedStDev + distanceMedian
     
     #get which peaks have values above cutoff, initialize them in mmapprData
     for(i in seq_along(mmapprData@distance)){
-        if(class(mmapprData@distance[[i]]) != "list") next
-        if(class(mmapprData@distance[[i]]$loess) != "loess") next
+        if(!is(mmapprData@distance[[i]], 'list')) next
+        if(!is(mmapprData@distance[[i]]$loess, 'loess')) next
            
         loessForChr <- mmapprData@distance[[i]]$loess
         if (length(loessForChr$x) < 50) next

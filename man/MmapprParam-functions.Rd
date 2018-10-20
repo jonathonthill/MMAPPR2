@@ -138,8 +138,27 @@
 
 \item{value}{Value to replace desired attribute.}
 }
+\value{
+The desired \code{\link{MmapprParam}} attribute.
+}
 \description{
 Access and assign slots of \code{\link{MmapprParam}} object.
+}
+\examples{
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+    ## Ignore these lines:
+    MMAPPR2:::.insertFakeVEPintoPath()
+    genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+    
+    param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+                               wtFiles = MMAPPR2data::zy13wtBam(),
+                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               species = "danio_rerio")
+
+    outputFolder(param) <- 'mmappr2_test_1'
+    minBaseQuality(param) <- 25
+    vepFlags(param)
+}
 }
 \seealso{
 \code{\link{MmapprParam}}

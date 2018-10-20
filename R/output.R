@@ -12,7 +12,7 @@
 #' outputMmapprData(postCandidatesMD)
 #' }
 outputMmapprData <- function(mmapprData) {
-    stopifnot(class(mmapprData) == "MmapprData")
+    stopifnot(is(mmapprData, "MmapprData"))
     oF <- outputFolder(param(mmapprData))
     
     tryCatch({
@@ -66,7 +66,7 @@ outputMmapprData <- function(mmapprData) {
     breaks <- tailPos
     labelpos <- NULL
     for (i in GenomeInfoDb::orderSeqlevels(names(mmapprData@distance))) {
-        if (class(mmapprData@distance[[i]]) != "list")
+        if (!is(mmapprData@distance[[i]], 'list'))
             next
         else if (!("loess" %in% names(mmapprData@distance[[i]])))
             stop("Distance list for sequence %s missing loess fit data", names(mmapprData@distance)[i])
@@ -83,17 +83,17 @@ outputMmapprData <- function(mmapprData) {
     if (savePdf) pdf(file.path(mmapprData@param@outputFolder, "genome_plots.pdf"), width=11, height=8.5)
     par(mfrow=c(2,1))
     plot(x = plotDf$pos, y = plotDf$fitted, type='l', 
-         ylim=c(min(plotDf$fitted, na.rm=T),
-                1.1*max(plotDf$fitted, na.rm=T)), 
+         ylim=c(min(plotDf$fitted, na.rm=TRUE),
+                1.1*max(plotDf$fitted, na.rm=TRUE)), 
          ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
          xaxt='n', xaxs='i', xlab="Chromosome" )
-    abline(v=(breaks[1:length(breaks)-1]+2), col="grey")
+    abline(v=(breaks[seq_len(length(breaks))-1]+2), col="grey")
     mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])), 
           at = labelpos, side=1, cex=.6)
     
     plot(x = plotDf$pos, y = plotDf$unfitted, pch=16, cex=.8, col="#999999AA", 
-         ylim=c(min(plotDf$unfitted, na.rm=T), 
-                1.1*max(plotDf$unfitted, na.rm=T)), 
+         ylim=c(min(plotDf$unfitted, na.rm=TRUE), 
+                1.1*max(plotDf$unfitted, na.rm=TRUE)), 
          ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)), 
          xaxt='n', xaxs='i', xlab="Chromosome" )
     abline(v=(breaks), col="grey")
@@ -115,8 +115,8 @@ outputMmapprData <- function(mmapprData) {
         densityData <- mmapprData@peaks[[seqname]]$densityData
         
         plot(chrLoess$x/1000000, chrLoess$fitted, type='l', 
-             ylim=c(min(chrLoess$fitted, na.rm=T),
-                    1.1*max(chrLoess$fitted, na.rm=T)),
+             ylim=c(min(chrLoess$fitted, na.rm=TRUE),
+                    1.1*max(chrLoess$fitted, na.rm=TRUE)),
              xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)) * 1E-6,
              xlab=paste(seqname,"Base Position (MB)"),
              ylab=NA, xaxs='i')
@@ -139,9 +139,9 @@ outputMmapprData <- function(mmapprData) {
         densityData$y <- densityData$y[posMatch]
         par(new=TRUE)
         plot(densityData, type='l',
-             ylim=c(min(densityData$y, na.rm=T), 1.1*max(densityData$y, na.rm=T)),
+             ylim=c(min(densityData$y, na.rm=TRUE), 1.1*max(densityData$y, na.rm=TRUE)),
              xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
-             ann=F, xaxs='i',
+             ann=FALSE, xaxs='i',
              xaxt='n', yaxt='n', col='#502ecc')
         axis(side=4, col='#502ecc')
         mtext(side=4, line=2, 'Probability', col='#502ecc')
@@ -150,8 +150,8 @@ outputMmapprData <- function(mmapprData) {
         
         # SNPs plot
         plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
-             ylim=c(min(chrLoess$y, na.rm=T),
-                    1.1*max(chrLoess$y, na.rm=T)),
+             ylim=c(min(chrLoess$y, na.rm=TRUE),
+                    1.1*max(chrLoess$y, na.rm=TRUE)),
              ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)),
              xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
     }

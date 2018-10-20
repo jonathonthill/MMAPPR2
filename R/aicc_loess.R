@@ -30,7 +30,7 @@ loessFit <- function(mmapprData) {
 
 .getLoess <- function(s, pos, euc_dist, ...){
     x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
-                   family="symmetric", ...), silent=T)
+                   family="symmetric", ...), silent=TRUE)
     return(x)
 }
 
@@ -43,7 +43,7 @@ loessFit <- function(mmapprData) {
     index <- which(spans %in% span)
     stopifnot(length(index) == 1)
     
-    result <- max(c(diff(spans)[index-1], diff(spans)[index]), na.rm = T)
+    result <- max(c(diff(spans)[index-1], diff(spans)[index]), na.rm=TRUE)
     stopifnot(is.numeric(result))
     return(result)
 }
@@ -51,7 +51,8 @@ loessFit <- function(mmapprData) {
 #returns a list of aicc and span values as well as the time it took
 #define needed functions
 .aiccOpt <- function(distanceDf, spans, resolution, cutFactor) {
-    aiccValues <- sapply(spans, .aicc, euc_dist = distanceDf$distance, pos = distanceDf$pos)
+    aiccValues <- vapply(spans, .aicc, FUN.VALUE=numeric(1),
+                         euc_dist=distanceDf$distance, pos=distanceDf$pos)
     if (length(spans) != length(aiccValues)) stop("AICc values and spans don't match")
     aiccDf <- data.frame(spans, aiccValues)
     
@@ -66,7 +67,7 @@ loessFit <- function(mmapprData) {
         localResolution <- round(.localResolution(spans, minSpan), digits=.numDecimals(resolution))
         stopifnot(is.numeric(localResolution))
         if (abs(localResolution) > resolution){
-            addVector <- ((localResolution * cutFactor) * 1:9)
+            addVector <- ((localResolution * cutFactor) * seq(1, 9))
             newSpans <- c(minSpan - addVector, minSpan + addVector)
             newSpans <- newSpans[newSpans > 0 & newSpans <= 1]
             newSpans <- round(newSpans, digits = .numDecimals(resolution))
@@ -95,7 +96,7 @@ loessFit <- function(mmapprData) {
 }
 
 .numDecimals <- function(x) {
-    stopifnot(class(x)=="numeric")
+    stopifnot(is(x, "numeric"))
     if (!grepl("[.]", x)) return(0)
     x <- sub("0+$","",x)
     x <- sub("^.+[.]","",x)
@@ -105,7 +106,7 @@ loessFit <- function(mmapprData) {
 .aicc <- function (s, euc_dist, pos) {
     # extract values from loess object
     x <- .getLoess(s, pos, euc_dist)
-    if(class(x)=="try-error") return(NA)
+    if(is(x, "try-error")) return(NA)
     span <- x$pars$span
     n <- x$n
     traceL <- x$trace.hat
@@ -126,17 +127,17 @@ loessFit <- function(mmapprData) {
 .loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor) {
     startTime <- proc.time()
     tryCatch({
-        if(class(resultList) == 'character') stop('--Loess fit failed')
+        if(is(resultList, 'character')) stop('--Loess fit failed')
         
         #returns dataframe with spans and aicc values for each loess
-        startSpans <- .01 * c(1:16, 1 + 10*2:9)
+        startSpans <- c(seq(.01, .16, .01), seq(.21, .91, .10))
         resultList$aicc <- .aiccOpt(distanceDf = resultList$distanceDf, 
                                               spans = startSpans,
                                               resolution = loessOptResolution,
                                               cutFactor = loessOptCutFactor)
         
         #now get loess for best aicc
-        bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm = T), 'spans'],
+        bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm=TRUE), 'spans'],
                           digits = .numDecimals(loessOptResolution))
         bestSpan <- mean(bestSpan, na.rm = TRUE)
         resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos, 
@@ -152,7 +153,7 @@ loessFit <- function(mmapprData) {
         return(resultList)
     },
     error = function(e) {
-        if (class(resultList) == "character")
+        if (is(resultList, "character"))
             return(paste0(resultList, e$message))
         else return(e$message)
     }

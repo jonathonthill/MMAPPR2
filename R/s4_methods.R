@@ -148,7 +148,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
 
 .validFiles <- function(files) {
     errors <- c()
-    if (class(files) != "BamFileList") 
+    if (!is(files, 'BamFileList')) 
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
     for (i in seq_along(files)) {
         file <- files[[i]]
@@ -185,7 +185,10 @@ setMethod("show", "MmapprParam", function(object) {
     cat("Other parameters:\n")
     slotNames <- slotNames("MmapprParam")[6:length(slotNames("MmapprParam"))]
     slotNames <- c('species', slotNames)
-    slotValues <- sapply(slotNames, function(name) slot(object, name))
+    slotValues <- vapply(slotNames,
+                         function(name) as.character(slot(object, name)),
+                         FUN.VALUE=character(1)
+    )
     names(slotValues) <- slotNames
     print(slotValues, quote=FALSE)
 })
@@ -197,17 +200,20 @@ setMethod("show", "MmapprData", function(object) {
     .customPrint(object@param, margin)
     
     cat("distance:\n")
-    classes <- sapply(object@distance, class)
+    classes <- vapply(object@distance, class, character(1))
     successes <- classes == "list"
     cat(margin, sprintf(
         "Contains Euclidian distance data for %i sequence(s)\n", 
         sum(successes)), sep="")
     loessFits <- 0
-    try(
-        loessFits <- sum(sapply(object@distance[successes], function(seq) {
-            if (!is.null(seq$loess)) return(TRUE)
-            else return(FALSE)
-        })), silent=TRUE
+    try({loessFits <- sum(vapply(object@distance[successes],
+                                 FUN.VALUE=logical(1),
+                                 FUN=function(seq) {
+                                     if (!is.null(seq$loess)) return(TRUE)
+                                     else return(FALSE)
+                                 }
+                          ))
+        }, silent=TRUE
     )
     cat(margin, sprintf(
         "and Loess regression data for %i of those\n", loessFits
@@ -234,9 +240,9 @@ setMethod("show", "MmapprData", function(object) {
 .customPrint <- function(obj, margin="  ", lineMax=getOption("max.print")) {
   lines <- capture.output(obj)
   lines <- strsplit(lines, split="\n")
-  lines <- sapply(lines, function(x) paste0(margin, x))
+  lines <- vapply(lines, function(x) paste0(margin, x), character(1))
   if (lineMax > length(lines)) lineMax=length(lines)
-  cat(lines[1:lineMax], sep="\n")
+  cat(lines[seq_len(lineMax)], sep="\n")
 }
 
 
@@ -266,8 +272,27 @@ setMethod("show", "MmapprData", function(object) {
 #'
 #' @param obj Desired \code{\link{MmapprParam}} object.
 #' @param value Value to replace desired attribute.
+#' 
+#' @return The desired \code{\link{MmapprParam}} attribute.
 #'   
 #' @seealso \code{\link{MmapprParam}}
+#' 
+#' @examples
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
+#'
+#'     outputFolder(param) <- 'mmappr2_test_1'
+#'     minBaseQuality(param) <- 25
+#'     vepFlags(param)
+#' }
+
 NULL
 
 #' @rdname MmapprParam-functions
@@ -325,21 +350,42 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' 
 #' @param obj Desired \code{\linkS4class{MmapprData}} object.
 #' 
-#' @name MmapprDataGetters
+#' @return Desired attribute.
+#' 
+#' @name MmapprData-getters
 #' @aliases param distance peaks candidates
 #' @seealso \code{\linkS4class{MmapprData}}
+#' 
+#' @examples
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     ## Ignore these lines:
+#'     MMAPPR2:::.insertFakeVEPintoPath()
+#'     genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+#'     
+#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'                                wtFiles = MMAPPR2data::zy13wtBam(),
+#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                species = "danio_rerio")
+#'
+#'     md <- new('MmapprData', param = param)
+#' 
+#'     param(md)
+#'     distance(md)
+#'     peaks(md)
+#'     candidates(md)
+#' }
 NULL
 
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("param", "MmapprData", function(obj) obj@param)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("distance", "MmapprData", function(obj) obj@distance)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("peaks", "MmapprData", function(obj) obj@peaks)
-#' @rdname MmapprDataGetters
+#' @rdname MmapprData-getters
 #' @export
 setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 

@@ -1,6 +1,6 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.98.11
+Version: 0.99.0
 Authors@R: c(
     person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role=c("aut")),
     person('Nathaniel', 'Jenkins', role=c('aut')),
@@ -40,7 +40,11 @@ Imports: ensemblVEP (>= 1.20.0),
     tidyr,
     VariantTools,
     magrittr,
-    methods
+    methods,
+    grDevices,
+    graphics,
+    stats,
+    utils
 SystemRequirements: Ensembl VEP
 biocViews: RNASeq,
     PooledScreens,

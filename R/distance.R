@@ -50,7 +50,7 @@ calculateDistance <- function(mmapprData) {
     tryCatch({
         #parameter check
         stopifnot(length(GenomeInfoDb::seqnames(chrRange)) == 1)
-        stopifnot(class(param) == "MmapprParam")
+        stopifnot(is(param, "MmapprParam"))
         
         stopifnot(!is.null(chrRange))
         wtFiles <- param@wtFiles
@@ -224,7 +224,7 @@ calculateDistance <- function(mmapprData) {
     
     #expand filter_mat to cover all 5 rows for each position
     new_mat <- c()
-    for (i in 1:ncol(filter_mat)){
+    for (i in seq_len(ncol(filter_mat))) {
         new_col <- rep(filter_mat[,i], each=5)
         new_mat <- cbind(new_mat, new_col)
     }
