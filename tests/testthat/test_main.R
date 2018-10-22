@@ -64,7 +64,7 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
 })
 
 
-test_that("MmapprParam takes character, BamFile, or BamFileList of real files", {
+test_that("MmapprParam takes only real files; handles character or objects", {
     fn_wt <- 'test_data/bam_files/zy14_dummy.bam'
     fn_mut <- 'test_data/bam_files/zy14_dummy.bam'
 
@@ -122,7 +122,9 @@ test_that('log writes to default folder', {
     unlink('/tmp/m2', recursive=TRUE)
     dir.create('/tmp/m2')
     newParam@outputFolder <- '/tmp/m2'
-    mockery::stub(mmappr, '.prepareOutputFolder', new('MmapprData', param=newParam))
+    mockery::stub(mmappr,
+                  '.prepareOutputFolder',
+                  new('MmapprData', param = newParam))
     mockery::stub(mmappr, 'tryCatch', function(...) stop('expected failure'))
     expect_error(mmappr(param), 'expected failure')
     expect_true(file.exists('/tmp/m2/mmappr2.log'))

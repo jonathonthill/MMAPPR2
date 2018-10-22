@@ -162,7 +162,8 @@ prePeak <- function(mmapprData) {
     combinedStDev <- sum(combinedStDev)^(1/2)
     
     distanceMedian <- vapply(mmapprData@distance, .medianForChr, numeric(1))
-    distanceMedian <- median(distanceMedian, na.rm=TRUE) #median of list of chr medians
+    # median of list of chr medians
+    distanceMedian <- median(distanceMedian, na.rm=TRUE)
     cutoff <- 3*combinedStDev + distanceMedian
     
     #get which peaks have values above cutoff, initialize them in mmapprData

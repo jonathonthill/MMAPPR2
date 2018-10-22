@@ -121,7 +121,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
                  fileAggregation=match.arg(fileAggregation))
     
     validity <- .validMmapprParam(param)
-    if (typeof(validity) == "logical") param else stop(paste(validity, collapse='\n  '))
+    if (typeof(validity) == "logical") param
+    else stop(paste(validity, collapse='\n  '))
 }
 
 
@@ -161,7 +162,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
 
 .validVepFlags <- function(vepFlags) {
     vepFormat <- ensemblVEP::flags(vepFlags)$format
-    if (is.null(vepFormat)) vepFormat <- "" # makes next conditional statement work
+    # makes next conditional statement work:
+    if (is.null(vepFormat)) vepFormat <- ""
     if (vepFormat != 'vcf'){
         return(paste0("VEPFlags format flag must be 'vcf'\n",
                       "  e.g., flags(vepFlags)$format <- 'vcf'"))
@@ -234,7 +236,8 @@ setMethod("show", "MmapprData", function(object) {
     }
     
     cat("candidates:\n")
-    for (i in seq_along(object@candidates)) .customPrint(object@candidates[i], margin, lineMax=5)
+    for (i in seq_along(object@candidates))
+        .customPrint(object@candidates[i], margin, lineMax=5)
 })
 
 .customPrint <- function(obj, margin="  ", lineMax=getOption("max.print")) {

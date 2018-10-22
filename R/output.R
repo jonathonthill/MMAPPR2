@@ -53,15 +53,18 @@ outputMmapprData <- function(mmapprData) {
         outputFolder(mmapprData@param) <- .defaultOutputFolder()
     
     if(dir.exists(outputFolder(mmapprData@param))){
-        message(sprintf("Output folder %s has already been created", outputFolder(param(mmapprData))))
+        message(sprintf("Output folder %s has already been created",
+                        outputFolder(param(mmapprData))))
         answer <- " "
         while(answer != "y" & answer != "n"){
             answer <- readline(
                 "Would you like to overwrite previously created results folder (y/n)?\n")
         }
         if (answer == "n") {
-            newOutputFolder <- readline("Please enter name for new output folder or press enter for default: ")
-            if (is.na(newOutputFolder)) outputFolder(mmapprData@param) <- .defaultOutputFolder()
+            newOutputFolder <-
+                readline("Please enter name for new output folder or press enter for default: ")
+            if (is.na(newOutputFolder))
+                outputFolder(mmapprData@param) <- .defaultOutputFolder()
             else outputFolder(mmapprData@param) <- newOutputFolder
             dir.create(outputFolder(mmapprData@param))
         } else {
@@ -87,23 +90,29 @@ outputMmapprData <- function(mmapprData) {
         if (!is(mmapprData@distance[[i]], 'list'))
             next
         else if (!("loess" %in% names(mmapprData@distance[[i]])))
-            stop("Distance list for sequence %s missing loess fit data", names(mmapprData@distance)[i])
+            stop("Distance list for sequence %s missing loess fit data",
+                 names(mmapprData@distance)[i])
         
         chrLoess <- mmapprData@distance[[i]]$loess
-        chrDf <- data.frame(pos = chrLoess$x + tailPos, seqname = names(mmapprData@distance)[i], 
+        chrDf <- data.frame(pos = chrLoess$x + tailPos,
+                            seqname = names(mmapprData@distance)[i], 
                             fitted = chrLoess$fitted, unfitted = chrLoess$y)
         plotDf <- rbind(plotDf, chrDf)
         tailPos <- chrDf$pos[nrow(chrDf)]
         breaks <- c(breaks, tailPos)
-        labelpos <- c(labelpos, (breaks[length(breaks)] + breaks[length(breaks) - 1]) / 2)
+        labelpos <-
+            c(labelpos, (breaks[length(breaks)]+breaks[length(breaks)-1])/2)
     }
     
-    if (savePdf) pdf(file.path(mmapprData@param@outputFolder, "genome_plots.pdf"), width=11, height=8.5)
+    if (savePdf)
+        pdf(file.path(mmapprData@param@outputFolder, "genome_plots.pdf"),
+            width=11, height=8.5)
     par(mfrow=c(2,1))
     plot(x = plotDf$pos, y = plotDf$fitted, type='l', 
          ylim=c(min(plotDf$fitted, na.rm=TRUE),
                 1.1*max(plotDf$fitted, na.rm=TRUE)), 
-         ylab=substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)), 
+         ylab=substitute("ED"^p~ ~"(Loess fit)",
+                         list(p=mmapprData@param@distancePower)), 
          xaxt='n', xaxs='i', xlab="Chromosome" )
     abline(v=(breaks[seq_len(length(breaks))-1]+2), col="grey")
     mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])), 
@@ -123,7 +132,8 @@ outputMmapprData <- function(mmapprData) {
 
 
 .plotPeaks <- function(mmapprData) {
-    pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"), width=11, height=8.5)
+    pdf(file.path(mmapprData@param@outputFolder, "peak_plots.pdf"),
+        width=11, height=8.5)
     par(mfrow=c(2,1), mar=c(5, 4, 4, 4))
     
     for (seqname in names(mmapprData@peaks)){
@@ -138,7 +148,8 @@ outputMmapprData <- function(mmapprData) {
              xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)) * 1E-6,
              xlab=paste(seqname,"Base Position (MB)"),
              ylab=NA, xaxs='i')
-        mtext(substitute("ED"^p~ ~"(Loess fit)", list(p=mmapprData@param@distancePower)),
+        mtext(substitute("ED"^p~ ~"(Loess fit)",
+                         list(p=mmapprData@param@distancePower)),
               side=2, line=2)
         shadeX <- c(start, 
                     chrLoess$x[chrLoess$x >= start & chrLoess$x <= end & 
@@ -157,13 +168,16 @@ outputMmapprData <- function(mmapprData) {
         densityData$y <- densityData$y[posMatch]
         par(new=TRUE)
         plot(densityData, type='l',
-             ylim=c(min(densityData$y, na.rm=TRUE), 1.1*max(densityData$y, na.rm=TRUE)),
+             ylim=c(min(densityData$y, na.rm=TRUE),
+                    1.1*max(densityData$y, na.rm=TRUE)),
              xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
              ann=FALSE, xaxs='i',
              xaxt='n', yaxt='n', col='#502ecc')
         axis(side=4, col='#502ecc')
         mtext(side=4, line=2, 'Probability', col='#502ecc')
-        legend('topright', legend=c("Fitted Distance Curve", "Peak Resampling Distribution"),
+        legend('topright',
+               legend=c("Fitted Distance Curve",
+                        "Peak Resampling Distribution"),
                col=c("black", "#502ecc"), lty=c(1, 1), cex=0.8, lwd=3)
         
         # SNPs plot
@@ -180,14 +194,17 @@ outputMmapprData <- function(mmapprData) {
 
 .writeCandidateTables <- function(candList, outputFolder){
     for (seqname in names(candList)) {
-        output <- data.frame("Position" = candList[[seqname]]@ranges@start, 
-                             "Symbol" = candList[[seqname]]@elementMetadata@listData$SYMBOL, 
-                             "Impact" = candList[[seqname]]@elementMetadata@listData$IMPACT,
-                             "Consequence" = candList[[seqname]]@elementMetadata@listData$Consequence,
-                             "DensityScore" = candList[[seqname]]@elementMetadata@listData$peakDensity,
-                             "Allele" = candList[[seqname]]@elementMetadata@listData$Allele, 
-                             "AminoAcid" = candList[[seqname]]@elementMetadata@listData$Amino_acids,
-                             "Feature" = candList[[seqname]]@elementMetadata@listData$Feature)
+        output <-
+            data.frame(
+                "Position"=candList[[seqname]]@ranges@start, 
+                "Symbol"=candList[[seqname]]@elementMetadata@listData$SYMBOL, 
+                "Impact"=candList[[seqname]]@elementMetadata@listData$IMPACT,
+                "Consequence"=candList[[seqname]]@elementMetadata@listData$Consequence,
+                "DensityScore"=candList[[seqname]]@elementMetadata@listData$peakDensity,
+                "Allele"=candList[[seqname]]@elementMetadata@listData$Allele,
+                "AminoAcid"=candList[[seqname]]@elementMetadata@listData$Amino_acids,
+                "Feature"=candList[[seqname]]@elementMetadata@listData$Feature
+            )
         filename <- paste0(seqname, '.tsv')
         write.table(output, file=file.path(outputFolder, filename),
                     sep='\t', row.names=FALSE, quote=FALSE)

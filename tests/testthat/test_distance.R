@@ -44,7 +44,8 @@ test_that("files get indexed automatically if needed", {
 
 test_that('files in BamFileList also get indexed automatically if needed', {
     skip_if_not_installed('mockery')
-    mockery::stub(calculateDistance, '.getFileReadChrList', function(...) stop('fail'))
+    mockery::stub(calculateDistance, '.getFileReadChrList', function(...)
+        stop('fail'))
     mockery::stub(calculateDistance, 'Rsamtools::indexBam',
                   function(...) write.table(matrix(), '/tmp/test.bam.bai'))
     

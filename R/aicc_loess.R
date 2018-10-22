@@ -31,9 +31,11 @@ loessFit <- function(mmapprData) {
     loessOptResolution <- mmapprData@param@loessOptResolution
     loessOptCutFactor <- mmapprData@param@loessOptCutFactor
     
-    #each item (chr) of distance list has mutCounts, wtCounts, distanceDf going in
+    # each item (chr) of distance list has mutCounts, wtCounts,
+    # distanceDf going in
     mmapprData@distance <- 
-        .runFunctionInParallel(mmapprData@distance, functionToRun=.loessFitForChr,
+        .runFunctionInParallel(mmapprData@distance,
+                               functionToRun=.loessFitForChr,
                                loessOptResolution=loessOptResolution,
                                loessOptCutFactor=loessOptCutFactor)
     #.loessFitForChr returns list with mutCounts, wtCounts, loess, aicc
@@ -48,7 +50,8 @@ loessFit <- function(mmapprData) {
     return(x)
 }
 
-#gets greater of the two differences to either side of a span in a vector of spans
+# gets greater of the two differences to either side of a span in a
+# vector of spans
 .localResolution <- function(spans, span) {
     stopifnot(is.numeric(spans))
     stopifnot(all(spans >= 0 & spans <= 1))
@@ -67,18 +70,22 @@ loessFit <- function(mmapprData) {
 .aiccOpt <- function(distanceDf, spans, resolution, cutFactor) {
     aiccValues <- vapply(spans, .aicc, FUN.VALUE=numeric(1),
                          euc_dist=distanceDf$distance, pos=distanceDf$pos)
-    if (length(spans) != length(aiccValues)) stop("AICc values and spans don't match")
+    if (length(spans) != length(aiccValues))
+        stop("AICc values and spans don't match")
     aiccDf <- data.frame(spans, aiccValues)
     
     #finds two lowest local minima for finer attempt
     minVals <- .minTwo(.localMin(aiccDf$aiccValues))
-    #gets first column of dataframe after selecting for rows that match the two lowest localMins
+    # gets first column of dataframe after selecting for rows that
+    # match the two lowest localMins
     minSpans <- aiccDf[aiccDf$aiccValues %in% minVals, 1]
     
-    #goes through each minimum and goes deeper if resolution isn't fine enough
+    # goes through each minimum and goes deeper if resolution isn't fine enough
     for (minSpan in minSpans) {
-        #get resolution at that point, which is greater of differences to either side
-        localResolution <- round(.localResolution(spans, minSpan), digits=.numDecimals(resolution))
+        # get resolution at that point, which is greater of differences
+        # to either side
+        localResolution <- round(.localResolution(spans, minSpan),
+                                 digits=.numDecimals(resolution))
         stopifnot(is.numeric(localResolution))
         if (abs(localResolution) > resolution){
             addVector <- ((localResolution * cutFactor) * seq(1, 9))
@@ -87,8 +94,9 @@ loessFit <- function(mmapprData) {
             newSpans <- round(newSpans, digits = .numDecimals(resolution))
             newSpans <- unique(newSpans)
             #recursive call
-            aiccDf <- rbind(aiccDf, .aiccOpt(distanceDf, spans = newSpans, 
-                                             resolution = resolution, cutFactor = cutFactor))
+            aiccDf <- rbind(aiccDf, .aiccOpt(distanceDf, spans=newSpans, 
+                                             resolution=resolution,
+                                             cutFactor=cutFactor))
         }
     }
     return(aiccDf)
@@ -131,14 +139,15 @@ loessFit <- function(mmapprData) {
     #return aicc value
     return(log(sigma2) + 1 + 2* (2*(traceL+1)) / (n-traceL-2))
     #what I understand:
-    #return(n * log(sigma2) + 2*traceL + 2*traceL*(traceL + 1) / (n - traceL - 1))
+    #return(n*log(sigma2) + 2*traceL + 2*traceL*(traceL + 1) / (n-traceL-1))
 }
 
 
-#the function that gets run for each chromosome
-#takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
-#outputs complete element of mmapprData@distance (mutcounts, wtCounts, loess, aicc)
-.loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor) {
+# the function that gets run for each chromosome
+# takes element of mmapprData@distance (with mutCounts, wtCounts, distanceDf)
+# outputs complete element of mmapprData@distance
+# with columns (mutcounts, wtCounts, loess, aicc)
+.loessFitForChr <- function(resultList, loessOptResolution, loessOptCutFactor){
     startTime <- proc.time()
     tryCatch({
         if(is(resultList, 'character')) stop('--Loess fit failed')
@@ -151,11 +160,16 @@ loessFit <- function(mmapprData) {
                                               cutFactor = loessOptCutFactor)
         
         #now get loess for best aicc
-        bestSpan <- round(resultList$aicc[resultList$aicc$aiccValues == min(resultList$aicc$aiccValues, na.rm=TRUE), 'spans'],
-                          digits = .numDecimals(loessOptResolution))
+        minAicc <- min(resultList$aicc$aiccValues, na.rm=TRUE)
+        bestSpan <- round(
+            resultList$aicc[resultList$aicc$aiccValues == minAicc, 'spans'],
+            digits = .numDecimals(loessOptResolution)
+        )
         bestSpan <- mean(bestSpan, na.rm = TRUE)
-        resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos, 
-                                                resultList$distanceDf$distance, surface = "direct")
+        resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos,
+                                      resultList$distanceDf$distance,
+                                      surface = "direct"
+        )
         
         precision <- .numDecimals(loessOptResolution)
         

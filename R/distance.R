@@ -92,7 +92,8 @@ calculateDistance <- function(mmapprData) {
         gc()
         
         #apply functions to mutant pool
-        applyPileupMut <- Rsamtools::applyPileups(pfMut, FUN = .calcInfo, param = apParam)
+        applyPileupMut <- Rsamtools::applyPileups(pfMut, FUN=.calcInfo,
+                                                  param=apParam)
         tryCatch(
             mutCounts <- applyPileupMut[[1]] %>%
                 .makeDfForChromsome() %>%
@@ -142,7 +143,9 @@ calculateDistance <- function(mmapprData) {
     },
     
     error = function(e) {
-        msg <- paste0(toString(GenomeInfoDb::seqnames(chrRange)), ": ", e$message)
+        msg <- paste(toString(GenomeInfoDb::seqnames(chrRange)),
+                     e$message,
+                     sep=': ')
         return(msg)
     }
     )
@@ -154,12 +157,14 @@ calculateDistance <- function(mmapprData) {
                                      mmapprData@param@mutFiles))
     
     bamInfo <- Rsamtools::seqinfo(bams)
-    Sys.which('hello-there')
     chrRanges <- as(bamInfo, "GRanges")
     #cut to standard chromosomes
-    chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges, pruning.mode='coarse')
-    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM', pruning.mode='coarse')
-    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT', pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges,
+                                                       pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM',
+                                             pruning.mode='coarse')
+    chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT',
+                                             pruning.mode='coarse')
     
     chrList <- list()
     # store range for each chromosome as list item
@@ -245,12 +250,15 @@ calculateDistance <- function(mmapprData) {
     #if only one file and na_cutoff isn't 0
     if ( sum( !(names(chrDf) %in% c("pos", "nucleotide")) ) == 1 
          & naCutoff != 0){
-        warning('naCutoff for a single-file pool must be 0. Continuing with cutoff of 0.')
+        warning(paste('naCutoff for a single-file pool must be 0.',
+                      'Continuing with cutoff of 0.'))
         naCutoff <- 0
     }
-    #vector returns true on rows with cutoff or less NaNs or NAs (is.na accounts for both)
-    #need drop=F so it works if only 1 column is passed to rowSums
-    filter_vec <- (rowSums(is.na(chrDf[, 3:length(chrDf), drop = FALSE])) <= naCutoff)
+    # vector returns true on rows with cutoff or less NaNs or NAs
+    # (is.na accounts for both)
+    # need drop=F so it works if only 1 column is passed to rowSums
+    filter_vec <-
+        (rowSums(is.na(chrDf[, 3:length(chrDf), drop = FALSE])) <= naCutoff)
     chrDf <- chrDf[filter_vec, ]
     return(chrDf)
 }
@@ -263,7 +271,8 @@ calculateDistance <- function(mmapprData) {
     stopifnot(fileAggregation %in% c('sum', 'mean'))
     #throw away non-mean columns and return
     if (fileAggregation == 'sum') {
-        chrDf$avgCount <- rowSums(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
+        chrDf$avgCount <-
+            rowSums(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
         #takes non-cvg rows and divides them by cvg
         chrDf[-seq(5, nrow(chrDf), by=5), 'avgCount'] <- 
             chrDf[-seq(5, nrow(chrDf), by=5), 'avgCount'] /
@@ -274,7 +283,8 @@ calculateDistance <- function(mmapprData) {
         chrDf[-seq(5, nrow(chrDf), by=5), 3:length(chrDf)] <- 
             chrDf[-seq(5, nrow(chrDf), by=5), 3:length(chrDf)] /
                 chrDf[rep(seq(5, nrow(chrDf), by=5), each = 4), 3:length(chrDf)]
-        chrDf$avgCount <- rowMeans(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
+        chrDf$avgCount <-
+            rowMeans(chrDf[, 3:length(chrDf), drop=FALSE], na.rm=TRUE)
     }
     return(chrDf[, c("pos", "nucleotide", 'avgCount')])
 }

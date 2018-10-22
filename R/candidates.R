@@ -39,24 +39,28 @@ generateCandidates <- function(mmapprData) {
     mmapprData@candidates <- lapply(mmapprData@peaks, .getPeakRange)
     
     #call variants in peak
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN=.getVariantsForRange, 
+    mmapprData@candidates <- lapply(mmapprData@candidates,
+                                    FUN=.getVariantsForRange, 
                                     param=mmapprData@param)
     
     #run VEP
-    mmapprData@candidates <- lapply(mmapprData@candidates, FUN=.runVEPForVariants,
+    mmapprData@candidates <- lapply(mmapprData@candidates,
+                                    FUN=.runVEPForVariants,
                                     vepFlags=mmapprData@param@vepFlags)
     
     #filter out low impact variants
     mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
     
     #density score and order variants
-    mmapprData@candidates <- lapply(names(mmapprData@candidates), function(seqname) {
-        densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
-        stopifnot(!is.null(densityFunction))
-        variants <- mmapprData@candidates[[seqname]]
-        variants <- .densityScoreAndOrderVariants(variants, densityFunction)
-        return(variants)
-    })
+    mmapprData@candidates <-
+        lapply(names(mmapprData@candidates), function(seqname) {
+            densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
+            stopifnot(!is.null(densityFunction))
+            variants <- mmapprData@candidates[[seqname]]
+            variants <-
+                .densityScoreAndOrderVariants(variants, densityFunction)
+            return(variants)
+        })
     
     #transfer names
     names(mmapprData@candidates) <- names(mmapprData@peaks)
@@ -81,7 +85,9 @@ generateCandidates <- function(mmapprData) {
     # merge files in desired region if there are multiple
     if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
     else{
-        mutBam <- mergeBam(param@mutFiles, destination="tmp.bam", region=inputRange)
+        mutBam <- mergeBam(param@mutFiles,
+                           destination="tmp.bam",
+                           region=inputRange)
     }
 
     # create param for variant calling

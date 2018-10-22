@@ -1,4 +1,5 @@
-.runFunctionInParallel <- function(inputList, functionToRun, ..., BPPARAM=NULL) {
+.runFunctionInParallel <- function(inputList, functionToRun,
+                                   ..., BPPARAM=NULL) {
     if (is.null(BPPARAM)) bpParam <- BiocParallel::bpparam()
     BiocParallel::bpprogressbar(bpParam) <- TRUE
     resultList <- BiocParallel::bplapply(inputList, functionToRun, ...,
@@ -115,7 +116,8 @@ mmappr <- function(mmapprParam) {
     .messageAndLog(paste('\nEnd time:', endTime), oF)
     runtime <- format(endTime - startTime)
     .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
-    saveRDS(mmapprData, file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
+    saveRDS(mmapprData,
+            file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
     
     .log('\nsessionInfo()', oF)
     .log(sessionInfo(), oF)
