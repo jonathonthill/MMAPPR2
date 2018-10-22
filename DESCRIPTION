@@ -14,8 +14,6 @@ Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the 
 Depends: R (>= 3.5.0)
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
-LazyLoad: yes
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr
 Suggests: testthat,
