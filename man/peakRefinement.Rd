@@ -18,7 +18,23 @@ Follows the \code{\link{prePeak}} step and precedes
 \code{\link{generateCandidates}}.
 }
 \examples{
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+    ## Ignore these lines:
+    MMAPPR2:::.insertFakeVEPintoPath()
+    genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
+
+    # Specify parameters:
+    mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+                               wtFiles = MMAPPR2data::zy13wtBam(),
+                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               species = "danio_rerio")
+}
 \dontrun{
+md <- new('MmapprData', param = mmapprParam)
+postCalcDistMD <- calculateDistance(md)
+postLoessMD <- loessFit(postCalcDistMD)
+postPrePeakMD <- prePeak(postLoessMD)
+
 postPeakRefMD <- peakRefinement(postPrePeakMD)
 }
 }
