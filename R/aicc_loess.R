@@ -45,8 +45,8 @@ loessFit <- function(mmapprData) {
 
 
 .getLoess <- function(s, pos, euc_dist, ...){
-    x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
-                   family="symmetric", ...), silent=TRUE)
+    x <- suppressWarnings(try(loess(euc_dist ~ pos, span=s, degree=1, 
+                   family="symmetric", ...), silent=TRUE))
     return(x)
 }
 
