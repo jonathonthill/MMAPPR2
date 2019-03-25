@@ -31,7 +31,10 @@
 #' }
 outputMmapprData <- function(mmapprData) {
     stopifnot(is(mmapprData, "MmapprData"))
-    oF <- outputFolder(param(mmapprData))
+    
+    if (!dir.exists(outputFolder(param(mmapprData)))) {
+        mmapprData <- .prepareOutputFolder(mmapprData)
+    }
     
     tryCatch({
         .plotGenomeDistance(mmapprData)
@@ -40,7 +43,8 @@ outputMmapprData <- function(mmapprData) {
         graphics.off()
     })
     
-    .writeCandidateTables(mmapprData@candidates, oF)  
+    .writeCandidateTables(mmapprData@candidates,
+                          outputFolder(param(mmapprData)))  
 }
 
 
