@@ -19,7 +19,7 @@ vignette: |
 # Getting Started
 
 ## Installing Dependencies
-You must first install Ensembl VEP like so:
+You'll need Ensembl VEP, which you can install like this:
 ```{bash installVEP, eval=FALSE}
 git clone https://github.com/Ensembl/ensembl-vep.git
 cd ensembl-vep
@@ -33,34 +33,47 @@ and make sure any differences are accounted for in the
 
 ## Reference Genome
 Variant calling requires a reference genome, which you can create from your reference file like this:
-```{r refGenome, eval=FALSE}
-refGenome <- gmapR::GmapGenome('correct_genome.fa', create=TRUE)
+```{r refGenome, echo=TRUE, results='hide'}
+library(MMAPPR2data, quietly = TRUE)
+
+refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
 ```
 
-**Make sure your reference genome is the same one installed by VEP, i.e., the most recent one on Ensembl! You should use this same genome in aligning your sequencing data as well.**
+For our example, we will use just the golden gene from the GRCz11 zebrafish reference genome. **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize. You should use the same genome in aligning your sequencing data as well.**
 
 # Basic Use
 
 ## Setting Parameters
-```{r hidden-hacks, echo=FALSE}
-# hide from users, allows VEPFlags to be constructed without complaining
-MMAPPR2:::.insertFakeVEPintoPath()
-gmapR::GmapGenomeDirectory(create=TRUE)
-BiocParallel::register(BiocParallel::SerialParam())
-```
-```{r param}
-library(MMAPPR2, quietly = TRUE)
-library(MMAPPR2data, quietly = TRUE)
 
-param <- MmapprParam(refGenome = gmapR::GmapGenome('GRCz11'),
-                     wtFiles = zy13wtBam(),
-                     mutFiles = zy13mutBam(),
-                     species = 'danio_rerio')
+Here we configure the VEPFlags object to use our example fasta and GTF files.
+[See below for more info.](#configure-vepflags-object)
+
+```{r param}
+BiocParallel::register(BiocParallel::SerialParam())  ## see below for explanation of BiocParallel
+library(MMAPPR2, quietly = TRUE)
+library(Rsamtools, quietly = TRUE)
+
+vepFlags <- ensemblVEP::VEPFlags(flags = list(
+    format = 'vcf',  # <-- this is necessary
+    vcf = FALSE,  # <-- as well as this
+    database = FALSE,
+    species = 'danio_rerio',
+    fasta = goldenFasta(),
+    gff = goldenGFF(),
+    filter_common = TRUE,
+    coding_only = TRUE  # assuming RNA-seq data
+))
+
+param <- MmapprParam(refGenome = gmapR::GmapGenome('slc24a5'),
+                     wtFiles = exampleWTbam(),
+                     mutFiles = exampleMutBam(),
+                     species = 'danio_rerio',
+                     vepFlags = vepFlags)
 ```
 
 ## Running MMAPPR2
 With parameters set, running the pipeline should be as simple as the following:
-```{r mmappr, eval=FALSE}
+```{r mmappr}
 mmapprData <- mmappr(param)
 ```
 
@@ -71,18 +84,7 @@ postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
 postPeakRefMD <- peakRefinement(postPrePeakMD)
-```
-```{r candidates-step, eval=FALSE}
 postCandidatesMD <- generateCandidates(postPeakRefMD)
-```
-```{r prep-for-output, echo=FALSE}
-postCandidatesMD <- postPeakRefMD
-## I don't know why data isn't being exported right and I have to do this...
-data("zy13candidates")
-postCandidatesMD@candidates <- zy13candidates # tack on from MMAPPR2data
-dir.create(outputFolder(param(postCandidatesMD)), showWarnings = FALSE)
-```
-```{r output-step}
 outputMmapprData(postCandidatesMD)
 ```
 
@@ -90,12 +92,11 @@ If the pipeline fails midway, the `MmapprData` object is saved, which you can th
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-system2('ls', outputFolder(param(postCandidatesMD)))
+system2('ls', outputFolder(param(mmapprData)))
 
-mdFile <- file.path(outputFolder(param(postCandidatesMD)), 'mmappr_data.RDS')
-```
-```{r read-md, eval=FALSE}
+mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
 md <- readRDS(mdFile)
+md
 ```
 
 
@@ -117,7 +118,7 @@ vepFlags <- VEPFlags(flags = list(
     coding_only = TRUE  # assuming RNA-seq data
     ### YOU MAY FIND THESE INTERESTING:
     # everything = TRUE  # enables many optional analyses, such as Polyphen and SIFT
-    # per_gene = TRUE  # will output only the worst variant per gene
+    # per_gene = TRUE  # will output only the most severe variant per gene
     # pick = TRUE  # will output only one consequence per variant
 ))
 ```
