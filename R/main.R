@@ -25,15 +25,14 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#'     ## Ignore these lines:
-#'     MMAPPR2:::.insertFakeVEPintoPath()
-#'     genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
+#'         Sys.which('vep') != '') {
+#'     genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
 #' 
 #'     # Specify parameters:
 #'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
-#'                                wtFiles = MMAPPR2data::zy13wtBam(),
-#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio")
 #'                                
 #'     # Run pipeline:
@@ -139,13 +138,4 @@ mmappr <- function(mmapprParam) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file=logFile, sep='\n', append=TRUE)
-}
-
-
-.insertFakeVEPintoPath <- function() {
-    unlink('/tmp/bin', recursive=TRUE)
-    dir.create('/tmp/bin')
-    file.create('/tmp/bin/vep')
-    system2('chmod', c('777', '/tmp/bin/vep'))
-    Sys.setenv('PATH'=paste(Sys.getenv('PATH'), '/tmp/bin', sep=':'))
 }

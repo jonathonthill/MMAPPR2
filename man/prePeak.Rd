@@ -18,10 +18,9 @@ Follows the \code{\link{loessFit}} step and precedes
 \code{\link{peakRefinement}}.
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-    ## Ignore these lines:
-    MMAPPR2:::.insertFakeVEPintoPath()
-    genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
+if (requireNamespace('MMAPPR2data', quietly = TRUE) &
+        Sys.which('vep') != '') {
+    genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
 
     # Specify parameters:
     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),

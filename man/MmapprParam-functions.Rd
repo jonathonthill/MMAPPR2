@@ -145,14 +145,13 @@ The desired \code{\link{MmapprParam}} attribute.
 Access and assign slots of \code{\link{MmapprParam}} object.
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-    ## Ignore these lines:
-    MMAPPR2:::.insertFakeVEPintoPath()
-    genDir <- gmapR::GmapGenomeDirectory('example', create=TRUE)
+if (requireNamespace('MMAPPR2data', quietly = TRUE) &
+        Sys.which('vep') != '') {
+    genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
     
     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
-                               wtFiles = MMAPPR2data::zy13wtBam(),
-                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               wtFiles = MMAPPR2data::exampleWTbam(),
+                               mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio")
 
     outputFolder(param) <- 'mmappr2_test_1'
