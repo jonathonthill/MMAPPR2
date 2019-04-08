@@ -9,15 +9,15 @@
 #'   of the \code{distance} slot list filled.
 #'   
 #' @examples 
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#'     ## Ignore these lines:
-#'     MMAPPR2:::.insertFakeVEPintoPath()
-#'     genDir <- gmapR::GmapGenomeDirectory('DEFAULT', create=TRUE)
-#' 
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
+#'         Sys.which('vep') != '') {
+#'     slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
+#'                                        name = 'slc24a5',
+#'                                        create = TRUE)
 #'     # Specify parameters:
-#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
-#'                                wtFiles = MMAPPR2data::zy13wtBam(),
-#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
+#'                                wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio")
 #' }
 #' \dontrun{
@@ -45,8 +45,8 @@ loessFit <- function(mmapprData) {
 
 
 .getLoess <- function(s, pos, euc_dist, ...){
-    x <- try(loess(euc_dist ~ pos, span=s, degree=1, 
-                   family="symmetric", ...), silent=TRUE)
+    x <- suppressWarnings(try(loess(euc_dist ~ pos, span=s, degree=1, 
+                   family="symmetric", ...), silent=TRUE))
     return(x)
 }
 
