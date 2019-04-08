@@ -24,10 +24,12 @@ in regions of peak distance.
 \examples{
 if (requireNamespace('MMAPPR2data', quietly = TRUE) &
         Sys.which('vep') != '') {
-    genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
+    slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
+                                       name = 'slc24a5',
+                                       create = TRUE)
 
     # Specify parameters:
-    mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+    mmapprParam <- MmapprParam(refGenome = slc24a5genome,
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio")

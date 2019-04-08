@@ -12,10 +12,11 @@
 #' @examples 
 #' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
 #'         Sys.which('vep') != '') {
-#'     genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
-#' 
+#'     slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
+#'                                        name = 'slc24a5',
+#'                                        create = TRUE)
 #'     # Specify parameters:
-#'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio")
@@ -141,8 +142,8 @@ peakRefinement <- function(mmapprData){
 #' 
 #'     # Specify parameters:
 #'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
-#'                                wtFiles = MMAPPR2data::zy13wtBam(),
-#'                                mutFiles = MMAPPR2data::zy13mutBam(),
+#'                                wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio")
 #' }
 #' \dontrun{

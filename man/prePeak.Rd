@@ -24,8 +24,8 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE) &
 
     # Specify parameters:
     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
-                               wtFiles = MMAPPR2data::zy13wtBam(),
-                               mutFiles = MMAPPR2data::zy13mutBam(),
+                               wtFiles = MMAPPR2data::exampleWTbam(),
+                               mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio")
 }
 \dontrun{
