@@ -49,7 +49,7 @@ Here we configure the VEPFlags object to use our example fasta and GTF files.
 [See below for more info.](#configure-vepflags-object)
 
 ```{r param}
-BiocParallel::register(BiocParallel::SerialParam())  ## see below for explanation of BiocParallel
+BiocParallel::register(BiocParallel::MulticoreParam())  ## see below for explanation of BiocParallel
 library(MMAPPR2, quietly = TRUE)
 library(Rsamtools, quietly = TRUE)
 
