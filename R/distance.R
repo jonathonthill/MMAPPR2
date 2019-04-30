@@ -29,7 +29,7 @@ calculateDistance <- function(mmapprData) {
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
     
     mmapprData@distance <-
-        .runFunctionInParallel(chrList, .calcDistForChr, param=mmapprData@param)
+        BiocParallel::bplapply(chrList, .calcDistForChr, param=mmapprData@param)
     
     return(mmapprData)
 }

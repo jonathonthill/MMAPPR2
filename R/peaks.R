@@ -31,7 +31,7 @@
 #' }
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <- 
-        .runFunctionInParallel(mmapprData@peaks,
+        BiocParallel::bplapply(mmapprData@peaks,
                                .peakRefinementChr,
                                mmapprData=mmapprData)
     return(mmapprData)

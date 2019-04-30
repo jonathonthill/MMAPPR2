@@ -128,7 +128,7 @@ MMAPPR2 simply uses the default `bpparam` registered. You can change this (for e
 ```{r bpparam}
 library(BiocParallel, quietly = TRUE)
 register(SerialParam())
-register(MulticoreParam())
+register(MulticoreParam(progressbar=TRUE))
 registered()
 ```
 

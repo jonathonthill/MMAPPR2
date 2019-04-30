@@ -34,8 +34,8 @@ loessFit <- function(mmapprData) {
     # each item (chr) of distance list has mutCounts, wtCounts,
     # distanceDf going in
     mmapprData@distance <- 
-        .runFunctionInParallel(mmapprData@distance,
-                               functionToRun=.loessFitForChr,
+        BiocParallel::bplapply(mmapprData@distance,
+                               FUN=.loessFitForChr,
                                loessOptResolution=loessOptResolution,
                                loessOptCutFactor=loessOptCutFactor)
     #.loessFitForChr returns list with mutCounts, wtCounts, loess, aicc
