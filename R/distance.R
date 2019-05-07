@@ -171,7 +171,8 @@ calculateDistance <- function(mmapprData) {
         GenomeInfoDb::orderSeqlevels(
             as.character(GenomeInfoDb::seqnames(chrRanges))))) {
         
-        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- chrRanges[i]
+        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <-
+            chrRanges[i]
     }
 
     
@@ -195,7 +196,7 @@ calculateDistance <- function(mmapprData) {
         y <- rbind(y, cvg)
         return(y)
     })
-    #info is matrix of ACGTcvg by position
+    #info is matrix of ACGTcvg by position  TODO: wrong
     list(pos=x[["pos"]], info=info) 
 }
 

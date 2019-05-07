@@ -198,16 +198,17 @@ outputMmapprData <- function(mmapprData) {
 
 .writeCandidateTables <- function(candList, outputFolder){
     for (seqname in names(candList)) {
-        output <-
+        listData <- 
+        output <- candList[[seqname]]@elementMetadata@listData
             data.frame(
                 "Position"=candList[[seqname]]@ranges@start, 
-                "Symbol"=candList[[seqname]]@elementMetadata@listData$SYMBOL, 
-                "Impact"=candList[[seqname]]@elementMetadata@listData$IMPACT,
-                "Consequence"=candList[[seqname]]@elementMetadata@listData$Consequence,
-                "DensityScore"=candList[[seqname]]@elementMetadata@listData$peakDensity,
-                "Allele"=candList[[seqname]]@elementMetadata@listData$Allele,
-                "AminoAcid"=candList[[seqname]]@elementMetadata@listData$Amino_acids,
-                "Feature"=candList[[seqname]]@elementMetadata@listData$Feature
+                "Symbol"=listData$SYMBOL, 
+                "Impact"=listData$IMPACT,
+                "Consequence"=listData$Consequence,
+                "DensityScore"=listData$peakDensity,
+                "Allele"=listData$Allele,
+                "AminoAcid"=listData$Amino_acids,
+                "Feature"=listData$Feature
             )
         filename <- paste0(seqname, '.tsv')
         write.table(output, file=file.path(outputFolder, filename),
