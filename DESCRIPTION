@@ -1,6 +1,6 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: c(
     person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role=c("aut")),
     person('Nathaniel', 'Jenkins', role=c('aut')),
@@ -11,7 +11,7 @@ Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the 
     a reference genome as input, identifies loci of high sequence disparity between the
     control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
     Effect Predictor, and outputs a ranked list of candidate mutations.
-Depends: R (>= 3.5.0)
+Depends: R (>= 3.6.0)
 License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 6.1.1
