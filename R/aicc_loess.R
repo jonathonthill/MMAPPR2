@@ -133,13 +133,8 @@ loessFit <- function(mmapprData) {
     n <- x$n
     traceL <- x$trace.hat
     sigma2 <- sum( x$residuals^2 ) / (n-1)
-    delta1 <- x$one.delta
-    delta2 <- x$two.delta
-    enp <- x$enp
     #return aicc value
     return(log(sigma2) + 1 + 2* (2*(traceL+1)) / (n-traceL-2))
-    #what I understand:
-    #return(n*log(sigma2) + 2*traceL + 2*traceL*(traceL + 1) / (n-traceL-1))
 }
 
 
@@ -170,8 +165,6 @@ loessFit <- function(mmapprData) {
                                       resultList$distanceDf$distance,
                                       surface = "direct"
         )
-        
-        precision <- .numDecimals(loessOptResolution)
         
         #no longer needed
         resultList$distanceDf <- NULL
