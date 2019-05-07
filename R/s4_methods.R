@@ -93,6 +93,8 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
     wtFiles <- Rsamtools::BamFileList(wtFiles)
     mutFiles <- Rsamtools::BamFileList(mutFiles)
     
+    # TODO: fasta
+    
     if (is.null(vepFlags))
         vepFlags <- ensemblVEP::VEPFlags(flags = list(
             format = 'vcf',  # <-- this is necessary
