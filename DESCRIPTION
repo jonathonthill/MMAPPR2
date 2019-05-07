@@ -42,7 +42,9 @@ Imports: ensemblVEP (>= 1.20.0),
     grDevices,
     graphics,
     stats,
-    utils
+    utils,
+    stringr,
+    data.table
 SystemRequirements: Ensembl VEP
 biocViews: RNASeq,
     PooledScreens,
