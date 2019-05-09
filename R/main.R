@@ -52,6 +52,8 @@ mmappr <- function(mmapprParam) {
     message("------------------------------------")
     message('')
     
+    # TODO: dependency check (VEP, samtools)
+    
     mmapprData <- new("MmapprData", param=mmapprParam)
     mmapprData <- .prepareOutputFolder(mmapprData)
     oF <- outputFolder(mmapprData@param)
