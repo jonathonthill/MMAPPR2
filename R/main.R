@@ -49,72 +49,55 @@ mmappr <- function(mmapprParam) {
     startTime <- Sys.time()
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
-    message("------------------------------------")
-    message('')
+    message("------------------------------------\n")
     
     # TODO: dependency check (VEP, samtools)
     
-    mmapprData <- new("MmapprData", param=mmapprParam)
-    mmapprData <- .prepareOutputFolder(mmapprData)
-    oF <- outputFolder(mmapprData@param)
+    md <- new("MmapprData", param=mmapprParam)
+    md <- .prepareOutputFolder(md)
+    oF <- outputFolder(md@param)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
-    
     .log('Parameters:', oF)
     .log(mmapprParam, oF)
     .log('', oF)
     
-    mmapprData <- tryCatch({
+    md <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
-        mmapprData <- calculateDistance(mmapprData)
-        .messageAndLog("Done", oF)
-        
+        md <- calculateDistance(md)
         .messageAndLog("Generating optimal Loess curves for each chromosome...", oF)
-        mmapprData <- loessFit(mmapprData)
-        .messageAndLog("Done", oF)
-        
+        md <- loessFit(md)
         .messageAndLog("Identifying chromosome(s) harboring linkage region...", oF)
-        mmapprData <- prePeak(mmapprData)
-        if (length(mmapprData@peaks) > 0)
+        md <- prePeak(md)
+        if (length(peaks(md)) > 0)
             .messageAndLog("Peak regions succesfully identified", oF)
-        else {
-            stop("No peak regions identified")
-        }
+        else stop("No peak regions identified")
         .messageAndLog("Refining peak characterization using SNP resampling...", oF)
-        mmapprData <- peakRefinement(mmapprData)
-        .messageAndLog("Done", oF)
-
+        md <- peakRefinement(md)
         .messageAndLog('Generating, analyzing, and ranking candidate variants...', oF)        
-        mmapprData <- generateCandidates(mmapprData)
-        .messageAndLog("Done", oF)
-        
+        md <- generateCandidates(md)
         .messageAndLog("Writing output plots and tables...", oF)
-        outputMmapprData(mmapprData)
-        .messageAndLog("Done", oF)
+        outputMmapprData(md)
         
-        mmapprData  # return for use after block
+        return(md)  # return for use after block
     }, 
     error = function(e) {
         .messageAndLog(paste('ERROR:', e$message), oF)
         .messageAndLog("MmapprData object up to the failing step is returned.", oF)
         .messageAndLog(paste0("You can also recover this object ",
-                              "from 'mmappr_data.RDS' in the '", 
-                              outputFolder(param(mmapprData)),
-                              "' output folder"), oF)
-        return(mmapprData)
+            "from 'mmappr_data.RDS' in the '", outputFolder(param(md)),
+            "' output folder"), oF)
+        return(md)
     })
     
     endTime <- Sys.time()
     .messageAndLog(paste('\nEnd time:', endTime), oF)
-    runtime <- format(endTime - startTime)
-    .messageAndLog(paste("MMAPPR2 runtime:", runtime), oF)
-    saveRDS(mmapprData,
-            file.path(mmapprData@param@outputFolder, "mmappr_data.RDS"))
-    
+    .messageAndLog(paste("MMAPPR2 runtime:", format(endTime - startTime)), oF)
+    saveRDS(md, file.path(md@param@outputFolder, "mmappr_data.RDS"))
     .log('\nsessionInfo()', oF)
     .log(sessionInfo(), oF)
     
-    return(mmapprData)
+    return(md)
 }
 
 

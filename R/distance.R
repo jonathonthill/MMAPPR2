@@ -152,7 +152,8 @@ calculateDistance <- function(mmapprData) {
         GenomeInfoDb::orderSeqlevels(
             as.character(GenomeInfoDb::seqnames(chrRanges))))) {
         
-        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <- chrRanges[i]
+        chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <-
+            chrRanges[i]
     }
     
     
