@@ -62,6 +62,8 @@ test_that("MmapprParam takes only real files; handles character or objects", {
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
+    
+    expect_true(FALSE)  # test .validFastaFile
 
 })
 

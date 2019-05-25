@@ -17,6 +17,8 @@
 #' @param vepFlags Optional \code{\link[ensemblVEP]{VEPFlags}}
 #'   object containing runtime options for Ensembl's Variant Effect Predictor.
 #'   See vignette for details.
+#' @param fasta The path to the fasta file genome, which will be referenced
+#'   in reading the BAM files.
 #' @param outputFolder Length-one character vector specifying where to save
 #'   output, including a \code{\linkS4class{MmapprData}} stored as
 #'   \code{mmappr_data.RDS}, \code{mmappr2.log}, a \code{.tsv} file
@@ -83,7 +85,7 @@
 #'                                species = "danio_rerio")
 #' }
 MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
-                        outputFolder=NULL, distancePower=4,
+                        fasta, outputFolder=NULL, distancePower=4,
                         peakIntervalWidth=0.95, minDepth=10,
                         homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
@@ -110,7 +112,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
     
     param <- new("MmapprParam", refGenome=refGenome, wtFiles=wtFiles, 
                  mutFiles=mutFiles, species=species, vepFlags=vepFlags, 
-                 distancePower=distancePower,
+                 fasta=fasta, distancePower=distancePower,
                  peakIntervalWidth=peakIntervalWidth,
                  minDepth=minDepth,
                  homozygoteCutoff=homozygoteCutoff,
@@ -140,15 +142,22 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
             return(errors)
     }
 
-    errors <- .validityErrors(.validFiles, param@wtFiles, errors)
-    errors <- .validityErrors(.validFiles, param@mutFiles, errors)
-    errors <- .validityErrors(.validVepFlags, param@vepFlags, errors)
+    errors <- .validityErrors(.validFastaFile, fasta(param), errors)
+    errors <- .validityErrors(.validBamFiles, wtFiles(param), errors)
+    errors <- .validityErrors(.validBamFiles, mutFiles(param), errors)
+    errors <- .validityErrors(.validVepFlags, vepFlags(param), errors)
 
     
     if (length(errors) == 0) TRUE else errors
 }
 
-.validFiles <- function(files) {
+.validFastaFile <- function(filepath) {
+    if (!file.exists(filepath))
+        errors <- c(errors, paste(filepath, "does not exist"))
+    if (length(errors) == 0) TRUE else errors
+}
+
+.validBamFiles <- function(files) {
     errors <- c()
     if (!is(files, 'BamFileList')) 
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
@@ -184,9 +193,11 @@ setMethod("show", "MmapprParam", function(object) {
     .customPrint(object@mutFiles, margin)
     cat("vepFlags:\n", sep="")
     .customPrint(object@vepFlags, margin)
+    cat("Reference fasta file:\n", sep="")
+    .customPrint(as.character(object@fasta), margin)
     
     cat("Other parameters:\n")
-    slotNames <- slotNames("MmapprParam")[6:length(slotNames("MmapprParam"))]
+    slotNames <- slotNames("MmapprParam")[7:length(slotNames("MmapprParam"))]
     slotNames <- c('species', slotNames)
     slotValues <- vapply(slotNames,
                          function(name) as.character(slot(object, name)),

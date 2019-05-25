@@ -68,7 +68,8 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('slc24a5'),
                      wtFiles = exampleWTbam(),
                      mutFiles = exampleMutBam(),
                      species = 'danio_rerio',
-                     vepFlags = vepFlags)
+                     vepFlags = vepFlags,
+                     fasta = goldenFasta())
 ```
 
 ## Running MMAPPR2
