@@ -75,7 +75,7 @@ calculateDistance <- function(mmapprData) {
         gc()
         
         #apply functions to mutant pool
-        applyPileupMut <- .samtoolsPileup(files = wtFiles(param), param, chrRange)
+        applyPileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
         
         tryCatch(
             mutCounts <- applyPileupMut %>%
