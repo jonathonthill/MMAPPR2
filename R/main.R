@@ -51,7 +51,7 @@ mmappr <- function(mmapprParam) {
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------\n")
     
-    # TODO: dependency check (VEP, samtools)
+    .checkDep('samtools')
     
     md <- new("MmapprData", param=mmapprParam)
     md <- .prepareOutputFolder(md)
@@ -114,4 +114,11 @@ mmappr <- function(mmapprParam) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file=logFile, sep='\n', append=TRUE)
+}
+
+
+.checkDep <- function(program) {
+    if (Sys.which(program) == '' || is.null(Sys.which(program))) {
+        stop(program + ' dependency is not installed.')
+    }
 }

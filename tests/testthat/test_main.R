@@ -95,3 +95,16 @@ test_that('log writes to default folder', {
     expect_true(file.exists('/tmp/m2/mmappr2.log'))
     unlink('/tmp/m2', recursive=TRUE)
 })
+
+test_that('checkDep finds program iff in path', {
+    tempProgramLocation <- tempdir()
+    originalPath = Sys.getenv('PATH')
+    Sys.setenv('PATH', tempProgramLocation)
+    file.create(file.path(tempProgramLocation, 'program'))
+    expect_true(.checkDep('program'))
+    expect_false(.checkDep('rubbish'))
+    Sys.setenv('PATH', 'nonexistentFolder')
+    expect_false(.checkDep('program'))
+    
+    Sys.setenv('PATH', originalPath)
+})
