@@ -24,7 +24,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempdir())
 #'                                
 #'     # Run pipeline:
 #'     mmapprData <- mmappr(mmapprParam)

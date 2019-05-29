@@ -17,7 +17,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempdir())
 #'
 #'     md <- new('MmapprData', param = mmapprParam)
 #'     postCalcDistMD <- calculateDistance(md)
