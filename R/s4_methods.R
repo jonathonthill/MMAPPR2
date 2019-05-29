@@ -273,6 +273,7 @@ setMethod("show", "MmapprData", function(object) {
 #'   mutFiles mutFiles<-
 #'   species species<-
 #'   vepFlags vepFlags<-
+#'   fasta fasta<-
 #'   homozygoteCutoff homozygoteCutoff<-
 #'   distancePower distancePower<-
 #'   peakIntervalWidth peakIntervalWidth<-
