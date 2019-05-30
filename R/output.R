@@ -18,7 +18,7 @@
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
-#'                                outputFolder = tempdir())
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)
@@ -51,6 +51,10 @@ outputMmapprData <- function(mmapprData) {
 
 .defaultOutputFolder <- function()
     paste0("mmappr2_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
+
+
+tempOutputFolder <- function()
+    file.path(tempdir(), .defaultOutputFolder())
 
             
 .prepareOutputFolder <- function(mmapprData) {

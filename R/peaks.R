@@ -20,7 +20,7 @@
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
-#'                                outputFolder = tempdir())
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)
@@ -146,7 +146,7 @@ peakRefinement <- function(mmapprData){
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
-#'                                outputFolder = tempdir())
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)

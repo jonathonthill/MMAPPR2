@@ -69,7 +69,7 @@ param <- MmapprParam(refGenome = gmapR::GmapGenome('slc24a5'),
                      mutFiles = exampleMutBam(),
                      species = 'danio_rerio',
                      vepFlags = vepFlags,
-                     outputFolder = tempdir())
+                     outputFolder = tempOutputFolder())
 ```
 
 ## Running MMAPPR2

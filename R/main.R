@@ -25,7 +25,7 @@
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
-#'                                outputFolder = tempdir())
+#'                                outputFolder = tempOutputFolder())
 #'                                
 #'     # Run pipeline:
 #'     mmapprData <- mmappr(mmapprParam)
