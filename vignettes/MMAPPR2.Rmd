@@ -20,14 +20,14 @@ vignette: |
 
 ## Installing Dependencies
 You'll need Ensembl VEP, which you can install like this:
-```{bash installVEP, eval=FALSE}
+```{r installVEP, eval=FALSE}
 git clone https://github.com/Ensembl/ensembl-vep.git
 cd ensembl-vep
 perl INSTALL.pl -a ac -s my_species
 ```
 
 This installs the most recent VEP and cache for your desired species, which is what MMAPPR2 expects by default.
-If you depart from the installation shown here, see [Ensembl's instructions](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#installer)
+If you depart from the installation shown here, or if things don't go smoothly, see [Ensembl's instructions](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#installer)
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
 
