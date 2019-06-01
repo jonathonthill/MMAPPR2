@@ -27,7 +27,7 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE) &
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio",
-                               outputFolder = tempdir())
+                               outputFolder = tempOutputFolder())
 }
 \dontrun{
 md <- new('MmapprData', param = mmapprParam)
