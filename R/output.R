@@ -17,7 +17,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)
@@ -51,6 +52,24 @@ outputMmapprData <- function(mmapprData) {
 .defaultOutputFolder <- function()
     paste0("mmappr2_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
 
+
+#' Generate temporary output folder
+#' 
+#' Conveniently creates a timestamp-named temporary directory 
+#'
+#' @return The path to the temporary directory
+#' @export
+#'
+#' @examples
+#' mmapprParam <- MmapprParam(refGenome = slc24a5genome,
+#'                            wtFiles = MMAPPR2data::exampleWTbam(),
+#'                            mutFiles = MMAPPR2data::exampleMutBam(),
+#'                            species = "danio_rerio",
+#'                            outputFolder = tempOutputFolder())
+tempOutputFolder <- function() {
+    file.path(tempdir(), .defaultOutputFolder())
+}
+
             
 .prepareOutputFolder <- function(mmapprData) {
     if (outputFolder(mmapprData@param) == 'DEFAULT')
@@ -75,7 +94,7 @@ outputMmapprData <- function(mmapprData) {
             unlink(file.path(outputFolder(param(mmapprData)), '*'))
         }
     } else {
-        dir.create(outputFolder(mmapprData@param))
+        dir.create(outputFolder(mmapprData@param), recursive=TRUE)
     }
     
     file.create(file.path(outputFolder(mmapprData@param), 'mmappr2.log'))
