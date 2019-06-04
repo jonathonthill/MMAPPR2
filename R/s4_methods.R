@@ -326,6 +326,9 @@ setMethod("species", "MmapprParam", function(obj) obj@species)
 setMethod("vepFlags", "MmapprParam", function(obj) obj@vepFlags)
 #' @rdname MmapprParam-functions
 #' @export
+setMethod("fasta", "MmapprParam", function(obj) obj@fasta)
+#' @rdname MmapprParam-functions
+#' @export
 setMethod("homozygoteCutoff", "MmapprParam", function(obj) obj@homozygoteCutoff)
 #' @rdname MmapprParam-functions
 #' @export
@@ -433,6 +436,13 @@ setMethod("mutFiles<-", "MmapprParam",
 setMethod("vepFlags<-", "MmapprParam",
           function(obj, value) {
             obj@vepFlags <- value 
+            obj
+          })
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("fasta<-", "MmapprParam",
+          function(obj, value) {
+            obj@fasta <- value 
             obj
           })
 #' @rdname MmapprParam-functions
