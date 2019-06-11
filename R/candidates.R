@@ -113,20 +113,21 @@ generateCandidates <- function(mmapprData) {
     else return(NULL)
 }
 
+.tmpPeakVcf <- function(param) file.path(outputFolder(param), 'peak.tmp.vcf')
 
 .runVEPForVariants <- function(inputVariants, param){
     vepFlags <- vepFlags(param)
     stopifnot(is(vepFlags, "VEPFlags"))
     stopifnot(is(inputVariants, 'VRanges'))
     
-    peakVcfFile <- file.path(outputFolder(param), 'peak.tmp.vcf')
+    vcf <- .tmpPeakVcf(param)
     tryCatch({
-        VariantAnnotation::writeVcf(inputVariants, peakVcfFile)
-        resultGRanges <- ensemblVEP::ensemblVEP(peakVcfFile, vepFlags)
+        VariantAnnotation::writeVcf(inputVariants, vcf)
+        resultGRanges <- ensemblVEP::ensemblVEP(vcf, vepFlags)
     }, error=function(e) {
         stop(e)
     },finally={
-        if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
+        if (file.exists(vcf)) file.remove(vcf)
     })
     
     return(resultGRanges)
