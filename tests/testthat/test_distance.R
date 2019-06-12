@@ -9,7 +9,8 @@ param <-
         'test_data/bam_files/zy14_dummy.bam',
         'test_data/bam_files/zy14_dummy.bam',
         species='danio_rerio',
-        vepFlags=vepFlags
+        vepFlags=vepFlags,
+        fasta='test_data/dummy.fasta'
     )
 mmapprData <- new("MmapprData", param = param)
 

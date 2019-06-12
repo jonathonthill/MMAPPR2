@@ -421,7 +421,7 @@ setMethod("refGenome<-", "MmapprParam",
 setMethod("wtFiles<-", "MmapprParam",
           function(obj, value) {
               obj@wtFiles <- Rsamtools::BamFileList(value)
-              v <- .validFiles(obj@wtFiles)
+              v <- .validBamFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
@@ -429,7 +429,7 @@ setMethod("wtFiles<-", "MmapprParam",
 setMethod("mutFiles<-", "MmapprParam",
           function(obj, value) {
               obj@mutFiles <- Rsamtools::BamFileList(value)
-              v <- .validFiles(obj@wtFiles)
+              v <- .validBamFiles(obj@wtFiles)
               if (typeof(v) == 'logical') obj else stop(v)
           })
 #' @rdname MmapprParam-functions
