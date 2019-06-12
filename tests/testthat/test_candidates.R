@@ -13,6 +13,7 @@ test_that("ranges for peaks are prepared", {
 
 
 test_that('.getVariantsForRange returns VRanges with sample names', {
+    skip_if_not_installed('mockery')
     mockVariantCall <- mockery::mock(
         VariantAnnotation::VRanges(
             seqnames='chr5',
@@ -80,16 +81,19 @@ test_that('.runVEPForVariants will remove temporary file if ensemblVEP fails', {
                                ranges=IRanges::IRanges(start=c(1), width=1),
                                ref=c('A')
     )
-    vepFlags <- mmapprData@param@vepFlags
+    vepFlags <- vepFlags(param(mmapprData))
+    mmapprData@param@outputFolder <- tempdir()
+    vcf <- .tmpPeakVcf(param(mmapprData))
     
+    mockery::stub(.runVEPForVariants, 'VariantAnnotation::writeVcf',
+                  function(x, filename) write.table(matrix(), vcf))
     mockery::stub(.runVEPForVariants, 'ensemblVEP::ensemblVEP',
                   function(d1, d2) stop('ensemblVEP failed'))
-    mockery::stub(.runVEPForVariants, 'VariantAnnotation::writeVcf',
-                  function(x, filename) write.table(matrix(), '/tmp/peak.vcf'))
     
-    expect_error(.runVEPForVariants(vr, vepFlags), regexp='ensemblVEP failed')
+    expect_error(.runVEPForVariants(vr, param(mmapprData)),
+                 regexp='ensemblVEP failed')
     
-    expect_false(file.exists('/tmp/peak.vcf'))
+    expect_false(file.exists(vcf))
 })
 
 

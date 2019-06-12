@@ -17,7 +17,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)
@@ -51,6 +52,31 @@ outputMmapprData <- function(mmapprData) {
 .defaultOutputFolder <- function()
     paste0("mmappr2_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
 
+
+#' Generate temporary output folder
+#' 
+#' Conveniently creates a timestamp-named temporary directory 
+#'
+#' @return The path to the temporary directory
+#' @export
+#'
+#' @examples
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
+#'         Sys.which('vep') != '') {
+#'     slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
+#'                                        name = 'slc24a5',
+#'                                        create = TRUE)
+#'     # Specify parameters:
+#'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
+#'                                wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
+#' }
+tempOutputFolder <- function() {
+    file.path(tempdir(), .defaultOutputFolder())
+}
+
             
 .prepareOutputFolder <- function(mmapprData) {
     if (outputFolder(mmapprData@param) == 'DEFAULT')
@@ -75,7 +101,7 @@ outputMmapprData <- function(mmapprData) {
             unlink(file.path(outputFolder(param(mmapprData)), '*'))
         }
     } else {
-        dir.create(outputFolder(mmapprData@param))
+        dir.create(outputFolder(mmapprData@param), recursive=TRUE)
     }
     
     file.create(file.path(outputFolder(mmapprData@param), 'mmappr2.log'))
@@ -198,8 +224,8 @@ outputMmapprData <- function(mmapprData) {
 
 .writeCandidateTables <- function(candList, outputFolder){
     for (seqname in names(candList)) {
-        listData <- 
-        output <- candList[[seqname]]@elementMetadata@listData
+        listData <- candList[[seqname]]@elementMetadata@listData
+        output <- 
             data.frame(
                 "Position"=candList[[seqname]]@ranges@start, 
                 "Symbol"=listData$SYMBOL, 

@@ -60,7 +60,8 @@ test_that('user can choose default output folder to avoid overwriting', {
 test_that('multiple candidate tables get written', {
     unlink('tmp', recursive=TRUE)
     skip_if_not_installed('mockery')
-    candList <- list(chr1=NA, chr2=NA)
+    gr <- GenomicRanges::GRanges()
+    candList <- list(chr1=gr, chr2=gr)
     candDF <- data.frame("Position" = 1,
                          "Feature" = 'del',
                          "Symbol" = 'GENE',
@@ -71,9 +72,7 @@ test_that('multiple candidate tables get written', {
                          "DensityScore" = 1234
     )
     mockery::stub(.writeCandidateTables, 'data.frame', candDF)
-    dir.create('tmp')
-    .writeCandidateTables(candList, 'tmp')
-    expect_true(file.exists('tmp/chr1.tsv'))
-    expect_true(file.exists('tmp/chr2.tsv'))
-    unlink('tmp', recursive=TRUE)
+    .writeCandidateTables(candList, tempdir())
+    expect_true(file.exists(file.path(tempdir(), 'chr1.tsv')))
+    expect_true(file.exists(file.path(tempdir(), 'chr2.tsv')))
 })

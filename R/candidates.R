@@ -22,7 +22,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmapprParam)
@@ -46,7 +47,7 @@ generateCandidates <- function(mmapprData) {
     #run VEP
     mmapprData@candidates <- lapply(mmapprData@candidates,
                                     FUN=.runVEPForVariants,
-                                    vepFlags=mmapprData@param@vepFlags)
+                                    param=mmapprData@param)
     
     #filter out low impact variants
     mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
@@ -83,10 +84,11 @@ generateCandidates <- function(mmapprData) {
 
 .getVariantsForRange <- function(inputRange, param) {
     # merge files in desired region if there are multiple
+    mergedBam <- file.path(outputFolder(param), 'merged.tmp.bam')
     if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
     else{
         mutBam <- mergeBam(param@mutFiles,
-                           destination="tmp.bam",
+                           destination=mergedBam,
                            region=inputRange)
     }
 
@@ -98,7 +100,7 @@ generateCandidates <- function(mmapprData) {
 
     resultVr <- callVariants(mutBam, tally.param=tallyParam)
 
-    if (file.exists("tmp.bam")) file.remove("tmp.bam")
+    if (file.exists(mergedBam)) file.remove(mergedBam)
 
     if (length(resultVr) > 0) {
         # need sampleNames to convert to VCF; using mutant file names
@@ -111,19 +113,21 @@ generateCandidates <- function(mmapprData) {
     else return(NULL)
 }
 
+.tmpPeakVcf <- function(param) file.path(outputFolder(param), 'peak.tmp.vcf')
 
-.runVEPForVariants <- function(inputVariants, vepFlags){
+.runVEPForVariants <- function(inputVariants, param){
+    vepFlags <- vepFlags(param)
     stopifnot(is(vepFlags, "VEPFlags"))
     stopifnot(is(inputVariants, 'VRanges'))
     
-    peakVcfFile <- "/tmp/peak.vcf"
+    vcf <- .tmpPeakVcf(param)
     tryCatch({
-        VariantAnnotation::writeVcf(inputVariants, peakVcfFile)
-        resultGRanges <- ensemblVEP::ensemblVEP(peakVcfFile, vepFlags)
+        VariantAnnotation::writeVcf(inputVariants, vcf)
+        resultGRanges <- ensemblVEP::ensemblVEP(vcf, vepFlags)
     }, error=function(e) {
         stop(e)
     },finally={
-        if (file.exists(peakVcfFile)) file.remove(peakVcfFile)
+        if (file.exists(vcf)) file.remove(vcf)
     })
     
     return(resultGRanges)

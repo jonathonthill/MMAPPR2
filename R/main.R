@@ -24,7 +24,8 @@
 #'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
 #'                                
 #'     # Run pipeline:
 #'     mmapprData <- mmappr(mmapprParam)
@@ -79,7 +80,7 @@ mmappr <- function(mmapprParam) {
         .messageAndLog("Writing output plots and tables...", oF)
         outputMmapprData(md)
         
-        return(md)  # return for use after block
+        md  # return for use after block
     }, 
     error = function(e) {
         .messageAndLog(paste('ERROR:', e$message), oF)
@@ -87,7 +88,7 @@ mmappr <- function(mmapprParam) {
         .messageAndLog(paste0("You can also recover this object ",
             "from 'mmappr_data.RDS' in the '", outputFolder(param(md)),
             "' output folder"), oF)
-        return(md)
+        md
     })
     
     endTime <- Sys.time()
