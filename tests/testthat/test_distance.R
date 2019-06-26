@@ -17,6 +17,7 @@ mmapprData <- new("MmapprData", param = param)
 # with dummy files
 test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
+    skip_if_not_in_path('samtools')
     mmapprData <- calculateDistance(mmapprData)
     expect_identical(
         mmapprData@distance,
@@ -98,6 +99,7 @@ test_that('chrM and MT are dropped and sequences are reordered', {
 
 test_that("single chromosome is read correctly", {
     skip_if_not_installed('mockery')
+    skip_if_not_in_path('samtools')
     
     inputRange <-
         GenomicRanges::GRanges('7',
@@ -165,7 +167,8 @@ test_that('.avgFiles works as expected with mean fileAggregation', {
 
 test_that("single chromosome is read correctly with replicates", {
     skip_if_not_installed('mockery')
-
+    skip_if_not_in_path('samtools')
+    
     inputRange <-
         GenomicRanges::GRanges('7',
                                IRanges::IRanges(start=1, width=999))

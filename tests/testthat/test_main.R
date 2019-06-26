@@ -5,7 +5,8 @@ param <- MmapprParam(new("GmapGenome"),
                      'test_data/bam_files/zy14_dummy.bam',
                      'test_data/bam_files/zy14_dummy.bam',
                      species='danio_rerio',
-                     vepFlags=vepFlags)
+                     vepFlags=vepFlags,
+                     fasta='test_data/dummy.fasta')
 
 
 test_that("MmapprParam has default VEPFlags when one isn't provided", {
@@ -18,7 +19,8 @@ test_that("MmapprParam has default VEPFlags when one isn't provided", {
     mp <- MmapprParam(new("GmapGenome"),
                       'test_data/bam_files/zy14_dummy.bam',
                       'test_data/bam_files/zy14_dummy.bam',
-                      species='danio_rerio')
+                      species='danio_rerio',
+                      fasta='test_data/dummy.fasta')
     expect_false(is.null(mp@vepFlags))
     expect_true(ensemblVEP::flags(vepFlags(mp))$database == FALSE)
     expect_true(ensemblVEP::flags(vepFlags(mp))$species == 'danio_rerio')
@@ -35,41 +37,48 @@ test_that("MmapprParam takes only real files; handles character or objects", {
 
     # non-existing filename shouldn't work
     expect_error(MmapprParam(new("GmapGenome"), "wt", 'mut',
-                             'danio_rerio', vepFlags))
+                             'danio_rerio', vepFlags,
+                             fasta='test_data/dummy.fasta'))
 
     # existing filename, just character, should work
     param <- MmapprParam(new("GmapGenome"), fn_wt, fn_mut,
-                         'danio_rerio', vepFlags)
+                         'danio_rerio', vepFlags,
+                         fasta='test_data/dummy.fasta')
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
     
     # character with length>1
     param <- MmapprParam(new("GmapGenome"), c(fn_wt, fn_wt), fn_mut,
-                         'danio_rerio', vepFlags)
+                         'danio_rerio', vepFlags,
+                         fasta='test_data/dummy.fasta')
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
 
     bf <- Rsamtools::BamFile(fn_mut)
-    param <- MmapprParam(new("GmapGenome"), bf, bf, 'danio_rerio', vepFlags)
+    param <- MmapprParam(new("GmapGenome"), bf, bf, 'danio_rerio', vepFlags,
+                         fasta='test_data/dummy.fasta')
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
 
     bfl <- Rsamtools::BamFileList(fn_mut)
-    param <- MmapprParam(new("GmapGenome"), bfl, bfl, 'danio_rerio', vepFlags)
+    param <- MmapprParam(new("GmapGenome"), bfl, bfl, 'danio_rerio', vepFlags,
+                         fasta='test_data/dummy.fasta')
     expect_s4_class(param, "MmapprParam")
     expect_s4_class(param@wtFiles, "BamFileList")
     expect_s4_class(param@mutFiles, "BamFileList")
     
-    expect_true(FALSE)  # test .validFastaFile
+    expect_error(MmapprParam(new("GmapGenome"), bfl, bfl, 'danio_rerio', vepFlags,
+                         fasta='fake.fasta'))
 
 })
 
 test_that('file setters for param can change format automatically', {
     fn <- 'test_data/bam_files/zy14_dummy.bam'
-    param <- MmapprParam(new("GmapGenome"), fn, fn, 'danio_rerio', vepFlags)
+    param <- MmapprParam(new("GmapGenome"), fn, fn, 'danio_rerio', vepFlags,
+                         fasta='test_data/dummy.fasta')
     
     wtFiles(param) <- c(fn, fn)
     mutFiles(param) <- c(fn, fn)
@@ -99,14 +108,18 @@ test_that('log writes to default folder', {
 })
 
 test_that('checkDep finds program iff in path', {
-    tempProgramLocation <- tempdir()
-    originalPath = Sys.getenv('PATH')
-    Sys.setenv('PATH', tempProgramLocation)
-    file.create(file.path(tempProgramLocation, 'program'))
-    expect_true(.checkDep('program'))
-    expect_false(.checkDep('rubbish'))
-    Sys.setenv('PATH', 'nonexistentFolder')
-    expect_false(.checkDep('program'))
+    tryCatch({
+        tempProgramLocation <- tempdir()
+        originalPath = Sys.getenv('PATH')
+        Sys.setenv(PATH=tempProgramLocation)
+        file.create(file.path(tempProgramLocation, 'program'))
+        Sys.chmod(file.path(tempProgramLocation, 'program'))
+        expect_true(.checkDep('program'))
+        expect_error(.checkDep('rubbish'))
+        Sys.setenv(PATH='nonexistentFolder')
+        expect_error(.checkDep('program'))
+    }, finally = {
+        Sys.setenv(PATH=originalPath)
+    })
     
-    Sys.setenv('PATH', originalPath)
 })

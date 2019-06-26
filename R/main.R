@@ -120,6 +120,8 @@ mmappr <- function(mmapprParam) {
 
 .checkDep <- function(program) {
     if (Sys.which(program) == '' || is.null(Sys.which(program))) {
-        stop(program + ' dependency is not installed.')
+        stop(paste(program, 'dependency is not installed (or at least not in path).'))
+    } else {
+        return(TRUE)
     }
 }

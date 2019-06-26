@@ -8,9 +8,10 @@
                  "--region", as.character(chrRange, ignore.strand = TRUE))
     # Run command and read results for each file
     for (file in BiocGenerics::path(files)) {
-        pile_dat <- data.table::fread(text = system2(command = "samtools",
-                                        args = paste(args, file),
-                                        stdout = TRUE))
+        pile_dat <- data.table::fread(text=system2(command = "samtools",
+                                        args=paste(args, file),
+                                        stdout=TRUE,
+                                        stderr=FALSE))
         
         # Clean extra symbols for beginning and end of reads and sub in letters
         pile_dat$V5 <- toupper(pile_dat$V5)

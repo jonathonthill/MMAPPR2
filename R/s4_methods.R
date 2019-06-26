@@ -152,6 +152,7 @@ MmapprParam <- function(refGenome, wtFiles, mutFiles, species, vepFlags=NULL,
 }
 
 .validFastaFile <- function(filepath) {
+    errors <- c()
     if (!file.exists(filepath))
         errors <- c(errors, paste(filepath, "does not exist"))
     if (length(errors) == 0) TRUE else errors
