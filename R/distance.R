@@ -54,37 +54,37 @@ calculateDistance <- function(mmapprData) {
         
         stopifnot(!is.null(chrRange))
         
-        applyPileupWT <- .samtoolsPileup(files = wtFiles(param), param, chrRange)
-        
         #apply functions to wild type pool
         #CAUTION: functions must be applied in this order to work right
-        tryCatch(
-            wtCounts <- applyPileupWT %>%
+        tryCatch({
+            pileupWT <- .samtoolsPileup(files = wtFiles(param), param, chrRange)
+            
+            wtCounts <- pileupWT %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
                 .avgFiles(fileAggregation=fileAggregation(param)) %>%
                 tidyr::spread(key='nucleotide', value='avgCount') %>%
                 #homoz filter only on wt pool
-                .homozygoteFilter(homozygoteCutoff=homozygoteCutoff(param)),
+                .homozygoteFilter(homozygoteCutoff=homozygoteCutoff(param))
             
-            error = function(e) {
+            }, error = function(e) {
                 msg <- 'Insufficient data in wild-type file(s)'
+                print(e)
                 stop(msg)
             }
         )
         colnames(wtCounts)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
-        rm(applyPileupWT)
+        rm(pileupWT)
         gc()
         
-        #apply functions to mutant pool
-        applyPileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
         
-        tryCatch(
-            mutCounts <- applyPileupMut %>%
+        tryCatch({
+            pileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
+            mutCounts <- pileupMut %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
                 .avgFiles(fileAggregation=fileAggregation(param)) %>%
-                tidyr::spread(key='nucleotide', value='avgCount'),
+                tidyr::spread(key='nucleotide', value='avgCount')
             
-            error = function(e) {
+            }, error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
                 stop(msg)
             }
@@ -92,7 +92,7 @@ calculateDistance <- function(mmapprData) {
         
         colnames(mutCounts)[2:6] <-
             c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
-        rm(applyPileupMut)
+        rm(pileupMut)
         gc()
         
         #inner_join already removes rows without a match
@@ -187,7 +187,7 @@ calculateDistance <- function(mmapprData) {
 #function takes dataframe with pos, nuc (ACGTcvg--with counts),
 #  file1, file2...returns it with files combined into one mean column
 #so output should be df with pos, nuc (ACGTcvg--with base proportions), avgCount
-.avgFiles <- function(chrDf, fileAggregation) {
+.avgFiles <- function(chrDf, fileAggregation="sum") {
     stopifnot(fileAggregation %in% c('sum', 'mean'))
     #throw away non-mean columns and return
     if (fileAggregation == 'sum') {
