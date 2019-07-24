@@ -19,7 +19,6 @@ test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
     skip_if_not_in_path('samtools')
     mmapprData <- calculateDistance(mmapprData)
-    str(mmapprData@distance)
     expect_identical(
         mmapprData@distance,
         readRDS('test_data/objects/post_calcdist_dummy_md.RDS')@distance
