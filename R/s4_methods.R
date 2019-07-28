@@ -107,7 +107,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
         ))
     
     if (is.null(refGenome))
-      refGenome <- gmapR::GmapGenome(refFasta, create=TRUE)
+      refGenome <- gmapR::GmapGenome(refFasta, name=species, create=TRUE)
     
     if (is.null(outputFolder)) outputFolder <- 'DEFAULT'
     
