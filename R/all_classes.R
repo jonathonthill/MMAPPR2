@@ -7,11 +7,12 @@
 #' @export
 setClass("MmapprParam",
          representation(
-             refGenome = "GmapGenome",
+             refFasta="character",
              wtFiles = "BamFileList",
              mutFiles = "BamFileList",
              species = "character",
              vepFlags = "VEPFlags",
+             refGenome = "GmapGenome",
              distancePower = "numeric",
              peakIntervalWidth = "numeric",
              minDepth = "numeric",

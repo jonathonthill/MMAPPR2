@@ -14,14 +14,11 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
-#'         Sys.which('vep') != '') {
-#'     slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
-#'                                        name = 'slc24a5',
-#'                                        create = TRUE)
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
+#'         & Sys.which('vep') != '') {
 #'
 #'     # Specify parameters:
-#'     mmapprParam <- MmapprParam(refGenome = slc24a5genome,
+#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
@@ -51,6 +48,8 @@ mmappr <- function(mmapprParam) {
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------\n")
+    
+    .checkDep('samtools')
     
     md <- new("MmapprData", param=mmapprParam)
     md <- .prepareOutputFolder(md)
@@ -113,4 +112,13 @@ mmappr <- function(mmapprParam) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file=logFile, sep='\n', append=TRUE)
+}
+
+
+.checkDep <- function(program) {
+    if (Sys.which(program) == '' || is.null(Sys.which(program))) {
+        stop(paste(program, 'dependency is not installed (or at least not in path).'))
+    } else {
+        return(TRUE)
+    }
 }

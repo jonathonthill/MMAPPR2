@@ -5,17 +5,19 @@ Sys.unsetenv("R_TESTS")
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 param <-
     MmapprParam(
-        new("GmapGenome"),
-        'test_data/bam_files/zy14_dummy.bam',
-        'test_data/bam_files/zy14_dummy.bam',
+        refFasta='test_data/dummy.fasta',
+        wtFiles='test_data/bam_files/zy14_dummy.bam',
+        mutFiles='test_data/bam_files/zy14_dummy.bam',
         species='danio_rerio',
-        vepFlags=vepFlags
+        vepFlags=vepFlags,
+        refGenome=new("GmapGenome")
     )
 mmapprData <- new("MmapprData", param = param)
 
 # with dummy files
 test_that("whole genome is read correctly", {
     skip_if_not_travis_or_bioc()
+    skip_if_not_in_path('samtools')
     mmapprData <- calculateDistance(mmapprData)
     expect_identical(
         mmapprData@distance,
@@ -49,19 +51,19 @@ test_that('files in BamFileList also get indexed automatically if needed', {
         stop('fail'))
     mockery::stub(calculateDistance, 'Rsamtools::indexBam',
                   function(...) write.table(matrix(), '/tmp/test.bam.bai'))
-    
+
     file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test.bam')
     file.copy('test_data/bam_files/zy14_dummy.bam', '/tmp/test2.bam')
-    
+
     expect_false(file.exists('/tmp/test.bam.bai'))
     wtFiles(mmapprData@param) <- c('/tmp/test.bam', '/tmp/test2.bam')
     mutFiles(mmapprData@param) <- '/tmp/test.bam'
     expect_error(calculateDistance(mmapprData), 'fail')
     expect_true(file.exists('/tmp/test.bam.bai'))
     expect_true(file.exists('/tmp/test2.bam.bai'))
-    
+
     unlink('/tmp/test*.bam*')
-    
+
 })
 
 
@@ -97,21 +99,22 @@ test_that('chrM and MT are dropped and sequences are reordered', {
 
 test_that("single chromosome is read correctly", {
     skip_if_not_installed('mockery')
-    
+    skip_if_not_in_path('samtools')
+
     inputRange <-
         GenomicRanges::GRanges('7',
                                IRanges::IRanges(start=1, width=999))
 
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
-    mockAP <- mockery::mock(
-        list(list(pos=1:10, # WT
-             info=matrix(infoVec, ncol=1))),
-        list(list(pos=2:11, # MUT
-             info=matrix(infoVec, ncol=1)))
+    mockPileup <- mockery::mock(
+        data.frame(pos=rep(1:10, each=5), nucleotide=c('A', 'C', 'G', 'T', 'cvg'),
+                   file1=infoVec),  # WT
+        data.frame(pos=rep(2:11, each=5), nucleotide=c('A', 'C', 'G', 'T', 'cvg'),
+                   file1=infoVec),  # MUT
     )
-    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    mockery::stub(.calcDistForChr, '.samtoolsPileup', mockPileup)
     result <- .calcDistForChr(inputRange, param=param)
-    mockery::expect_called(mockAP, 2)
+    mockery::expect_called(mockPileup, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)
@@ -164,21 +167,22 @@ test_that('.avgFiles works as expected with mean fileAggregation', {
 
 test_that("single chromosome is read correctly with replicates", {
     skip_if_not_installed('mockery')
+    skip_if_not_in_path('samtools')
 
     inputRange <-
         GenomicRanges::GRanges('7',
                                IRanges::IRanges(start=1, width=999))
 
     infoVec <- rep(c(1, 1, 1, 1, 4)*10, 10) # coverage=40
-    mockAP <- mockery::mock(
-        list(list(pos=1:10, # WT
-             info=matrix(rep(infoVec, 2), ncol=2))),
-        list(list(pos=2:11, # MUT
-             info=matrix(rep(infoVec, 3), ncol=3)))
+    mockPileup <- mockery::mock(
+        data.frame(pos=rep(1:10, each=5), nucleotide=c('A', 'C', 'G', 'T', 'cvg'),
+                   file1=infoVec),  # WT
+        data.frame(pos=rep(2:11, each=5), nucleotide=c('A', 'C', 'G', 'T', 'cvg'),
+                   file1=infoVec),  # MUT
     )
-    mockery::stub(.calcDistForChr, 'Rsamtools::applyPileups', mockAP)
+    mockery::stub(.calcDistForChr, '.samtoolsPileup', mockPileup)
     result <- .calcDistForChr(inputRange, param=param)
-    mockery::expect_called(mockAP, 2)
+    mockery::expect_called(mockPileup, 2)
     expect_true(all(
         c("wtCounts", "mutCounts", "distanceDf", "seqname") %in%
             names(result)

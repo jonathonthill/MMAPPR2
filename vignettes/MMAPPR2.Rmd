@@ -18,12 +18,17 @@ vignette: |
 
 # Getting Started
 
+## Data
+You'll need BAM file(s) for your wild-type pool, BAM file(s) for your mutant pool, and the
+reference genome for your species in fasta format.
+
 ## Installing Dependencies
-You'll need Ensembl VEP, which you can install like this:
+You'll need Ensembl VEP, which you can install like this, replacing `my_species` with
+your species (e.g., `danio_rerio`):
 ```{r installVEP, eval=FALSE}
 git clone https://github.com/Ensembl/ensembl-vep.git
 cd ensembl-vep
-perl INSTALL.pl -a ac -s my_species
+perl INSTALL.pl -a ac -s {my_species}
 ```
 
 This installs the most recent VEP and cache for your desired species, which is what MMAPPR2 expects by default.
@@ -31,45 +36,41 @@ If you depart from the installation shown here, or if things don't go smoothly, 
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
 
-## Reference Genome
-Variant calling requires a reference genome, which you can create from your reference file like this:
-```{r refGenome, echo=TRUE, results='hide'}
-library(MMAPPR2data, quietly = TRUE)
-
-refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
-```
-
-For our example, we will use just the golden gene from the GRCz11 zebrafish reference genome. **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize. You should use the same genome in aligning your sequencing data as well.**
-
 # Basic Use
 
 ## Setting Parameters
 
-Here we configure the VEPFlags object to use our example fasta and GTF files.
+For our example, we will use just the golden gene from the GRCz11 zebrafish reference genome.
+
+Here we also configure the VEPFlags object to use our example fasta and GTF files.
 [See below for more info.](#configure-vepflags-object)
+
+ **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize. You should use the same genome in aligning your sequencing data as well.**
 
 ```{r param}
 BiocParallel::register(BiocParallel::MulticoreParam())  ## see below for explanation of BiocParallel
 library(MMAPPR2, quietly = TRUE)
+library(MMAPPR2data, quietly = TRUE)
 library(Rsamtools, quietly = TRUE)
 
+# This is normally configured automatically:
 vepFlags <- ensemblVEP::VEPFlags(flags = list(
     format = 'vcf',  # <-- this is necessary
     vcf = FALSE,  # <-- as well as this
-    database = FALSE,
     species = 'danio_rerio',
-    fasta = goldenFasta(),
-    gff = goldenGFF(),
+    database = FALSE,  # <-- these three arguments allow us to run VEP offline,
+    fasta = goldenFasta(),  # <-╯|  which you probably won't need
+    gff = goldenGFF(),  # <------╯
     filter_common = TRUE,
     coding_only = TRUE  # assuming RNA-seq data
 ))
 
-param <- MmapprParam(refGenome = gmapR::GmapGenome('slc24a5'),
+param <- MmapprParam(refFasta = goldenFasta(),
                      wtFiles = exampleWTbam(),
                      mutFiles = exampleMutBam(),
                      species = 'danio_rerio',
-                     vepFlags = vepFlags,
-                     outputFolder = tempOutputFolder())
+                     vepFlags = vepFlags,  ## optional
+                     outputFolder = tempOutputFolder())  ## optional
 ```
 
 ## Running MMAPPR2
@@ -134,6 +135,14 @@ registered()
 ```
 
 The last param registered becomes the default.
+
+## Reference Genome
+The variant calling step requires a `BiocStyle::Biocpkg("gmapR")` `GmapGenome`, which is normally automatically generated from the `refFasta` parameter. If for some reason you want to generate your own, the process is like this:
+```{r refGenome, echo=TRUE, results='hide'}
+refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
+```
+
+
 
 ## Whole-genome Sequencing (WGS)
 MMAPPR2, like its predecessor, was designed for and tested using RNA-Seq data. However, the principles at work should still apply for WGS data.
