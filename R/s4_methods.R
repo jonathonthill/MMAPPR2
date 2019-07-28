@@ -296,11 +296,9 @@ setMethod("show", "MmapprData", function(object) {
 #' @seealso \code{\link{MmapprParam}}
 #' 
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
-#'         Sys.which('vep') != '') {
-#'     genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
-#'     
-#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
+#'         & Sys.which('vep') != '') {
+#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio")
@@ -377,14 +375,13 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' @seealso \code{\linkS4class{MmapprData}}
 #' 
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE) &
-#'         Sys.which('vep') != '') {
-#'     genDir <- gmapR::GmapGenomeDirectory(tempdir(), create=TRUE)
-#'     
-#'     param <- MmapprParam(refGenome = gmapR::GmapGenome("GRCz11", genDir),
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
+#'         & Sys.which('vep') != '') {
+#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'                                species = "danio_rerio",
+#'                                outputFolder = tempOutputFolder())
 #'
 #'     md <- new('MmapprData', param = param)
 #' 
