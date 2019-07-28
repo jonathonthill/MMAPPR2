@@ -13,13 +13,9 @@ The path to the temporary directory
 Conveniently creates a timestamp-named temporary directory
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE) &
-        Sys.which('vep') != '') {
-    slc24a5genome <- gmapR::GmapGenome(MMAPPR2data::goldenFasta(),
-                                       name = 'slc24a5',
-                                       create = TRUE)
-    # Specify parameters:
-    mmapprParam <- MmapprParam(refGenome = slc24a5genome,
+if (requireNamespace('MMAPPR2data', quietly=TRUE)
+        & Sys.which('vep') != '') {
+    mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio",

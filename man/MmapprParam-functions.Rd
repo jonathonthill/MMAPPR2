@@ -3,10 +3,8 @@
 \docType{methods}
 \name{MmapprParam-functions}
 \alias{MmapprParam-functions}
-\alias{fileAggregation}
-\alias{fileAggregation<-}
-\alias{refGenome}
-\alias{refGenome<-}
+\alias{refFasta}
+\alias{refFasta<-}
 \alias{wtFiles}
 \alias{wtFiles<-}
 \alias{mutFiles}
@@ -15,6 +13,8 @@
 \alias{species<-}
 \alias{vepFlags}
 \alias{vepFlags<-}
+\alias{refGenome}
+\alias{refGenome<-}
 \alias{homozygoteCutoff}
 \alias{homozygoteCutoff<-}
 \alias{distancePower}
@@ -35,11 +35,14 @@
 \alias{naCutoff<-}
 \alias{outputFolder}
 \alias{outputFolder<-}
-\alias{refGenome,MmapprParam-method}
+\alias{fileAggregation}
+\alias{fileAggregation<-}
+\alias{refFasta,MmapprParam-method}
 \alias{wtFiles,MmapprParam-method}
 \alias{mutFiles,MmapprParam-method}
 \alias{species,MmapprParam-method}
 \alias{vepFlags,MmapprParam-method}
+\alias{refGenome,MmapprParam-method}
 \alias{homozygoteCutoff,MmapprParam-method}
 \alias{distancePower,MmapprParam-method}
 \alias{peakIntervalWidth,MmapprParam-method}
@@ -51,10 +54,11 @@
 \alias{naCutoff,MmapprParam-method}
 \alias{outputFolder,MmapprParam-method}
 \alias{fileAggregation,MmapprParam-method}
-\alias{refGenome<-,MmapprParam-method}
+\alias{refFasta<-,MmapprParam-method}
 \alias{wtFiles<-,MmapprParam-method}
 \alias{mutFiles<-,MmapprParam-method}
 \alias{vepFlags<-,MmapprParam-method}
+\alias{refGenome<-,MmapprParam-method}
 \alias{species<-,MmapprParam-method}
 \alias{homozygoteCutoff<-,MmapprParam-method}
 \alias{distancePower<-,MmapprParam-method}
@@ -69,7 +73,7 @@
 \alias{fileAggregation<-,MmapprParam-method}
 \title{MmapprParam Getters and Setters}
 \usage{
-\S4method{refGenome}{MmapprParam}(obj)
+\S4method{refFasta}{MmapprParam}(obj)
 
 \S4method{wtFiles}{MmapprParam}(obj)
 
@@ -78,6 +82,8 @@
 \S4method{species}{MmapprParam}(obj)
 
 \S4method{vepFlags}{MmapprParam}(obj)
+
+\S4method{refGenome}{MmapprParam}(obj)
 
 \S4method{homozygoteCutoff}{MmapprParam}(obj)
 
@@ -101,13 +107,15 @@
 
 \S4method{fileAggregation}{MmapprParam}(obj)
 
-\S4method{refGenome}{MmapprParam}(obj) <- value
+\S4method{refFasta}{MmapprParam}(obj) <- value
 
 \S4method{wtFiles}{MmapprParam}(obj) <- value
 
 \S4method{mutFiles}{MmapprParam}(obj) <- value
 
 \S4method{vepFlags}{MmapprParam}(obj) <- value
+
+\S4method{refGenome}{MmapprParam}(obj) <- value
 
 \S4method{species}{MmapprParam}(obj) <- value
 
