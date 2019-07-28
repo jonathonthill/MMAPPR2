@@ -36,6 +36,10 @@ If you depart from the installation shown here, or if things don't go smoothly, 
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
 
+*Note:* If you have any trouble installing VEP, using
+[their Docker image](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#docker)
+may save you a lot of hassle.
+
 # Basic Use
 
 ## Setting Parameters
@@ -94,11 +98,21 @@ If the pipeline fails midway, the `MmapprData` object is saved, which you can th
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-system2('ls', outputFolder(param(mmapprData)))
+cat(paste(system2('ls', outputFolder(param(mmapprData)), stdout=TRUE)), sep = '\n')
 
 mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
 md <- readRDS(mdFile)
 md
+```
+
+## Results
+If everything goes well you should be able to track down your mutation using the `candidates` slot of your `MmapprData`
+object or by looking at files in the output folder:
+```{r results}
+head(candidates(mmapprData)$`18`, n=2)
+
+outputTsv <- file.path(outputFolder(param(mmapprData)), '18.tsv')
+cat(paste(system2('head', outputTsv, stdout = TRUE)), sep = '\n')
 ```
 
 
@@ -138,7 +152,7 @@ The last param registered becomes the default.
 
 ## Reference Genome
 The variant calling step requires a `BiocStyle::Biocpkg("gmapR")` `GmapGenome`, which is normally automatically generated from the `refFasta` parameter. If for some reason you want to generate your own, the process is like this:
-```{r refGenome, echo=TRUE, results='hide'}
+```{r refGenome, eval=FALSE}
 refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
 ```
 
