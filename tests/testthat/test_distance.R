@@ -5,12 +5,12 @@ Sys.unsetenv("R_TESTS")
 vepFlags <- readRDS('test_data/objects/vep_flags.RDS')
 param <-
     MmapprParam(
-        new("GmapGenome"),
-        'test_data/bam_files/zy14_dummy.bam',
-        'test_data/bam_files/zy14_dummy.bam',
+        refFasta='test_data/dummy.fasta',
+        wtFiles='test_data/bam_files/zy14_dummy.bam',
+        mutFiles='test_data/bam_files/zy14_dummy.bam',
         species='danio_rerio',
         vepFlags=vepFlags,
-        fasta='test_data/dummy.fasta'
+        refGenome=new("GmapGenome")
     )
 mmapprData <- new("MmapprData", param = param)
 

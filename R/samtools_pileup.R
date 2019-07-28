@@ -1,10 +1,10 @@
 .samtoolsPileup <- function(files, param, chrRange) {
     # Build command
     args <- paste("mpileup -ERI",   #Redo Baq, ignore readgroups, and skip indels
-                 "-f", param@fasta,
+                 "-f", refFasta(param),
                  "-C 50",
-                 "--min-MQ", param@minMapQuality,
-                 "--min-BQ", param@minBaseQuality,
+                 "--min-MQ", minMapQuality(param),
+                 "--min-BQ", minBaseQuality(param),
                  "--region", as.character(chrRange, ignore.strand=TRUE))
     # Run command and read results for each file
     for (file in BiocGenerics::path(files)) {
