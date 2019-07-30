@@ -152,6 +152,7 @@ The last param registered becomes the default.
 
 ## Reference Genome
 The variant calling step requires a `BiocStyle::Biocpkg("gmapR")` `GmapGenome`, which is normally automatically generated from the `refFasta` parameter. If for some reason you want to generate your own, the process is like this:
+
 ```{r refGenome, eval=FALSE}
 refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
 ```
