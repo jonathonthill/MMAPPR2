@@ -45,7 +45,7 @@ Imports: ensemblVEP (>= 1.20.0),
     utils,
     stringr,
     data.table
-SystemRequirements: Ensembl VEP
+SystemRequirements: Ensembl VEP, Samtools
 biocViews: RNASeq,
     PooledScreens,
     DNASeq,
