@@ -1,5 +1,5 @@
 #' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-#' 
+#'
 #' MMAPPR2 is designed to map the causative mutation in a forward genetics
 #' screen. It analyzes aligned sequence files, calculates the per-base
 #' Euclidean distance between the mutant and wild-type pools, performs
@@ -18,20 +18,20 @@
 #'         & Sys.which('vep') != '') {
 #'
 #'     # Specify parameters:
-#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
 #'                                outputFolder = tempOutputFolder())
-#'                                
+#'
 #'     # Run pipeline:
-#'     mmapprData <- mmappr(mmapprParam)
-#' 
+#'     mmapprData <- mmappr(mmappr_param)
+#'
 #' }
 #' \dontrun{
 #' ### Alternately, you can navigate the pipeline step by step.
 #' ### This may be helpful for debugging.
-#' md <- new('MmapprData', param = mmapprParam)
+#' md <- new('MmapprData', param = mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
@@ -39,7 +39,7 @@
 #' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' outputMmapprData(postCandidatesMD)
 #' } 
-#' 
+#'
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
 #'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
 #'   \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
@@ -48,9 +48,9 @@ mmappr <- function(mmapprParam) {
     message("------------------------------------")
     message("-------- Welcome to MMAPPR2 --------")
     message("------------------------------------\n")
-    
+
     .checkDep('samtools')
-    
+
     md <- new("MmapprData", param=mmapprParam)
     md <- .prepareOutputFolder(md)
     oF <- outputFolder(md@param)
@@ -59,7 +59,7 @@ mmappr <- function(mmapprParam) {
     .log('Parameters:', oF)
     .log(mmapprParam, oF)
     .log('', oF)
-    
+
     md <- tryCatch({
         .messageAndLog("Reading BAM files and generating Euclidean distance data...", oF)
         md <- calculateDistance(md)
@@ -72,13 +72,13 @@ mmappr <- function(mmapprParam) {
         else stop("No peak regions identified")
         .messageAndLog("Refining peak characterization using SNP resampling...", oF)
         md <- peakRefinement(md)
-        .messageAndLog('Generating, analyzing, and ranking candidate variants...', oF)        
+        .messageAndLog('Generating, analyzing, and ranking candidate variants...', oF)
         md <- generateCandidates(md)
         .messageAndLog("Writing output plots and tables...", oF)
         outputMmapprData(md)
-        
+
         md  # return for use after block
-    }, 
+    },
     error = function(e) {
         .messageAndLog(paste('ERROR:', e$message), oF)
         .messageAndLog("MmapprData object up to the failing step is returned.", oF)
@@ -87,14 +87,14 @@ mmappr <- function(mmapprParam) {
             "' output folder"), oF)
         md
     })
-    
+
     endTime <- Sys.time()
     .messageAndLog(paste('\nEnd time:', endTime), oF)
     .messageAndLog(paste("MMAPPR2 runtime:", format(endTime - startTime)), oF)
     saveRDS(md, file.path(md@param@outputFolder, "mmappr_data.RDS"))
     .log('\nsessionInfo()', oF)
     .log(sessionInfo(), oF)
-    
+
     return(md)
 }
 

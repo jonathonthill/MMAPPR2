@@ -1,5 +1,5 @@
 #' Generate potential causative mutations and consequences in peak regions
-#' 
+#'
 #' Follows the \code{\link{peakRefinement}} step and produces a
 #' \code{\linkS4class{MmapprData}} object ready for
 #' \code{\link{outputMmapprData}}.
@@ -11,43 +11,43 @@
 #'   peak chromosome containing variants and predicted consequences from
 #'   Ensembl's Variant Effect Predictor.
 #' @export
-#' 
-#' @examples 
+#'
+#' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
 #'                                outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
-#' md <- new('MmapprData', param = mmapprParam)
+#' md <- new('MmapprData', param = mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
 #' postPeakRefMD <- peakRefinement(postPrePeakMD)
-#' 
+#'
 #' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' }
 generateCandidates <- function(mmapprData) {
-    
+
     #get GRanges representation of peak
     mmapprData@candidates <- lapply(mmapprData@peaks, .getPeakRange)
-    
+
     #call variants in peak
     mmapprData@candidates <- lapply(mmapprData@candidates,
-                                    FUN=.getVariantsForRange, 
+                                    FUN=.getVariantsForRange,
                                     param=mmapprData@param)
-    
+
     #run VEP
     mmapprData@candidates <- lapply(mmapprData@candidates,
                                     FUN=.runVEPForVariants,
                                     param=mmapprData@param)
-    
+
     #filter out low impact variants
     mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
-    
+
     #density score and order variants
     mmapprData@candidates <-
         lapply(names(mmapprData@candidates), function(seqname) {
@@ -58,11 +58,11 @@ generateCandidates <- function(mmapprData) {
                 .densityScoreAndOrderVariants(variants, densityFunction)
             return(variants)
         })
-    
+
     #transfer names
     names(mmapprData@candidates) <- names(mmapprData@peaks)
-    
-    
+
+
     return(mmapprData)
 }
 
@@ -71,8 +71,8 @@ generateCandidates <- function(mmapprData) {
     ir <- IRanges::IRanges(start=as.numeric(peakList$start),
                   end=as.numeric(peakList$end),
                   names=peakList$seqname)
-    
-    gr <- GenomicRanges::GRanges(seqnames=names(ir), 
+
+    gr <- GenomicRanges::GRanges(seqnames=names(ir),
                   ranges=ir)
     return(gr)
 }
@@ -115,7 +115,7 @@ generateCandidates <- function(mmapprData) {
     vepFlags <- vepFlags(param)
     stopifnot(is(vepFlags, "VEPFlags"))
     stopifnot(is(inputVariants, 'VRanges'))
-    
+
     vcf <- .tmpPeakVcf(param)
     tryCatch({
         VariantAnnotation::writeVcf(inputVariants, vcf)
@@ -125,7 +125,7 @@ generateCandidates <- function(mmapprData) {
     },finally={
         if (file.exists(vcf)) file.remove(vcf)
     })
-    
+
     return(resultGRanges)
 }
 
@@ -140,14 +140,14 @@ generateCandidates <- function(mmapprData) {
 
 .densityScoreAndOrderVariants <- function(candidateGRanges, densityFunction) {
     #density calculation
-    positions <- BiocGenerics::start(candidateGRanges) + 
+    positions <- BiocGenerics::start(candidateGRanges) +
         ((BiocGenerics::width(candidateGRanges) - 1) / 2)
     densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
     GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
-    
+
     #re-order
     orderVec <- order(densityCol, decreasing=TRUE)
     candidateGRanges <- candidateGRanges[orderVec]
-    
+
     return(candidateGRanges)
 }

@@ -12,24 +12,24 @@
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
 #'                                outputFolder = tempOutputFolder())
 #'
-#'     md <- new('MmapprData', param = mmapprParam)
+#'     md <- new('MmapprData', param = mmappr_param)
 #'     postCalcDistMD <- calculateDistance(md)
 #' }
 calculateDistance <- function(mmapprData) {
     .indexBamFileList(wtFiles(param(mmapprData)))
     .indexBamFileList(mutFiles(param(mmapprData)))
-    
+
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
-    
+
     mmapprData@distance <-
         BiocParallel::bplapply(chrList, .calcDistForChr, param=mmapprData@param)
-    
+
     return(mmapprData)
 }
 
@@ -49,21 +49,21 @@ calculateDistance <- function(mmapprData) {
         #parameter check
         stopifnot(length(GenomeInfoDb::seqnames(chrRange)) == 1)
         stopifnot(is(param, "MmapprParam"))
-        
+
         stopifnot(!is.null(chrRange))
-        
+
         #apply functions to wild type pool
         #CAUTION: functions must be applied in this order to work right
         tryCatch({
             pileupWT <- .samtoolsPileup(files = wtFiles(param), param, chrRange)
-            
+
             wtCounts <- pileupWT %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
                 .avgFiles(fileAggregation=fileAggregation(param)) %>%
                 tidyr::spread(key='nucleotide', value='avgCount') %>%
                 #homoz filter only on wt pool
                 .homozygoteFilter(homozygoteCutoff=homozygoteCutoff(param))
-            
+
             }, error = function(e) {
                 msg <- 'Insufficient data in wild-type file(s)'
                 print(e)
@@ -73,37 +73,37 @@ calculateDistance <- function(mmapprData) {
         colnames(wtCounts)[2:6] <- c('A.wt', 'C.wt', 'cvg.wt', 'G.wt', 'T.wt')
         rm(pileupWT)
         gc()
-        
-        
+
+
         tryCatch({
             pileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
             mutCounts <- pileupMut %>%
                 .naFilter(naCutoff=naCutoff(param)) %>%
                 .avgFiles(fileAggregation=fileAggregation(param)) %>%
                 tidyr::spread(key='nucleotide', value='avgCount')
-            
+
             }, error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
                 stop(msg)
             }
         )
-        
+
         colnames(mutCounts)[2:6] <-
             c('A.mut', 'C.mut', 'cvg.mut', 'G.mut', 'T.mut')
         rm(pileupMut)
         gc()
-        
+
         #inner_join already removes rows without a match
         distanceDf <- dplyr::inner_join(wtCounts, mutCounts, by=c('pos'))
         if (length(distanceDf) == 0)
             stop('Empty dataframe after joining WT and Mut count tables')
-        
+
         #calculate Euclidian distance
         distanceDf$A.wt <- (distanceDf$A.wt - distanceDf$A.mut)^2
         distanceDf$C.wt <- (distanceDf$C.wt - distanceDf$C.mut)^2
         distanceDf$G.wt <- (distanceDf$G.wt - distanceDf$G.mut)^2
         distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
-        
+
         distanceDf <- dplyr::transmute(distanceDf,
                                        pos=distanceDf$pos,
                                        distance=
@@ -112,16 +112,16 @@ calculateDistance <- function(mmapprData) {
                                                 distanceDf$G.wt +
                                                 distanceDf$T.wt)^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
-        
+
         stopifnot(nrow(distanceDf) > 0)
-        
+
         resultList <- list(wtCounts = wtCounts, mutCounts = mutCounts,
                            distanceDf = distanceDf)
         resultList$seqname <- as.character(GenomeInfoDb::seqnames(chrRange))
-        
+
         return(resultList)
     },
-    
+
     error = function(e) {
         msg <- paste(toString(GenomeInfoDb::seqnames(chrRange)),
                      e$message,
@@ -134,7 +134,7 @@ calculateDistance <- function(mmapprData) {
 .getFileReadChrList <- function(mmapprData) {suppressWarnings({
     bams <- Rsamtools::BamFileList(c(mmapprData@param@wtFiles,
                                      mmapprData@param@mutFiles))
-    
+
     bamInfo <- Rsamtools::seqinfo(bams)
     chrRanges <- as(bamInfo, "GRanges")
     #cut to standard chromosomes
@@ -144,18 +144,18 @@ calculateDistance <- function(mmapprData) {
                                              pruning.mode='coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT',
                                              pruning.mode='coarse')
-    
+
     chrList <- list()
     # store range for each chromosome as list item
     for (i in suppressWarnings(
         GenomeInfoDb::orderSeqlevels(
             as.character(GenomeInfoDb::seqnames(chrRanges))))) {
-        
+
         chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <-
             chrRanges[i]
     }
-    
-    
+
+
     return(chrList)
 })}
 

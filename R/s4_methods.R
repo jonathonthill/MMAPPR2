@@ -78,11 +78,11 @@
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                          wtFiles = MMAPPR2data::exampleWTbam(),
-#'                          mutFiles = MMAPPR2data::exampleMutBam(),
-#'                          species = "danio_rerio",
-#'                          outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'                                 wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 species = "danio_rerio",
+#'                                 outputFolder = tempOutputFolder())
 #' }
 MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
                         refGenome=NULL, outputFolder=NULL, distancePower=4,
@@ -298,14 +298,14 @@ setMethod("show", "MmapprData", function(object) {
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                          wtFiles = MMAPPR2data::exampleWTbam(),
 #'                          mutFiles = MMAPPR2data::exampleMutBam(),
 #'                          species = "danio_rerio")
 #'
-#'     outputFolder(param) <- 'mmappr2_test_1'
-#'     minBaseQuality(param) <- 25
-#'     vepFlags(param)
+#'     outputFolder(mmappr_param) <- 'mmappr2_test_1'
+#'     minBaseQuality(mmappr_param) <- 25
+#'     vepFlags(mmappr_param)
 #' }
 
 NULL
@@ -377,13 +377,13 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                species = "danio_rerio",
 #'                                outputFolder = tempOutputFolder())
 #'
-#'     md <- new('MmapprData', param = param)
+#'     md <- new('MmapprData', param = mmappr_param)
 #'
 #'     param(md)
 #'     distance(md)
