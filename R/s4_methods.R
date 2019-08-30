@@ -78,23 +78,23 @@
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'                          wtFiles = MMAPPR2data::exampleWTbam(),
+#'                          mutFiles = MMAPPR2data::exampleMutBam(),
+#'                          species = "danio_rerio",
+#'                          outputFolder = tempOutputFolder())
 #' }
 MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
                         refGenome=NULL, outputFolder=NULL, distancePower=4,
                         peakIntervalWidth=0.95, minDepth=10,
                         homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
-                        loessOptCutFactor=0.1, naCutoff=0, 
+                        loessOptCutFactor=0.1, naCutoff=0,
                         fileAggregation=c('sum', 'mean')) {
-    
+
     wtFiles <- Rsamtools::BamFileList(wtFiles)
     mutFiles <- Rsamtools::BamFileList(mutFiles)
-    
+
     if (is.null(vepFlags))
         vepFlags <- ensemblVEP::VEPFlags(flags = list(
             format = 'vcf',  # <-- this is necessary
@@ -105,25 +105,25 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
             filter_common = TRUE,
             coding_only = TRUE  # assuming RNA-seq data
         ))
-    
+
     if (is.null(refGenome))
       refGenome <- gmapR::GmapGenome(refFasta, name=species, create=TRUE)
-    
+
     if (is.null(outputFolder)) outputFolder <- 'DEFAULT'
-    
-    param <- new("MmapprParam", refFasta=refFasta, wtFiles=wtFiles, 
-                 mutFiles=mutFiles, species=species, vepFlags=vepFlags, 
+
+    param <- new("MmapprParam", refFasta=refFasta, wtFiles=wtFiles,
+                 mutFiles=mutFiles, species=species, vepFlags=vepFlags,
                  refGenome=refGenome, distancePower=distancePower,
                  peakIntervalWidth=peakIntervalWidth,
                  minDepth=minDepth,
                  homozygoteCutoff=homozygoteCutoff,
-                 minBaseQuality=minBaseQuality, 
+                 minBaseQuality=minBaseQuality,
                  minMapQuality=minMapQuality,
                  loessOptResolution=loessOptResolution,
-                 loessOptCutFactor=loessOptCutFactor, naCutoff=naCutoff, 
+                 loessOptCutFactor=loessOptCutFactor, naCutoff=naCutoff,
                  outputFolder=outputFolder,
                  fileAggregation=match.arg(fileAggregation))
-    
+
     validity <- .validMmapprParam(param)
     if (typeof(validity) == "logical") param
     else stop(paste(validity, collapse='\n  '))
@@ -134,7 +134,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
 
 .validMmapprParam <- function(param) {
     errors <- character()
-    
+
     .validityErrors <- function(fxn, value, errors) {
         result <- fxn(value)
         if (typeof(result) != 'logical')
@@ -148,7 +148,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
     errors <- .validityErrors(.validBamFiles, mutFiles(param), errors)
     errors <- .validityErrors(.validVepFlags, vepFlags(param), errors)
 
-    
+
     if (length(errors) == 0) TRUE else errors
 }
 
@@ -161,7 +161,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
 
 .validBamFiles <- function(files) {
     errors <- c()
-    if (!is(files, 'BamFileList')) 
+    if (!is(files, 'BamFileList'))
         errors <- c(errors, paste0(files, " is not a BamFileList object"))
     for (i in seq_along(files)) {
         file <- files[[i]]
@@ -179,7 +179,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
     if (vepFormat != 'vcf'){
         return(paste0("VEPFlags format flag must be 'vcf'\n",
                       "  e.g., flags(vepFlags)$format <- 'vcf'"))
-    } 
+    }
     return(TRUE)
 }
 
@@ -197,7 +197,7 @@ setMethod("show", "MmapprParam", function(object) {
     .customPrint(object@vepFlags, margin)
     cat("refGenome:\n")
     .customPrint(object@refGenome, margin)
-    
+
     cat("Other parameters:\n")
     slotNames <- slotNames("MmapprParam")[7:length(slotNames("MmapprParam"))]
     slotNames <- c('species', slotNames)
@@ -214,12 +214,12 @@ setMethod("show", "MmapprData", function(object) {
     cat("MmapprData object with following slots:\n")
     cat("param:\n")
     .customPrint(object@param, margin)
-    
+
     cat("distance:\n")
     classes <- vapply(object@distance, class, character(1))
     successes <- classes == "list"
     cat(margin, sprintf(
-        "Contains Euclidian distance data for %i sequence(s)\n", 
+        "Contains Euclidian distance data for %i sequence(s)\n",
         sum(successes)), sep="")
     loessFits <- 0
     try({loessFits <- sum(vapply(object@distance[successes],
@@ -235,9 +235,9 @@ setMethod("show", "MmapprData", function(object) {
         "and Loess regression data for %i of those\n", loessFits
     ), sep="")
     distanceSize <- object.size(object@distance)
-    cat(margin, sprintf("Memory usage = %.0f MB\n", 
+    cat(margin, sprintf("Memory usage = %.0f MB\n",
                         distanceSize/1000000), sep="")
-    
+
     cat("peaks:\n")
     for (peak in object@peaks){
         cat(margin, sprintf('%s: ', peak$seqname), sep='')
@@ -248,7 +248,7 @@ setMethod("show", "MmapprData", function(object) {
         if (!is.null(peak$densityFunction))
             cat(margin, margin, "Density function calculated\n", sep="")
     }
-    
+
     cat("candidates:\n")
     for (i in seq_along(object@candidates))
         .customPrint(object@candidates[i], margin, lineMax=5)
@@ -265,9 +265,9 @@ setMethod("show", "MmapprData", function(object) {
 
 ### GETTERS
 #' MmapprParam Getters and Setters
-#' 
+#'
 #' Access and assign slots of \code{\link{MmapprParam}} object.
-#' 
+#'
 #' @name MmapprParam-functions
 #' @aliases
 #'   refFasta refFasta<-
@@ -290,18 +290,18 @@ setMethod("show", "MmapprData", function(object) {
 #'
 #' @param obj Desired \code{\link{MmapprParam}} object.
 #' @param value Value to replace desired attribute.
-#' 
+#'
 #' @return The desired \code{\link{MmapprParam}} attribute.
-#'   
+#'
 #' @seealso \code{\link{MmapprParam}}
-#' 
+#'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
-#'     mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio")
+#'     param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+#'                          wtFiles = MMAPPR2data::exampleWTbam(),
+#'                          mutFiles = MMAPPR2data::exampleMutBam(),
+#'                          species = "danio_rerio")
 #'
 #'     outputFolder(param) <- 'mmappr2_test_1'
 #'     minBaseQuality(param) <- 25
@@ -363,17 +363,17 @@ setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
 setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 
 #' MmapprData Getters
-#' 
+#'
 #' Access slots of \code{\linkS4class{MmapprData}} object.
-#' 
+#'
 #' @param obj Desired \code{\linkS4class{MmapprData}} object.
-#' 
+#'
 #' @return Desired attribute.
-#' 
+#'
 #' @name MmapprData-getters
 #' @aliases param distance peaks candidates
 #' @seealso \code{\linkS4class{MmapprData}}
-#' 
+#'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & Sys.which('vep') != '') {
@@ -384,7 +384,7 @@ setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
 #'                                outputFolder = tempOutputFolder())
 #'
 #'     md <- new('MmapprData', param = param)
-#' 
+#'
 #'     param(md)
 #'     distance(md)
 #'     peaks(md)
@@ -412,7 +412,7 @@ setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 #' @export
 setMethod("refFasta<-", "MmapprParam",
           function(obj, value) {
-            obj@refFasta <- value 
+            obj@refFasta <- value
             obj
           })
 #' @rdname MmapprParam-functions
@@ -435,97 +435,97 @@ setMethod("mutFiles<-", "MmapprParam",
 #' @export
 setMethod("vepFlags<-", "MmapprParam",
           function(obj, value) {
-            obj@vepFlags <- value 
+            obj@vepFlags <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("refGenome<-", "MmapprParam",
           function(obj, value) {
-            obj@refGenome <- value 
+            obj@refGenome <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("species<-", "MmapprParam",
           function(obj, value) {
-            obj@species <- value 
+            obj@species <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("homozygoteCutoff<-", "MmapprParam",
           function(obj, value) {
-            obj@homozygoteCutoff <- value 
+            obj@homozygoteCutoff <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("distancePower<-", "MmapprParam",
           function(obj, value) {
-            obj@distancePower <- value 
+            obj@distancePower <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("peakIntervalWidth<-", "MmapprParam",
           function(obj, value) {
-            obj@peakIntervalWidth <- value 
+            obj@peakIntervalWidth <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("minDepth<-", "MmapprParam",
           function(obj, value) {
-            obj@minDepth <- value 
+            obj@minDepth <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("minBaseQuality<-", "MmapprParam",
           function(obj, value) {
-            obj@minBaseQuality <- value 
+            obj@minBaseQuality <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("loessOptResolution<-", "MmapprParam",
           function(obj, value) {
-            obj@loessOptResolution <- value 
+            obj@loessOptResolution <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("loessOptCutFactor<-", "MmapprParam",
           function(obj, value) {
-            obj@loessOptCutFactor <- value 
+            obj@loessOptCutFactor <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("naCutoff<-", "MmapprParam",
           function(obj, value) {
-            obj@naCutoff <- value 
+            obj@naCutoff <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("outputFolder<-", "MmapprParam",
           function(obj, value) {
-            obj@outputFolder <- value 
+            obj@outputFolder <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("minMapQuality<-", "MmapprParam",
           function(obj, value) {
-            obj@minMapQuality <- value 
+            obj@minMapQuality <- value
             obj
           })
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("fileAggregation<-", "MmapprParam",
           function(obj, value) {
-            obj@fileAggregation <- value 
+            obj@fileAggregation <- value
             obj
           })
