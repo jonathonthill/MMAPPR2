@@ -155,14 +155,14 @@ Access and assign slots of \code{\link{MmapprParam}} object.
 \examples{
 if (requireNamespace('MMAPPR2data', quietly=TRUE)
         & Sys.which('vep') != '') {
-    mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-                               wtFiles = MMAPPR2data::exampleWTbam(),
-                               mutFiles = MMAPPR2data::exampleMutBam(),
-                               species = "danio_rerio")
+    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+                         wtFiles = MMAPPR2data::exampleWTbam(),
+                         mutFiles = MMAPPR2data::exampleMutBam(),
+                         species = "danio_rerio")
 
-    outputFolder(param) <- 'mmappr2_test_1'
-    minBaseQuality(param) <- 25
-    vepFlags(param)
+    outputFolder(mmappr_param) <- 'mmappr2_test_1'
+    minBaseQuality(mmappr_param) <- 25
+    vepFlags(mmappr_param)
 }
 }
 \seealso{

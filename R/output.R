@@ -32,12 +32,13 @@ outputMmapprData <- function(mmapprData) {
     if (!dir.exists(outputFolder(param(mmapprData)))) {
         mmapprData <- .prepareOutputFolder(mmapprData)
     }
-
+    current_devs = dev.list()    # get open graphcis devices to help cleanup
     tryCatch({
         .plotGenomeDistance(mmapprData)
         .plotPeaks(mmapprData)
-    }, finally={
-        graphics.off()
+    }, finally = {
+        opened_devs <- dev.list()[!(dev.list() %in% current_devs)]
+        if (length(opened_devs) > 0) dev.off(opened_devs)
     })
 
     .writeCandidateTables(mmapprData@candidates,

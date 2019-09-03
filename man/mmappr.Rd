@@ -26,20 +26,20 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE)
         & Sys.which('vep') != '') {
 
     # Specify parameters:
-    mmapprParam <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio",
                                outputFolder = tempOutputFolder())
-                               
+
     # Run pipeline:
-    mmapprData <- mmappr(mmapprParam)
+    mmapprData <- mmappr(mmappr_param)
 
 }
 \dontrun{
 ### Alternately, you can navigate the pipeline step by step.
 ### This may be helpful for debugging.
-md <- new('MmapprData', param = mmapprParam)
+md <- new('MmapprData', param = mmappr_param)
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)

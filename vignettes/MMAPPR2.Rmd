@@ -31,7 +31,7 @@ cd ensembl-vep
 perl INSTALL.pl -a ac -s {my_species}
 ```
 
-This installs the most recent VEP and cache for your desired species, which is what MMAPPR2 expects by default.
+This installs the most recent VEP and allows you to create a cache for your desired species, which is what MMAPPR2 expects by default.
 If you depart from the installation shown here, or if things don't go smoothly, see [Ensembl's instructions](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#installer)
 and make sure any differences are accounted for in the
 [`VEPFlags`](#configure-vepflags-object) object.
@@ -39,6 +39,12 @@ and make sure any differences are accounted for in the
 *Note:* If you have any trouble installing VEP, using
 [their Docker image](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#docker)
 may save you a lot of hassle.
+
+*Note:* We have found that R sometimes has issues finding VEP, especially when perlbrew is used. If you encounter errors at the path to your perl installation to the .Rprofile file. For example:
+
+```{bash, eval = FALSE}
+echo 'Sys.setenv(PATH=paste("/Path/to/Perlbrew", Sys.getenv("PATH"), sep=":"))' >> ~/.Rprofile
+```
 
 # Basic Use
 

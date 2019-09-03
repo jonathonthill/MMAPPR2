@@ -33,13 +33,13 @@ Access slots of \code{\linkS4class{MmapprData}} object.
 \examples{
 if (requireNamespace('MMAPPR2data', quietly=TRUE)
         & Sys.which('vep') != '') {
-    param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
+    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
                                species = "danio_rerio",
                                outputFolder = tempOutputFolder())
 
-    md <- new('MmapprData', param = param)
+    md <- new('MmapprData', param = mmappr_param)
 
     param(md)
     distance(md)
