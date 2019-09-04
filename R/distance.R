@@ -99,18 +99,18 @@ calculateDistance <- function(mmapprData) {
             stop('Empty dataframe after joining WT and Mut count tables')
 
         #calculate Euclidian distance
-        distanceDf$A.wt <- (distanceDf$A.wt - distanceDf$A.mut)^2
-        distanceDf$C.wt <- (distanceDf$C.wt - distanceDf$C.mut)^2
-        distanceDf$G.wt <- (distanceDf$G.wt - distanceDf$G.mut)^2
-        distanceDf$T.wt <- (distanceDf$T.wt - distanceDf$T.mut)^2
+        distanceDf$A <- (distanceDf$A.wt - distanceDf$A.mut)^2
+        distanceDf$C <- (distanceDf$C.wt - distanceDf$C.mut)^2
+        distanceDf$G <- (distanceDf$G.wt - distanceDf$G.mut)^2
+        distanceDf$T <- (distanceDf$T.wt - distanceDf$T.mut)^2
 
         distanceDf <- dplyr::transmute(distanceDf,
                                        pos=distanceDf$pos,
                                        distance=
-                                           (distanceDf$A.wt +
-                                                distanceDf$C.wt +
-                                                distanceDf$G.wt +
-                                                distanceDf$T.wt)^(1/2))
+                                           (distanceDf$A +
+                                                distanceDf$C +
+                                                distanceDf$G +
+                                                distanceDf$T)^(1/2))
         distanceDf$distance <- distanceDf$distance ^ param@distancePower
 
         stopifnot(nrow(distanceDf) > 0)

@@ -16,15 +16,49 @@ vignette: |
   %\VignetteEncoding{UTF-8}  
 ---
 
+```{bash, echo = FALSE}
+# Cooking show code to account for cases when samtools is not installed
+echo '#!/bin/bash' > /tmp/samtools
+chmod 755 /tmp/samtools
+```
+
+```{r, echo = FALSE}
+dataDir <- system.file('extdata', package = 'MMAPPR2data')
+WTpileupFile <- file.path(dataDir, 'exwt.plp')
+MTpileupFile <- file.path(dataDir, 'exmut.plp')
+samtoolsScript <- file('/tmp/samtools', "a")
+writeLines(c(
+  'if [[ ${@:$#} == *"wt.bam"* ]];',
+  'then',
+  paste('cat', WTpileupFile),
+  'else',
+  paste('cat', MTpileupFile),
+  'fi'
+  ), samtoolsScript)
+close(samtoolsScript)
+
+origPath <- Sys.getenv('PATH')
+Sys.setenv(PATH = paste(origPath, '/tmp', sep = ':')) 
+```
+
+
 # Getting Started
 
 ## Data
 You'll need BAM file(s) for your wild-type pool, BAM file(s) for your mutant pool, and the
-reference genome for your species in fasta format.
+reference genome for your species in fasta format. We recommend that each pool contain at least 
+20 individuals to ensure a good number of recombinations to measure.
 
 ## Installing Dependencies
+MMAPPR2 depends on two system tools to function: Samtools and VEP. Both must be installed and in the PATH to be found by the appropriate functions. 
+
+### Installing Samtools
+Instructions to install samtools can be found at https://github.com/samtools/samtools and installation instructions are in the INSTALL file included with samtools. 
+
+### Installing VEP
 You'll need Ensembl VEP, which you can install like this, replacing `my_species` with
 your species (e.g., `danio_rerio`):
+
 ```{r installVEP, eval=FALSE}
 git clone https://github.com/Ensembl/ensembl-vep.git
 cd ensembl-vep
@@ -42,8 +76,8 @@ may save you a lot of hassle.
 
 *Note:* We have found that R sometimes has issues finding VEP, especially when perlbrew is used. If you encounter errors at the path to your perl installation to the .Rprofile file. For example:
 
-```{bash, eval = FALSE}
-echo 'Sys.setenv(PATH=paste("/Path/to/Perlbrew", Sys.getenv("PATH"), sep=":"))' >> ~/.Rprofile
+```{r, eval = FALSE}
+Sys.setenv(PATH=paste("/Path/to/Perlbrew", Sys.getenv("PATH"), sep=":"))
 ```
 
 # Basic Use
@@ -91,7 +125,7 @@ mmapprData <- mmappr(param)
 
 The MMAPPR2 pipeline can also be run a step at a time:
 ```{r mmappr-steps}
-md <- new('MmapprData', param=param) ## calculateDistance() takes a MmapprData object
+md <- new('MmapprData', param = param) ## calculateDistance() takes a MmapprData object
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
@@ -104,7 +138,7 @@ If the pipeline fails midway, the `MmapprData` object is saved, which you can th
 and use for inspection and debugging:
 ```{r recover-md}
 ## Contents of output folder:
-cat(paste(system2('ls', outputFolder(param(mmapprData)), stdout=TRUE)), sep = '\n')
+cat(paste(system2('ls', outputFolder(param(mmapprData)), stdout = TRUE)), sep = '\n')
 
 mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
 md <- readRDS(mdFile)
@@ -173,4 +207,8 @@ MMAPPR2, like its predecessor, was designed for and tested using RNA-Seq data. H
 # Session Info
 ```{r sessionInfo}
 sessionInfo()
+```
+
+```{r, echo = FALSE}
+Sys.setenv(PATH=origPath)
 ```
