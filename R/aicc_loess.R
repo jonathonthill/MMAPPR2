@@ -8,9 +8,9 @@
 #' @return A \code{\linkS4class{MmapprData}} object with the \code{$loess} element
 #'   of the \code{distance} slot list filled.
 #'
-#' @examples 
+#' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
-#'         & Sys.which('vep') != '') {
+#'         & all(Sys.which(c("samtools", "vep")) != "")) {
 #'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                 wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),

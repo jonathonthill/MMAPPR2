@@ -11,7 +11,7 @@
 #'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
-#'         & Sys.which('vep') != '') {
+#'         & all(Sys.which(c("samtools", "vep")) != "") {
 #'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                mutFiles = MMAPPR2data::exampleMutBam(),
@@ -21,6 +21,7 @@
 #'     md <- new('MmapprData', param = mmappr_param)
 #'     postCalcDistMD <- calculateDistance(md)
 #' }
+
 calculateDistance <- function(mmapprData) {
     .indexBamFileList(wtFiles(param(mmapprData)))
     .indexBamFileList(mutFiles(param(mmapprData)))
@@ -28,7 +29,7 @@ calculateDistance <- function(mmapprData) {
     chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
 
     mmapprData@distance <-
-        BiocParallel::bplapply(chrList, .calcDistForChr, param=mmapprData@param)
+        BiocParallel::bplapply(chrList, .calcDistForChr, param = mmapprData@param)
 
     return(mmapprData)
 }
@@ -58,9 +59,9 @@ calculateDistance <- function(mmapprData) {
             pileupWT <- .samtoolsPileup(files = wtFiles(param), param, chrRange)
 
             wtCounts <- pileupWT %>%
-                .naFilter(naCutoff=naCutoff(param)) %>%
-                .avgFiles(fileAggregation=fileAggregation(param)) %>%
-                tidyr::spread(key='nucleotide', value='avgCount') %>%
+                .naFilter(naCutoff = naCutoff(param)) %>%
+                .avgFiles(fileAggregation = fileAggregation(param)) %>%
+                tidyr::spread(key = 'nucleotide', value = 'avgCount') %>%
                 #homoz filter only on wt pool
                 .homozygoteFilter(homozygoteCutoff=homozygoteCutoff(param))
 
@@ -78,9 +79,9 @@ calculateDistance <- function(mmapprData) {
         tryCatch({
             pileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
             mutCounts <- pileupMut %>%
-                .naFilter(naCutoff=naCutoff(param)) %>%
-                .avgFiles(fileAggregation=fileAggregation(param)) %>%
-                tidyr::spread(key='nucleotide', value='avgCount')
+                .naFilter(naCutoff = naCutoff(param)) %>%
+                .avgFiles(fileAggregation = fileAggregation(param)) %>%
+                tidyr::spread(key = 'nucleotide', value = 'avgCount')
 
             }, error = function(e) {
                 msg <- 'Insufficient data in mutant file(s)'
@@ -105,8 +106,8 @@ calculateDistance <- function(mmapprData) {
         distanceDf$T <- (distanceDf$T.wt - distanceDf$T.mut)^2
 
         distanceDf <- dplyr::transmute(distanceDf,
-                                       pos=distanceDf$pos,
-                                       distance=
+                                       pos = distanceDf$pos,
+                                       distance =
                                            (distanceDf$A +
                                                 distanceDf$C +
                                                 distanceDf$G +
@@ -125,7 +126,7 @@ calculateDistance <- function(mmapprData) {
     error = function(e) {
         msg <- paste(toString(GenomeInfoDb::seqnames(chrRange)),
                      e$message,
-                     sep=': ')
+                     sep = ': ')
         return(msg)
     }
     )
@@ -139,11 +140,11 @@ calculateDistance <- function(mmapprData) {
     chrRanges <- as(bamInfo, "GRanges")
     #cut to standard chromosomes
     chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges,
-                                                       pruning.mode='coarse')
+                                                       pruning.mode = 'coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM',
-                                             pruning.mode='coarse')
+                                             pruning.mode = 'coarse')
     chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT',
-                                             pruning.mode='coarse')
+                                             pruning.mode = 'coarse')
 
     chrList <- list()
     # store range for each chromosome as list item
