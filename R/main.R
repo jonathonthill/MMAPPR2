@@ -15,7 +15,7 @@
 #'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & Sys.which('vep') != '') {
+#'         & all(Sys.which(c('vep', 'samtools')) != '')) {
 #'
 #'     # Specify parameters:
 #'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
@@ -38,7 +38,7 @@
 #' postPeakRefMD <- peakRefinement(postPrePeakMD)
 #' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' outputMmapprData(postCandidatesMD)
-#' } 
+#' }
 #'
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
 #'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
