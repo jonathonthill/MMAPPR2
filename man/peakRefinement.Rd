@@ -19,7 +19,7 @@ Follows the \code{\link{prePeak}} step and precedes
 }
 \examples{
 if (requireNamespace('MMAPPR2data', quietly=TRUE)
-        & Sys.which('vep') != '') {
+        & all(Sys.which(c("samtools", "vep")) != "")) {
     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
                                wtFiles = MMAPPR2data::exampleWTbam(),
                                mutFiles = MMAPPR2data::exampleMutBam(),
