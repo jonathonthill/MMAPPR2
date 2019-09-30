@@ -16,7 +16,7 @@ mmapprData <- new("MmapprData", param = param)
 
 # with dummy files
 test_that("whole genome is read correctly", {
-    skip_if_not_travis_or_bioc()
+    #skip_if_not_travis_or_bioc()
     skip_if_not_in_path('samtools')
     mmapprData <- calculateDistance(mmapprData)
     expect_identical(
