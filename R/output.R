@@ -32,17 +32,21 @@ outputMmapprData <- function(mmapprData) {
     if (!dir.exists(outputFolder(param(mmapprData)))) {
         mmapprData <- .prepareOutputFolder(mmapprData)
     }
-    current_devs = dev.list()    # get open graphcis devices to help cleanup
-    tryCatch({
+    current_devs = dev.list() # get open graphcis devices to help cleanup
+    if (length(distance((mmapprData))) > 0) {
+      tryCatch({
         .plotGenomeDistance(mmapprData)
         .plotPeaks(mmapprData)
-    }, finally = {
+      }, finally = {
         opened_devs <- dev.list()[!(dev.list() %in% current_devs)]
         if (length(opened_devs) > 0) dev.off(opened_devs)
-    })
-
-    .writeCandidateTables(mmapprData@candidates,
-                          outputFolder(param(mmapprData)))
+      })
+    }
+    
+    if (length(candidates(mmapprData)) > 0) {
+      .writeCandidateTables(mmapprData@candidates,
+                            outputFolder(param(mmapprData)))
+    }
 }
 
 
@@ -71,13 +75,10 @@ tempOutputFolder <- function() {
 }
 
 
-.prepareOutputFolder <- function(mmapprData) {
-    if (outputFolder(mmapprData@param) == 'DEFAULT')
-        outputFolder(mmapprData@param) <- .defaultOutputFolder()
-
-    if(dir.exists(outputFolder(mmapprData@param))){
+.prepareOutputFolder <- function(outputFolder) {
+    if(dir.exists(outputFolder)){
         message(sprintf("Output folder %s has already been created",
-                        outputFolder(param(mmapprData))))
+                        outputFolder))
         answer <- " "
         while(answer != "y" & answer != "n"){
             answer <- readline(
@@ -87,19 +88,19 @@ tempOutputFolder <- function() {
             newOutputFolder <-
                 readline("Please enter name for new output folder or press enter for default: ")
             if (is.na(newOutputFolder))
-                outputFolder(mmapprData@param) <- .defaultOutputFolder()
-            else outputFolder(mmapprData@param) <- newOutputFolder
-            dir.create(outputFolder(mmapprData@param))
+                outputFolder <- .defaultOutputFolder()
+            else outputFolder <- newOutputFolder
+            dir.create(outputFolder)
         } else {
-            unlink(file.path(outputFolder(param(mmapprData)), '*'))
+            unlink(file.path(outputFolder, '*'))
         }
     } else {
-        dir.create(outputFolder(mmapprData@param), recursive=TRUE)
+        dir.create(outputFolder, recursive=TRUE)
     }
 
-    file.create(file.path(outputFolder(mmapprData@param), 'mmappr2.log'))
+    file.create(file.path(outputFolder, 'mmappr2.log'))
 
-    return(mmapprData)
+    return(outputFolder)
 }
 
 
@@ -131,6 +132,7 @@ tempOutputFolder <- function() {
         pdf(file.path(mmapprData@param@outputFolder, "genome_plots.pdf"),
             width=11, height=8.5)
     par(mfrow=c(2,1))
+    
     plot(x = plotDf$pos, y = plotDf$fitted, type='l',
          ylim=c(min(plotDf$fitted, na.rm=TRUE),
                 1.1*max(plotDf$fitted, na.rm=TRUE)),
@@ -140,7 +142,7 @@ tempOutputFolder <- function() {
     abline(v=(breaks[seq_len(length(breaks))-1]+2), col="grey")
     mtext(unique(gsub("chr", "", plotDf$seqname[!is.na(plotDf$seqname)])),
           at = labelpos, side=1, cex=.6)
-
+    
     plot(x = plotDf$pos, y = plotDf$unfitted, pch=16, cex=.8, col="#999999AA",
          ylim=c(min(plotDf$unfitted, na.rm=TRUE),
                 1.1*max(plotDf$unfitted, na.rm=TRUE)),
@@ -185,30 +187,34 @@ tempOutputFolder <- function() {
         polygon(shadeX/1000000, shadeY, col='#2ecc71', border=NA)
 
         # overlay density curve
-        posMatch <- (densityData$x >= chrLoess$x[1]) &
+        if (length(densityData) > 0) {
+          posMatch <- (densityData$x >= chrLoess$x[1]) &
             densityData$x <= chrLoess$x[length(chrLoess$x)]
-        densityData$x <- densityData$x[posMatch]
-        densityData$y <- densityData$y[posMatch]
-        par(new=TRUE)
-        plot(densityData, type='l',
-             ylim=c(min(densityData$y, na.rm=TRUE),
-                    1.1*max(densityData$y, na.rm=TRUE)),
-             xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
-             ann=FALSE, xaxs='i',
-             xaxt='n', yaxt='n', col='#502ecc')
-        axis(side=4, col='#502ecc')
-        mtext(side=4, line=2, 'Probability', col='#502ecc')
-        legend('topright',
-               legend=c("Fitted Distance Curve",
-                        "Peak Resampling Distribution"),
-               col=c("black", "#502ecc"), lty=c(1, 1), cex=0.8, lwd=3)
+          densityData$x <- densityData$x[posMatch]
+          densityData$y <- densityData$y[posMatch]
+          par(new=TRUE)
+          plot(densityData, type='l',
+               ylim=c(min(densityData$y, na.rm=TRUE),
+                      1.1*max(densityData$y, na.rm=TRUE)),
+               xlim=c(chrLoess$x[1], tail(chrLoess$x, n=1)),
+               ann=FALSE, xaxs='i',
+               xaxt='n', yaxt='n', col='#502ecc')
+          axis(side=4, col='#502ecc')
+          mtext(side=4, line=2, 'Probability', col='#502ecc')
+          legend('topright',
+                 legend=c("Fitted Distance Curve",
+                          "Peak Resampling Distribution"),
+                 col=c("black", "#502ecc"), lty=c(1, 1), cex=0.8, lwd=3)
+        }
 
         # SNPs plot
-        plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
-             ylim=c(min(chrLoess$y, na.rm=TRUE),
-                    1.1*max(chrLoess$y, na.rm=TRUE)),
-             ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)),
-             xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
+        if (length(chrLoess) > 0) {
+          plot(chrLoess$x/1000000, chrLoess$y, pch=16, cex=.6,
+               ylim=c(min(chrLoess$y, na.rm=TRUE),
+                      1.1*max(chrLoess$y, na.rm=TRUE)),
+               ylab=substitute("ED"^p, list(p=mmapprData@param@distancePower)),
+               xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
+        }
     }
 
     dev.off()
@@ -218,19 +224,9 @@ tempOutputFolder <- function() {
 .writeCandidateTables <- function(candList, outputFolder){
     for (seqname in names(candList)) {
         listData <- candList[[seqname]]@elementMetadata@listData
-        output <-
-            data.frame(
-                "Position"=candList[[seqname]]@ranges@start,
-                "Symbol"=listData$SYMBOL,
-                "Impact"=listData$IMPACT,
-                "Consequence"=listData$Consequence,
-                "DensityScore"=listData$peakDensity,
-                "Allele"=listData$Allele,
-                "AminoAcid"=listData$Amino_acids,
-                "Feature"=listData$Feature
-            )
         filename <- paste0(seqname, '.tsv')
-        write.table(output, file=file.path(outputFolder, filename),
-                    sep='\t', row.names=FALSE, quote=FALSE)
+        write.table(as.data.frame(listData), 
+                    file=file.path(outputFolder, filename), 
+                    sep='\t', quote=FALSE, row.names=TRUE)
     }
 }

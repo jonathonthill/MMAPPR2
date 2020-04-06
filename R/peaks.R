@@ -35,11 +35,11 @@ peakRefinement <- function(mmapprData){
 }
 
 .getSubsampleLoessMax <- function(rawData, loessSpan) {
-    tempData <- rawData[sample(seq_len(nrow(rawData)), size=nrow(rawData)/2),]
+    tempData <- rawData[sample(seq_len(nrow(rawData)), size=nrow(rawData)*.5),]
     tempData <- tempData[order(tempData$pos),]
     loessData <- suppressWarnings(
         loess(euclideanDistance~pos, data=tempData,
-              span=loessSpan, family=c("symmetric")))
+              span=loessSpan, family=c("symmetric"), cell = 0.01))
     return(loessData$x[which.max(loessData$fitted)])
 }
 
@@ -112,9 +112,9 @@ peakRefinement <- function(mmapprData){
 }
 
 
-.medianForChr <- function(chr) {
+.meanForChr <- function(chr) {
     tryCatch({
-        return(median(chr$loess$fitted))
+        return(mean(chr$loess$fitted))
     }, error=function(e) {
         return(NA)
     })
@@ -155,10 +155,10 @@ prePeak <- function(mmapprData) {
     combinedStDev <- vapply(mmapprData@distance, .stDevForChr, numeric(1))
     combinedStDev <- sum(combinedStDev)^(1/2)
 
-    distanceMedian <- vapply(mmapprData@distance, .medianForChr, numeric(1))
-    # median of list of chr medians
-    distanceMedian <- median(distanceMedian, na.rm=TRUE)
-    cutoff <- 3*combinedStDev + distanceMedian
+    distancemean <- vapply(mmapprData@distance, .meanForChr, numeric(1))
+    # mean of list of chr means
+    distancemean <- mean(distancemean, na.rm=TRUE)
+    cutoff <- 3*combinedStDev + distancemean
 
     #get which peaks have values above cutoff, initialize them in mmapprData
     for(i in seq_along(mmapprData@distance)){

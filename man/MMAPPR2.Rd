@@ -3,7 +3,6 @@
 \docType{package}
 \name{MMAPPR2}
 \alias{MMAPPR2}
-\alias{MMAPPR2-package}
 \title{Mutation Mapping Analysis Pipeline for Pooled RNA-seq}
 \description{
 The main functionality of this package is described in the \code{\link{mmappr}}

@@ -9,6 +9,7 @@
 NULL
 
 #' @import methods
+#' @import data.table
 #' @importFrom magrittr %>%
 #' @importFrom graphics abline mtext par plot polygon axis legend
 #' @importFrom grDevices dev.off dev.list pdf rgb graphics.off

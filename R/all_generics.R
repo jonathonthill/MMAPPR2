@@ -15,6 +15,7 @@ setGeneric("loessOptCutFactor", function(obj) standardGeneric("loessOptCutFactor
 setGeneric("naCutoff", function(obj) standardGeneric("naCutoff"))
 setGeneric("outputFolder", function(obj) standardGeneric("outputFolder"))
 setGeneric("fileAggregation", function(obj) standardGeneric("fileAggregation"))
+setGeneric("vep_impact", function(obj) standardGeneric("vep_impact"))
 
 setGeneric("refFasta<-",function(obj,value) standardGeneric("refFasta<-"))
 setGeneric("wtFiles<-",function(obj,value) standardGeneric("wtFiles<-"))
@@ -33,6 +34,7 @@ setGeneric("loessOptCutFactor<-",function(obj,value) standardGeneric("loessOptCu
 setGeneric("naCutoff<-",function(obj,value) standardGeneric("naCutoff<-"))
 setGeneric("outputFolder<-",function(obj,value) standardGeneric("outputFolder<-"))
 setGeneric("fileAggregation<-",function(obj,value) standardGeneric("fileAggregation<-"))
+setGeneric("vep_impact<-",function(obj,value) standardGeneric("vep_impact<-"))
 
 setGeneric("param", function(obj) standardGeneric("param"))
 setGeneric("distance", function(obj) standardGeneric("distance"))

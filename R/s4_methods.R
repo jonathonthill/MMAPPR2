@@ -71,6 +71,9 @@
 #'   base call proportions as well as read depths, rather than the absolute count,
 #'   are averaged across files, which is useful when you want to weight each
 #'   replicate evenly without regards to differing depth.
+#' @param vep_impact A number from 1 to 4 designating the mutation impact ratings  
+#'   to be included. 1 = Hight, 2 = High and Moderate, 3 = High, Moderate, and 
+#'   Low, and 4 = High, Moderate, Low, and Modifier.
 #'
 #' @return A \code{MmapprParam} object.
 #' @export
@@ -84,26 +87,58 @@
 #'                                 species = "danio_rerio",
 #'                                 outputFolder = tempOutputFolder())
 #' }
-MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
+MmapprParam <- function(refFasta, gtf, wtFiles, mutFiles, species, 
                         refGenome=NULL, outputFolder=NULL, distancePower=4,
-                        peakIntervalWidth=0.95, minDepth=10,
+                        peakIntervalWidth=0.95, minDepth=20,
                         homozygoteCutoff=0.95, minBaseQuality=20,
                         minMapQuality=30, loessOptResolution=0.001,
                         loessOptCutFactor=0.1, naCutoff=0,
-                        fileAggregation=c('sum', 'mean')) {
-
+                        fileAggregation=c('simple', 'weighted'), vepFlags=NULL,
+                        vep_impact = 2) {
+    
+    refFasta <- normalizePath(refFasta)
+    gtf <- normalizePath(gtf)
+    wtFiles <- normalizePath(wtFiles)
+    mutFiles <- normalizePath(mutFiles)
+    stopifnot(file.exists(refFasta), 
+              file.exists(gtf), 
+              file.exists(wtFiles), 
+              file.exists(mutFiles))
+    
     wtFiles <- Rsamtools::BamFileList(wtFiles)
     mutFiles <- Rsamtools::BamFileList(mutFiles)
-
+    
+    if (outputFolder == 'DEFAULT')
+      outputFolder <- .defaultOutputFolder()
+    outputFolder <- .prepareOutputFolder(outputFolder)
+    
+    # Need to prep gtf file if no index present
+    if (!file.exists(paste0(gtf, ".tbi"))) {
+      if (grepl(".gz$", gtf)) {
+        system2("gunzip", gtf)
+        gtf <- gsub(".gz$", "", gtf)
+      } 
+      system(paste0("grep -v '#' ", gtf, 
+                    " | sort -k1,1 -k4,4n -k5,5n -t '\t'",
+                    "| bgzip -c > ", gtf, ".bgz"))
+      gtf <- paste0(gtf, ".bgz") 
+      index = Rsamtools::indexTabix(paste0(gtf, ".bgz"), 
+                                    seq = 1, start = 4, end = 5, comment = "#")
+    } else {
+      .messageAndLog("Found GTF index, skipping index step.", outputFolder)
+    }
+    
     if (is.null(vepFlags))
         vepFlags <- ensemblVEP::VEPFlags(flags = list(
             format = 'vcf',  # <-- this is necessary
             vcf = FALSE,  # <-- as well as this
             species = species,
-            database = FALSE,
-            cache = TRUE,
-            filter_common = TRUE,
-            coding_only = TRUE  # assuming RNA-seq data
+            gtf = gtf,
+            pick = TRUE,
+            coding_only = TRUE,  # assuming RNA-seq data
+            no_stats = TRUE,
+            fasta = refFasta,
+            fork = bpnworkers(bpparam())
         ))
 
     if (is.null(refGenome))
@@ -111,7 +146,7 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
 
     if (is.null(outputFolder)) outputFolder <- 'DEFAULT'
 
-    param <- new("MmapprParam", refFasta=refFasta, wtFiles=wtFiles,
+    param <- new("MmapprParam", refFasta=refFasta, gtf = gtf, wtFiles=wtFiles,
                  mutFiles=mutFiles, species=species, vepFlags=vepFlags,
                  refGenome=refGenome, distancePower=distancePower,
                  peakIntervalWidth=peakIntervalWidth,
@@ -122,11 +157,16 @@ MmapprParam <- function(refFasta, wtFiles, mutFiles, species, vepFlags=NULL,
                  loessOptResolution=loessOptResolution,
                  loessOptCutFactor=loessOptCutFactor, naCutoff=naCutoff,
                  outputFolder=outputFolder,
-                 fileAggregation=match.arg(fileAggregation))
+                 fileAggregation=match.arg(fileAggregation),
+                 vep_impact = vep_impact)
 
     validity <- .validMmapprParam(param)
-    if (typeof(validity) == "logical") param
-    else stop(paste(validity, collapse='\n  '))
+    if (typeof(validity) == "logical") {
+      return(param)
+    }
+    else {
+      stop(paste(validity, collapse='\n  '))
+    }
 }
 
 
@@ -189,6 +229,8 @@ setMethod("show", "MmapprParam", function(object) {
     cat("MmapprParam object with following values:\n")
     cat("Reference fasta file:\n", sep="")
     cat(paste0(margin, object@refFasta, '\n'))
+    cat("GTF file:\n", sep="")
+    cat(paste0(margin, object@gtf, '\n'))
     cat("wtFiles:\n", sep="")
     .customPrint(object@wtFiles, margin)
     cat("mutFiles:\n", sep="")
@@ -280,6 +322,7 @@ setMethod("show", "MmapprData", function(object) {
 #'   distancePower distancePower<-
 #'   peakIntervalWidth peakIntervalWidth<-
 #'   minDepth minDepth<-
+#'   maxSNPs maxSNPs<-
 #'   minBaseQuality minBaseQuality<-
 #'   minMapQuality minMapQuality<-
 #'   loessOptResolution loessOptResolution<-
@@ -361,6 +404,9 @@ setMethod("outputFolder", "MmapprParam", function(obj) obj@outputFolder)
 #' @rdname MmapprParam-functions
 #' @export
 setMethod("fileAggregation", "MmapprParam", function(obj) obj@fileAggregation)
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("vep_impact", "MmapprParam", function(obj) obj@vep_impact)
 
 #' MmapprData Getters
 #'
@@ -527,5 +573,12 @@ setMethod("minMapQuality<-", "MmapprParam",
 setMethod("fileAggregation<-", "MmapprParam",
           function(obj, value) {
             obj@fileAggregation <- value
+            obj
+          })
+#' @rdname MmapprParam-functions
+#' @export
+setMethod("vep_impact<-", "MmapprParam",
+          function(obj, value) {
+            obj@vep_impact <- value
             obj
           })

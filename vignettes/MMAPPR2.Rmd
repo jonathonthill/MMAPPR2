@@ -89,32 +89,19 @@ For our example, we will use just the golden gene from the GRCz11 zebrafish refe
 Here we also configure the VEPFlags object to use our example fasta and GTF files.
 [See below for more info.](#configure-vepflags-object)
 
- **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize. You should use the same genome in aligning your sequencing data as well.**
+ **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize it. You should use the same genome in aligning your sequencing data as well.**
 
 ```{r param}
 BiocParallel::register(BiocParallel::MulticoreParam())  ## see below for explanation of BiocParallel
 library(MMAPPR2, quietly = TRUE)
 library(MMAPPR2data, quietly = TRUE)
-library(Rsamtools, quietly = TRUE)
-
-# This is normally configured automatically:
-vepFlags <- ensemblVEP::VEPFlags(flags = list(
-    format = 'vcf',  # <-- this is necessary
-    vcf = FALSE,  # <-- as well as this
-    species = 'danio_rerio',
-    database = FALSE,  # <-- these three arguments allow us to run VEP offline,
-    fasta = goldenFasta(),  # <-╯|  which you probably won't need
-    gff = goldenGFF(),  # <------╯
-    filter_common = TRUE,
-    coding_only = TRUE  # assuming RNA-seq data
-))
 
 param <- MmapprParam(refFasta = goldenFasta(),
                      wtFiles = exampleWTbam(),
                      mutFiles = exampleMutBam(),
                      species = 'danio_rerio',
-                     vepFlags = vepFlags,  ## optional
-                     outputFolder = tempOutputFolder())  ## optional
+                     outputFolder = tempOutputFolder(),
+                     minDepth = 10)  ## optional
 ```
 
 ## Running MMAPPR2
@@ -170,7 +157,7 @@ vepFlags <- VEPFlags(flags = list(
     species = 'danio_rerio',
     database = FALSE,
     cache = TRUE,
-    filter_common = TRUE,
+    filter_common = FALSE,
     coding_only = TRUE  # assuming RNA-seq data
     ### YOU MAY FIND THESE INTERESTING:
     # everything = TRUE  # enables many optional analyses, such as Polyphen and SIFT

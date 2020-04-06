@@ -8,11 +8,12 @@
 setClass("MmapprParam",
          representation(
              refFasta="character",
+             gtf = "character",
              wtFiles = "BamFileList",
              mutFiles = "BamFileList",
-             species = "character",
              vepFlags = "VEPFlags",
              refGenome = "GmapGenome",
+             species = "character",
              distancePower = "numeric",
              peakIntervalWidth = "numeric",
              minDepth = "numeric",
@@ -23,7 +24,8 @@ setClass("MmapprParam",
              loessOptCutFactor = "numeric",
              naCutoff = "numeric",
              outputFolder = "character",
-             fileAggregation ='character'
+             fileAggregation = "character",
+             vep_impact = "numeric"
          )
 )
 

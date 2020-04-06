@@ -44,10 +44,17 @@ generateCandidates <- function(mmapprData) {
     mmapprData@candidates <- lapply(mmapprData@candidates,
                                     FUN=.runVEPForVariants,
                                     param=mmapprData@param)
+    
+    #add Nonsense-mediated decay candidates
+    # mmapprData$candidates <- lapply(mmapprData@candidates,
+    #                                 FUN=.addNMD,
+    #                                 param=mmapprData@param)
 
     #filter out low impact variants
-    mmapprData@candidates <- lapply(mmapprData@candidates, .filterVariants)
-
+    mmapprData@candidates <- lapply(mmapprData@candidates, 
+                                    FUN=.filterVariants, 
+                                    impact = vep_impact(mmapprData@param))
+    
     #density score and order variants
     mmapprData@candidates <-
         lapply(names(mmapprData@candidates), function(seqname) {
@@ -95,9 +102,9 @@ generateCandidates <- function(mmapprData) {
     )
 
     resultVr <- callVariants(mutBam, tally.param=tallyParam)
-
+    resultVr <- resultVr[altDepth(resultVr)/totalDepth(resultVr) > 0.8]
     if (file.exists(mergedBam)) file.remove(mergedBam)
-
+    
     if (length(resultVr) > 0) {
         # need sampleNames to convert to VCF; using mutant file names
         Biobase::sampleNames(resultVr) <-
@@ -123,17 +130,22 @@ generateCandidates <- function(mmapprData) {
     }, error=function(e) {
         stop(e)
     },finally={
-        if (file.exists(vcf)) file.remove(vcf)
+       # if (file.exists(vcf)) file.remove(vcf)
     })
 
     return(resultGRanges)
 }
 
+# .addNMD <- function(candidateGRanges, param) {
+#     counts = Rsubread::featureCounts()
+# }
 
-.filterVariants <- function(candidateGRanges) {
+.filterVariants <- function(candidateGRanges, impact) {
+    impact_levels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
     filter <-
-        GenomicRanges::mcols(candidateGRanges)$IMPACT != 'LOW'
+        GenomicRanges::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
     filter[is.na(filter)] <- TRUE
+    print(sum(filter))
     return(candidateGRanges[filter])
 }
 
@@ -146,8 +158,11 @@ generateCandidates <- function(mmapprData) {
     GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
 
     #re-order
-    orderVec <- order(densityCol, decreasing=TRUE)
+    impact_levels <- c("MODIFIER", "LOW", "MODERATE", "HIGH")
+    orderVec <- order(match(candidateGRanges$IMPACT, impact_levels), 
+                      densityCol, decreasing=TRUE)
     candidateGRanges <- candidateGRanges[orderVec]
 
     return(candidateGRanges)
 }
+

@@ -43,7 +43,7 @@ loessFit <- function(mmapprData) {
 
 .getLoess <- function(s, pos, euc_dist, ...){
     x <- suppressWarnings(try(loess(euc_dist ~ pos, span=s, degree=1,
-                   family="symmetric", ...), silent=TRUE))
+                   family="symmetric", cell = .01), silent=TRUE))
     return(x)
 }
 
@@ -66,7 +66,7 @@ loessFit <- function(mmapprData) {
 #define needed functions
 .aiccOpt <- function(distanceDf, spans, resolution, cutFactor) {
     aiccValues <- vapply(spans, .aicc, FUN.VALUE=numeric(1),
-                         euc_dist=distanceDf$distance, pos=distanceDf$pos)
+                         euc_dist=distanceDf$DISTANCE, pos=distanceDf$POS)
     if (length(spans) != length(aiccValues))
         stop("AICc values and spans don't match")
     aiccDf <- data.frame(spans, aiccValues)
@@ -158,9 +158,8 @@ loessFit <- function(mmapprData) {
             digits = .numDecimals(loessOptResolution)
         )
         bestSpan <- mean(bestSpan, na.rm = TRUE)
-        resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$pos,
-                                      resultList$distanceDf$distance,
-                                      surface = "direct"
+        resultList$loess <- .getLoess(bestSpan, resultList$distanceDf$POS,
+                                      resultList$distanceDf$DISTANCE
         )
 
         #no longer needed
