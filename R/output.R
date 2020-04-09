@@ -47,6 +47,7 @@ outputMmapprData <- function(mmapprData) {
       .writeCandidateTables(mmapprData@candidates,
                             outputFolder(param(mmapprData)))
     }
+    return()
 }
 
 
@@ -216,17 +217,18 @@ tempOutputFolder <- function() {
                xlab=paste(seqname,"Base Position (MB)"), xaxs='i' )
         }
     }
-
     dev.off()
 }
 
 
 .writeCandidateTables <- function(candList, outputFolder){
-    for (seqname in names(candList)) {
-        listData <- candList[[seqname]]@elementMetadata@listData
-        filename <- paste0(seqname, '.tsv')
-        write.table(as.data.frame(listData), 
-                    file=file.path(outputFolder, filename), 
-                    sep='\t', quote=FALSE, row.names=TRUE)
+  lapply(seq_along(candList), function(x, candList){
+    for (seqname in names(candList[[x]])) {
+      listData <- candList[[x]][[seqname]]
+      filename <- paste0(seqname, names(candList[x]), '.tsv')
+      write.table(as.data.frame(listData), 
+                  file=file.path(outputFolder, filename), 
+                  sep='\t', quote=FALSE, row.names=FALSE)
     }
+  }, candList)
 }

@@ -138,6 +138,7 @@ MmapprParam <- function(refFasta, gtf, wtFiles, mutFiles, species,
             coding_only = TRUE,  # assuming RNA-seq data
             no_stats = TRUE,
             fasta = refFasta,
+            database = FALSE,
             fork = bpnworkers(bpparam())
         ))
 

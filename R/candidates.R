@@ -30,139 +30,177 @@
 #'
 #' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' }
+
 generateCandidates <- function(mmapprData) {
-
-    #get GRanges representation of peak
-    mmapprData@candidates <- lapply(mmapprData@peaks, .getPeakRange)
-
-    #call variants in peak
-    mmapprData@candidates <- lapply(mmapprData@candidates,
-                                    FUN=.getVariantsForRange,
-                                    param=mmapprData@param)
-
-    #run VEP
-    mmapprData@candidates <- lapply(mmapprData@candidates,
-                                    FUN=.runVEPForVariants,
-                                    param=mmapprData@param)
-    
-    #add Nonsense-mediated decay candidates
-    # mmapprData$candidates <- lapply(mmapprData@candidates,
-    #                                 FUN=.addNMD,
-    #                                 param=mmapprData@param)
-
-    #filter out low impact variants
-    mmapprData@candidates <- lapply(mmapprData@candidates, 
-                                    FUN=.filterVariants, 
-                                    impact = vep_impact(mmapprData@param))
-    
-    #density score and order variants
-    mmapprData@candidates <-
-        lapply(names(mmapprData@candidates), function(seqname) {
-            densityFunction <- mmapprData@peaks[[seqname]]$densityFunction
-            stopifnot(!is.null(densityFunction))
-            variants <- mmapprData@candidates[[seqname]]
-            variants <-
-                .densityScoreAndOrderVariants(variants, densityFunction)
-            return(variants)
-        })
-
-    #transfer names
-    names(mmapprData@candidates) <- names(mmapprData@peaks)
-
-
-    return(mmapprData)
+  
+  #get GRanges representation of peak
+  peakGRanges <- lapply(mmapprData@peaks, .getPeakRange)
+  
+  #call variants in peak
+  mmapprData@candidates$snps <- lapply(peakGRanges,
+                                       FUN=.getVariantsForRange,
+                                       param=mmapprData@param)
+  
+  #run VEP
+  mmapprData@candidates$effects <- lapply(mmapprData@candidates$snps,
+                                          FUN=.runVEPForVariants,
+                                          param=mmapprData@param)
+  
+  #filter out low impact effects
+  mmapprData@candidates$effects <- lapply(mmapprData@candidates$effects, 
+                                          FUN=.filterVariants, 
+                                          impact = mmapprData@param@vep_impact)
+  
+  #add diff expressed genes
+  mmapprData@candidates$diff <- lapply(peakGRanges,
+                                       FUN=.addDiff,
+                                       param=mmapprData@param)
+  
+  #density score and order variants
+  mmapprData@candidates <- lapply(mmapprData@candidates,
+                                  FUN=.scoreVariants,
+                                  mmapprData@peaks)
+  
+  return(mmapprData)
 }
 
 
 .getPeakRange <- function(peakList) {
-    ir <- IRanges::IRanges(start=as.numeric(peakList$start),
-                  end=as.numeric(peakList$end),
-                  names=peakList$seqname)
-
-    gr <- GenomicRanges::GRanges(seqnames=names(ir),
-                  ranges=ir)
-    return(gr)
+  ir <- IRanges::IRanges(start=as.numeric(peakList$start),
+                         end=as.numeric(peakList$end),
+                         names=peakList$seqname)
+  
+  gr <- GenomicRanges::GRanges(seqnames=names(ir),
+                               ranges=ir)
+  return(gr)
 }
 
 
 .getVariantsForRange <- function(inputRange, param) {
-    # merge files in desired region if there are multiple
-    mergedBam <- file.path(outputFolder(param), 'merged.tmp.bam')
-    if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
-    else{
-        mutBam <- mergeBam(param@mutFiles,
-                           destination=mergedBam,
-                           region=inputRange)
-    }
-
-    # create param for variant calling
-    tallyParam <- TallyVariantsParam(genome=param@refGenome,
-                                     which=inputRange,
-                                     indels=TRUE
-    )
-
-    resultVr <- callVariants(mutBam, tally.param=tallyParam)
-    resultVr <- resultVr[altDepth(resultVr)/totalDepth(resultVr) > 0.8]
-    if (file.exists(mergedBam)) file.remove(mergedBam)
-    
-    if (length(resultVr) > 0) {
-        # need sampleNames to convert to VCF; using mutant file names
-        Biobase::sampleNames(resultVr) <-
-            paste0(names(param@mutFiles),
-                   collapse = " -- ")
-        S4Vectors::mcols(resultVr) <- NULL
-        return(resultVr)
-    }
-    else return(NULL)
+  # merge files in desired region if there are multiple
+  mergedBam <- file.path(outputFolder(param), 'merged.tmp.bam')
+  if (length(param@mutFiles) < 2) mutBam <- param@mutFiles[[1]]
+  else{
+    mutBam <- mergeBam(param@mutFiles,
+                       destination=mergedBam,
+                       region=inputRange)
+  }
+  
+  # create param for variant calling
+  tallyParam <- TallyVariantsParam(genome=param@refGenome,
+                                   which=inputRange,
+                                   indels=TRUE
+  )
+  
+  resultVr <- callVariants(mutBam, tally.param=tallyParam)
+  resultVr <- resultVr[altDepth(resultVr)/totalDepth(resultVr) > 0.8]
+  if (file.exists(mergedBam)) file.remove(mergedBam)
+  
+  if (length(resultVr) > 0) {
+    # need sampleNames to convert to VCF; using mutant file names
+    Biobase::sampleNames(resultVr) <-
+      paste0(names(param@mutFiles),
+             collapse = " -- ")
+    S4Vectors::mcols(resultVr) <- NULL
+    return(resultVr)
+  }
+  else return(NULL)
 }
 
-.tmpPeakVcf <- function(param) file.path(outputFolder(param), 'peak.tmp.vcf')
+
+.peakVcf <- function(param) file.path(outputFolder(param), 'peak.vcf')
+
 
 .runVEPForVariants <- function(inputVariants, param){
-    vepFlags <- vepFlags(param)
-    stopifnot(is(vepFlags, "VEPFlags"))
-    stopifnot(is(inputVariants, 'VRanges'))
-
-    vcf <- .tmpPeakVcf(param)
-    tryCatch({
-        VariantAnnotation::writeVcf(inputVariants, vcf)
-        resultGRanges <- ensemblVEP::ensemblVEP(vcf, vepFlags)
-    }, error=function(e) {
-        stop(e)
-    },finally={
-       # if (file.exists(vcf)) file.remove(vcf)
-    })
-
-    return(resultGRanges)
+  vepFlags <- vepFlags(param)
+  stopifnot(is(vepFlags, "VEPFlags"))
+  stopifnot(is(inputVariants, 'VRanges'))
+  
+  vcf <- .peakVcf(param)
+  tryCatch({
+    VariantAnnotation::writeVcf(inputVariants, vcf)
+    resultGRanges <- ensemblVEP::ensemblVEP(vcf, vepFlags)
+  }, error=function(e) {
+    stop(e)
+  },finally={
+    # if (file.exists(vcf)) file.remove(vcf)
+  })
+  
+  return(resultGRanges)
 }
-
-# .addNMD <- function(candidateGRanges, param) {
-#     counts = Rsubread::featureCounts()
-# }
 
 .filterVariants <- function(candidateGRanges, impact) {
-    impact_levels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
-    filter <-
-        GenomicRanges::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
-    filter[is.na(filter)] <- TRUE
-    print(sum(filter))
-    return(candidateGRanges[filter])
+  impact_levels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
+  filter <-
+    GenomicRanges::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
+  filter[is.na(filter)] <- TRUE
+  return(candidateGRanges[filter])
 }
 
 
-.densityScoreAndOrderVariants <- function(candidateGRanges, densityFunction) {
-    #density calculation
-    positions <- BiocGenerics::start(candidateGRanges) +
-        ((BiocGenerics::width(candidateGRanges) - 1) / 2)
-    densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
-    GenomicRanges::mcols(candidateGRanges)$peakDensity <- densityCol
+.addDiff <- function(peakGRange, param) {
+  #prep data
+  suppressMessages(genes <- data.table::fread(cmd=paste("zcat", param@gtf), 
+                                              showProgress = FALSE))
+  genes <- genes[V3 == "gene"
+               ][, gene_id := gsub(".*gene_id \"(.*?)\";.*", "\\1", V9)
+               ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
+               ][, .(seqnames = V1, start = V4, end = V5, strand = V7, 
+                     gene_id, gene_name)]
+  genes <- makeGRangesFromDataFrame(genes, keep.extra.columns = TRUE)
+  genes <- subsetByOverlaps(x=genes, ranges = peakGRange)
+  
+  #get and process counts
+  readfiles <- c(param@wtFiles, param@mutFiles)
+  counts <- GenomicAlignments::summarizeOverlaps(features=genes,
+                                                 reads=readfiles,
+                                                 param=ScanBamParam(which = peakGRange))
+  num_wt <- length(param@wtFiles)
+  countDF <- data.table::as.data.table(assays(counts)$counts)
+  countDF[, ave_wt := rowMeans(countDF[, 1:(num_wt + 1)])    
+        ][, ave_mt := rowMeans(countDF[, (num_wt + 1):length(countDF)])
+        ][, log2FC := round(log2(ave_mt/ave_wt), 3)]
+  
+  #merge counts with genes
+  mcols(genes) <- cbind(mcols(genes), countDF)
+  
+  #filter for differentially expressed genes
+  return(genes[(abs(genes$log2FC) > 1 | is.na(genes$log2FC)) 
+               & (genes$ave_wt > 10 | genes$ave_mt > 10)])
+}
 
+
+.scoreVariants <- function(candList, peaks) {
+  returnData = list()
+  for (seqname in names(candList)) {
+    #density calculation
+    densityFunction <- peaks[[seqname]]$densityFunction
+    stopifnot(!is.null(densityFunction))
+    positions <- BiocGenerics::start(candList[[seqname]]) +
+      ((BiocGenerics::width(candList[[seqname]]) - 1) / 2)
+    densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
+    GenomicRanges::mcols(candList[[seqname]])$peakDensity <- densityCol
+    
     #re-order
+    returnData[[seqname]] <-
+      .orderVariants(candList[[seqname]], densityCol)
+  }
+  return(returnData)
+}
+
+
+.orderVariants <- function(candidateGRanges, densityCol) {
+  if(!(class(candidateGRanges) %in% c("VRanges", "GRanges"))) { 
+    return(candidateGRanges)
+  }
+  if(!is.null(candidateGRanges$IMPACT)) {
     impact_levels <- c("MODIFIER", "LOW", "MODERATE", "HIGH")
     orderVec <- order(match(candidateGRanges$IMPACT, impact_levels), 
                       densityCol, decreasing=TRUE)
-    candidateGRanges <- candidateGRanges[orderVec]
-
-    return(candidateGRanges)
+  } else {
+    orderVec <- order(densityCol, decreasing=TRUE)
+  }
+  candidateGRanges <- candidateGRanges[orderVec]
+  return(candidateGRanges)
 }
 
