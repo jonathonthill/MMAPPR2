@@ -93,7 +93,8 @@ generateCandidates <- function(mmapprData) {
   )
   
   resultVr <- callVariants(mutBam, tally.param=tallyParam)
-  resultVr <- resultVr[altDepth(resultVr)/totalDepth(resultVr) > 0.8]
+  resultVr <- resultVr[VariantAnnotation::altDepth(resultVr)/
+                         VariantAnnotation::totalDepth(resultVr) > 0.8]
   if (file.exists(mergedBam)) file.remove(mergedBam)
   
   if (length(resultVr) > 0) {
@@ -132,7 +133,7 @@ generateCandidates <- function(mmapprData) {
 .filterVariants <- function(candidateGRanges, impact) {
   impact_levels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
   filter <-
-    GenomicRanges::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
+    S4Vectors::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
   filter[is.na(filter)] <- TRUE
   return(candidateGRanges[filter])
 }
@@ -147,22 +148,23 @@ generateCandidates <- function(mmapprData) {
                ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
                ][, .(seqnames = V1, start = V4, end = V5, strand = V7, 
                      gene_id, gene_name)]
-  genes <- makeGRangesFromDataFrame(genes, keep.extra.columns = TRUE)
-  genes <- subsetByOverlaps(x=genes, ranges = peakGRange)
+  genes <- GenomicRanges::makeGRangesFromDataFrame(genes, keep.extra.columns = TRUE)
+  genes <- IRanges::subsetByOverlaps(x=genes, ranges = peakGRange)
   
   #get and process counts
   readfiles <- c(param@wtFiles, param@mutFiles)
   counts <- GenomicAlignments::summarizeOverlaps(features=genes,
                                                  reads=readfiles,
-                                                 param=ScanBamParam(which = peakGRange))
+                                                 param=Rsamtools::ScanBamParam(which = peakGRange))
   num_wt <- length(param@wtFiles)
-  countDF <- data.table::as.data.table(assays(counts)$counts)
+  countDF <- data.table::as.data.table(
+    SummarizedExperiment::assays(counts)$counts)
   countDF[, ave_wt := rowMeans(countDF[, 1:(num_wt + 1)])    
         ][, ave_mt := rowMeans(countDF[, (num_wt + 1):length(countDF)])
         ][, log2FC := round(log2(ave_mt/ave_wt), 3)]
   
   #merge counts with genes
-  mcols(genes) <- cbind(mcols(genes), countDF)
+  S4Vectors::mcols(genes) <- cbind(S4Vectors::mcols(genes), countDF)
   
   #filter for differentially expressed genes
   return(genes[(abs(genes$log2FC) > 1 | is.na(genes$log2FC)) 
@@ -179,7 +181,7 @@ generateCandidates <- function(mmapprData) {
     positions <- BiocGenerics::start(candList[[seqname]]) +
       ((BiocGenerics::width(candList[[seqname]]) - 1) / 2)
     densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
-    GenomicRanges::mcols(candList[[seqname]])$peakDensity <- densityCol
+    S4Vectors::mcols(candList[[seqname]])$peakDensity <- densityCol
     
     #re-order
     returnData[[seqname]] <-
