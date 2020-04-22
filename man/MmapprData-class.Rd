@@ -14,7 +14,7 @@ Stores data from each step of the MMAPPR2 pipeline.
 \item{\code{param}}{\code{\linkS4class{MmapprParam}} object storing parameters
 used in analysis.}
 
-\item{\code{distance}}{List containing raw counts and Euclidean distance data for
+\item{\code{snpDistance}}{List containing raw counts and Euclidean distance data for
 each chromosome. After \code{\link{calculateDistance}}, chromosomes with
 sufficient data should have \code{$wtCounts},
 \code{$mutCounts}, and \code{$distanceDf} populated. After
@@ -25,10 +25,10 @@ list is replaced with a \code{$loess} element.}
 \code{\link{prePeak}} and populated with density function after
 \code{\link{peakRefinement}}.}
 
-\item{\code{candidates}}{List containing \code{\link[GenomicRanges]{GRanges}} object
-for each peak, resulting from \code{\link{generateCandidates}} function.
-VEP data, including gene symbol and consequence for each variant, are
-included in metacolumns.}
+\item{\code{candidates}}{List containing \code{\link[GenomicRanges]{GRanges}} objects
+with snps, VEP predicted effects, and differential expression data
+for each peak, all resulting from \code{\link{generateCandidates}} 
+function.}
 }}
 
 \seealso{

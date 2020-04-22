@@ -20,13 +20,14 @@ step.
 \examples{
 if (requireNamespace('MMAPPR2data', quietly=TRUE)
         & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-                               wtFiles = MMAPPR2data::exampleWTbam(),
-                               mutFiles = MMAPPR2data::exampleMutBam(),
-                               species = "danio_rerio",
-                               outputFolder = tempOutputFolder())
+    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+                                mutFiles = MMAPPR2data::exampleMutBam(),
+                                refFasta = MMAPPR2data::goldenFasta(),
+                                gtf = MMAPPR2data::gtf(),
+                                outputFolder = tempOutputFolder())
 
     md <- new('MmapprData', param = mmappr_param)
     postCalcDistMD <- calculateDistance(md)
 }
+
 }

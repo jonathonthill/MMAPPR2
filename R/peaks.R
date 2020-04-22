@@ -10,13 +10,13 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
 #'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmappr_param)
@@ -26,20 +26,23 @@
 #'
 #' postPeakRefMD <- peakRefinement(postPrePeakMD)
 #' }
+#' @import BiocParallel
+
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <-
-        BiocParallel::bplapply(mmapprData@peaks,
-                               .peakRefinementChr,
-                               mmapprData=mmapprData)
+        bplapply(mmapprData@peaks,
+                 .peakRefinementChr,
+                 mmapprData = mmapprData)
     return(mmapprData)
 }
 
 .getSubsampleLoessMax <- function(rawData, loessSpan) {
-    tempData <- rawData[sample(seq_len(nrow(rawData)), size=nrow(rawData)*.5),]
+    tempData <- rawData[sample(seq_len(nrow(rawData)), 
+                               size = nrow(rawData)*.5),]
     tempData <- tempData[order(tempData$pos),]
     loessData <- suppressWarnings(
-        loess(euclideanDistance~pos, data=tempData,
-              span=loessSpan, family=c("symmetric"), cell = 0.01))
+        loess(euclideanDistance~pos, data = tempData,
+              span = loessSpan, family = c("symmetric")))
     return(loessData$x[which.max(loessData$fitted)])
 }
 
@@ -61,7 +64,7 @@ peakRefinement <- function(mmapprData){
     maxPos = max(data$x)
     peakPos <- data$x[which.max(data$y)]
 
-    return(list(minPos=minPos, maxPos=maxPos, peakPos=peakPos))
+    return(list(minPos = minPos, maxPos = maxPos, peakPos = peakPos))
 }
 
 .peakRefinementChr <- function(inputList, mmapprData) {
@@ -69,17 +72,17 @@ peakRefinement <- function(mmapprData){
     seqname <- inputList$seqname
 
 
-    loessSpan <- mmapprData@distance[[seqname]]$loess$pars$span
-    pos <- mmapprData@distance[[seqname]]$loess$x
-    euclideanDistance <- mmapprData@distance[[seqname]]$loess$y
+    loessSpan <- mmapprData@snpDistance[[seqname]]$loess$pars$span
+    pos <- mmapprData@snpDistance[[seqname]]$loess$x
+    euclideanDistance <- mmapprData@snpDistance[[seqname]]$loess$y
     rawData <- data.frame(pos, euclideanDistance)
 
     # get peak values of loess fits of 1000 subsamples
-    maxValues <- replicate(1000, .getSubsampleLoessMax(rawData=rawData,
-                                                       loessSpan=loessSpan))
+    maxValues <- replicate(1000, .getSubsampleLoessMax(rawData = rawData,
+                                                       loessSpan = loessSpan))
 
     densityData <- density.default(maxValues)
-    densityFunction <- approxfun(x=densityData$x, y=densityData$y)
+    densityFunction <- approxfun(x = densityData$x, y = densityData$y)
 
     xMin <- min(densityData$x)
     xMax <- max(densityData$x)
@@ -87,7 +90,7 @@ peakRefinement <- function(mmapprData){
     densityRank <- data.frame(seq(xMin, xMax))
     names(densityRank) <- "pos"
     densityRank <- dplyr::mutate(densityRank,
-                      'densityValue'=densityFunction(seq(xMin,xMax)))
+                      'densityValue' = densityFunction(seq(xMin,xMax)))
 
     peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
 
@@ -106,7 +109,7 @@ peakRefinement <- function(mmapprData){
 .stDevForChr <- function(chr) {
     tryCatch({
         return(var(chr$loess$fitted)/length(chr$loess$fitted))
-    }, error=function(e) {
+    }, error = function(e) {
         return(0)
     })
 }
@@ -115,7 +118,7 @@ peakRefinement <- function(mmapprData){
 .meanForChr <- function(chr) {
     tryCatch({
         return(mean(chr$loess$fitted))
-    }, error=function(e) {
+    }, error = function(e) {
         return(NA)
     })
 }
@@ -133,13 +136,13 @@ peakRefinement <- function(mmapprData){
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
 #'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmappr_param)
@@ -152,23 +155,23 @@ prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
 
     #need to calculate standard dev of all chromosomes for cutoff
-    combinedStDev <- vapply(mmapprData@distance, .stDevForChr, numeric(1))
+    combinedStDev <- vapply(mmapprData@snpDistance, .stDevForChr, numeric(1))
     combinedStDev <- sum(combinedStDev)^(1/2)
 
-    distancemean <- vapply(mmapprData@distance, .meanForChr, numeric(1))
+    distancemean <- vapply(mmapprData@snpDistance, .meanForChr, numeric(1))
     # mean of list of chr means
-    distancemean <- mean(distancemean, na.rm=TRUE)
+    distancemean <- mean(distancemean, na.rm = TRUE)
     cutoff <- 3*combinedStDev + distancemean
 
     #get which peaks have values above cutoff, initialize them in mmapprData
-    for(i in seq_along(mmapprData@distance)){
-        if(!is(mmapprData@distance[[i]], 'list')) next
-        if(!is(mmapprData@distance[[i]]$loess, 'loess')) next
+    for(i in seq_along(mmapprData@snpDistance)){
+        if(!is(mmapprData@snpDistance[[i]], 'list')) next
+        if(!is(mmapprData@snpDistance[[i]]$loess, 'loess')) next
 
-        loessForChr <- mmapprData@distance[[i]]$loess
+        loessForChr <- mmapprData@snpDistance[[i]]$loess
         if (length(loessForChr$x) < 50) next
         containsPeak <- any(loessForChr$fitted > cutoff)
-        chrName <- names(mmapprData@distance)[[i]]
+        chrName <- names(mmapprData@snpDistance)[[i]]
         if (containsPeak) {
             mmapprData@peaks[[chrName]] <- list(seqname = chrName)
         }

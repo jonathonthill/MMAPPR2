@@ -15,11 +15,11 @@
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
 #' }
 #' \dontrun{
 #' md <- new('MmapprData', param = mmappr_param)
@@ -32,7 +32,6 @@
 #' }
 
 generateCandidates <- function(mmapprData) {
-  
   #get GRanges representation of peak
   peakGRanges <- lapply(mmapprData@peaks, .getPeakRange)
   
@@ -49,7 +48,7 @@ generateCandidates <- function(mmapprData) {
   #filter out low impact effects
   mmapprData@candidates$effects <- lapply(mmapprData@candidates$effects, 
                                           FUN=.filterVariants, 
-                                          impact = mmapprData@param@vep_impact)
+                                          impact = mmapprData@param@vepImpact)
   
   #add diff expressed genes
   mmapprData@candidates$diff <- lapply(peakGRanges,
@@ -70,8 +69,8 @@ generateCandidates <- function(mmapprData) {
                          end=as.numeric(peakList$end),
                          names=peakList$seqname)
   
-  gr <- GenomicRanges::GRanges(seqnames=names(ir),
-                               ranges=ir)
+  gr <- GRanges(seqnames=names(ir),
+                ranges=ir)
   return(gr)
 }
 
@@ -89,8 +88,7 @@ generateCandidates <- function(mmapprData) {
   # create param for variant calling
   tallyParam <- TallyVariantsParam(genome=param@refGenome,
                                    which=inputRange,
-                                   indels=TRUE
-  )
+                                   indels=TRUE)
   
   resultVr <- callVariants(mutBam, tally.param=tallyParam)
   resultVr <- resultVr[altDepth(resultVr)/totalDepth(resultVr) > 0.8]
@@ -108,18 +106,16 @@ generateCandidates <- function(mmapprData) {
 }
 
 
-.peakVcf <- function(param) file.path(outputFolder(param), 'peak.vcf')
-
-
 .runVEPForVariants <- function(inputVariants, param){
   vepFlags <- vepFlags(param)
   stopifnot(is(vepFlags, "VEPFlags"))
   stopifnot(is(inputVariants, 'VRanges'))
   
-  vcf <- .peakVcf(param)
+  vcf <- file.path(outputFolder(param), paste0(seqnames(inputVariants)[1], 'peak.vcf'))
+
   tryCatch({
-    VariantAnnotation::writeVcf(inputVariants, vcf)
-    resultGRanges <- ensemblVEP::ensemblVEP(vcf, vepFlags)
+    writeVcf(inputVariants, vcf)
+    resultGRanges <- ensemblVEP(vcf, vepFlags)
   }, error=function(e) {
     stop(e)
   },finally={
@@ -129,10 +125,10 @@ generateCandidates <- function(mmapprData) {
   return(resultGRanges)
 }
 
+
 .filterVariants <- function(candidateGRanges, impact) {
-  impact_levels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
-  filter <-
-    GenomicRanges::mcols(candidateGRanges)$IMPACT %in% impact_levels[1:impact]
+  impactLevels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
+  filter <- mcols(candidateGRanges)$IMPACT %in% impactLevels[1:impact]
   filter[is.na(filter)] <- TRUE
   return(candidateGRanges[filter])
 }
@@ -140,8 +136,8 @@ generateCandidates <- function(mmapprData) {
 
 .addDiff <- function(peakGRange, param) {
   #prep data
-  suppressMessages(genes <- data.table::fread(cmd=paste("zcat", param@gtf), 
-                                              showProgress = FALSE))
+  suppressMessages(genes <- fread(cmd=paste("zcat", param@gtf), 
+                                  showProgress = FALSE))
   genes <- genes[V3 == "gene"
                ][, gene_id := gsub(".*gene_id \"(.*?)\";.*", "\\1", V9)
                ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
@@ -156,7 +152,7 @@ generateCandidates <- function(mmapprData) {
                                                  reads=readfiles,
                                                  param=ScanBamParam(which = peakGRange))
   num_wt <- length(param@wtFiles)
-  countDF <- data.table::as.data.table(assays(counts)$counts)
+  countDF <- as.data.table(assays(counts)$counts)
   countDF[, ave_wt := rowMeans(countDF[, 1:(num_wt + 1)])    
         ][, ave_mt := rowMeans(countDF[, (num_wt + 1):length(countDF)])
         ][, log2FC := round(log2(ave_mt/ave_wt), 3)]
@@ -179,7 +175,7 @@ generateCandidates <- function(mmapprData) {
     positions <- BiocGenerics::start(candList[[seqname]]) +
       ((BiocGenerics::width(candList[[seqname]]) - 1) / 2)
     densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
-    GenomicRanges::mcols(candList[[seqname]])$peakDensity <- densityCol
+    mcols(candList[[seqname]])$peakDensity <- densityCol
     
     #re-order
     returnData[[seqname]] <-
@@ -194,8 +190,8 @@ generateCandidates <- function(mmapprData) {
     return(candidateGRanges)
   }
   if(!is.null(candidateGRanges$IMPACT)) {
-    impact_levels <- c("MODIFIER", "LOW", "MODERATE", "HIGH")
-    orderVec <- order(match(candidateGRanges$IMPACT, impact_levels), 
+    impactLevels <- c("MODIFIER", "LOW", "MODERATE", "HIGH")
+    orderVec <- order(match(candidateGRanges$IMPACT, impactLevels), 
                       densityCol, decreasing=TRUE)
   } else {
     orderVec <- order(densityCol, decreasing=TRUE)

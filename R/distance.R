@@ -12,15 +12,16 @@
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly=TRUE)
 #'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
 #'
 #'     md <- new('MmapprData', param = mmappr_param)
 #'     postCalcDistMD <- calculateDistance(md)
 #' }
+#' 
 
 calculateDistance <- function(mmapprData) {
   .indexBamFileList(wtFiles(param(mmapprData)), 
@@ -28,10 +29,10 @@ calculateDistance <- function(mmapprData) {
   .indexBamFileList(mutFiles(param(mmapprData)), 
                     oF = outputFolder(param(mmapprData)))
   
-  chrList <- suppressWarnings(.getFileReadChrList(mmapprData))
+  chrList <- suppressWarnings(.getFileReadChrList(param(mmapprData)))
   
-  mmapprData@distance <-
-    BiocParallel::bplapply(chrList, .calcDistForChr, param = mmapprData@param)
+  mmapprData@snpDistance <-
+    bplapply(chrList, .calcDistForChr, param = mmapprData@param)
   
   return(mmapprData)
 }
@@ -41,7 +42,7 @@ calculateDistance <- function(mmapprData) {
     bamFile <- bfl[[i]]
     if (is.na(Rsamtools::index(bamFile))) {
       .messageAndLog("No index found. Indexing Bam now.", oF)
-      Rsamtools::indexBam(bamFile)
+      indexBam(bamFile)
     } else {
       .messageAndLog("Index found. Skipping index step.", oF)
     }
@@ -52,7 +53,7 @@ calculateDistance <- function(mmapprData) {
 .calcDistForChr <- function(chrRange, param){
   tryCatch({
     #parameter check
-    stopifnot(length(GenomeInfoDb::seqnames(chrRange)) == 1)
+    stopifnot(length(unique(seqnames(chrRange))) == 1)
     stopifnot(is(param, "MmapprParam"))
     
     stopifnot(!is.null(chrRange))
@@ -60,9 +61,13 @@ calculateDistance <- function(mmapprData) {
     #apply functions to wild type pool
     #CAUTION: functions must be applied in this order to work right
     tryCatch({
-      pileupWT <- .samtoolsPileup(files = wtFiles(param), param, chrRange)       # Read and format files
-      pileupWT <- .avgFiles(pileupWT, fileAggregation = fileAggregation(param))  # Average files
-
+      
+      pileupWT <- lapply(wtFiles(param), .getPileup, param, chrRange) # Read and format files
+      pileupWT <- rbindlist(pileupWT)
+      pileupWT <- .avgFiles(pileupWT, 
+                            fileAggregation = fileAggregation(param)[1]) # Average files
+      pileupWT <- pileupWT[AVE.CVG > param@minDepth]
+      
     }, error = function(e) {
       msg <- 'Insufficient data in wild-type file(s)'
       print(e)
@@ -71,8 +76,13 @@ calculateDistance <- function(mmapprData) {
     )
     
     tryCatch({
-      pileupMut <- .samtoolsPileup(files = mutFiles(param), param, chrRange)
-      pileupMut <- .avgFiles(pileupMut, fileAggregation = fileAggregation(param))
+      
+      pileupMut <- lapply(mutFiles(param), .getPileup, param, chrRange)
+      pileupMut <- rbindlist(pileupMut)
+      pileupMut <- .avgFiles(pileupMut, 
+                             fileAggregation = fileAggregation(param)[1])
+      pileupMut <- pileupMut[AVE.CVG > param@minDepth]
+      
     }, error = function(e) {
       msg <- 'Insufficient data in mutant file(s)'
       stop(msg)
@@ -80,37 +90,37 @@ calculateDistance <- function(mmapprData) {
     )
     
     #inner_join (also removes rows without a match)
-    setkey(pileupWT, CHROM, POS, REF, ALT)
-    setkey(pileupMut, CHROM, POS, REF, ALT)
+    setkey(pileupWT, CHROM, POS)
+    setkey(pileupMut, CHROM, POS)
     distanceDf <- merge(pileupWT, pileupMut, suffixes = c(".WT", ".MT"))
-    
-    #filter out uninformative snps (both homozygous and identical)
-    distanceDf <- distanceDf[!((AVE_REF_FREQ.WT > homozygoteCutoff(param) &
-                                 AVE_REF_FREQ.MT > homozygoteCutoff(param)) |
-                               (AVE_ALT_FREQ.WT > homozygoteCutoff(param) &
-                                 AVE_ALT_FREQ.MT > homozygoteCutoff(param)))]
     
     if (length(distanceDf) == 0)
       stop('Empty dataframe after joining WT and Mut count tables')
     
     #calculate Euclidian distance
-    distanceDf <- distanceDf[, DISTANCE := sqrt((AVE_REF_FREQ.WT - AVE_REF_FREQ.MT)^2 + 
-                                                  (AVE_ALT_FREQ.WT - AVE_ALT_FREQ.MT)^2) ^ 
-                               distancePower(param)]
+    distanceDf[, DISTANCE := sqrt((AVE.A.FREQ.WT - AVE.A.FREQ.MT)^2 + 
+                                  (AVE.C.FREQ.WT - AVE.C.FREQ.MT)^2 +
+                                  (AVE.G.FREQ.WT - AVE.G.FREQ.MT)^2 +
+                                  (AVE.T.FREQ.WT - AVE.T.FREQ.MT)^2) ^
+                                  distancePower(param)]
+    
+    #filter out uninformative snps (both homozygous and identical)
+    homozygousWT <- apply(distanceDf[, AVE.A.FREQ.WT:AVE.T.FREQ.WT], 1, max) 
+    homozygousWT <- homozygousWT > homozygoteCutoff(param)
+    distanceDf <- distanceDf[!(homozygousWT)]
     
     stopifnot(nrow(distanceDf) > 0)
     
     resultList <- list(wtCounts = pileupWT, mutCounts = pileupMut,
                        distanceDf = distanceDf)
-    resultList$seqname <- as.character(GenomeInfoDb::seqnames(chrRange))
     
-    .messageAndLog(paste("Finished with ", chrRange), 
+    .messageAndLog(paste("Finished", seqnames(chrRange)[1]), 
                    outputFolder = outputFolder(param))
     return(resultList)
   },
   
   error = function(e) {
-    msg <- paste(toString(GenomeInfoDb::seqnames(chrRange)),
+    msg <- paste(toString(seqnames(chrRange)),
                  e$message,
                  sep = ': ')
     return(msg)
@@ -118,32 +128,27 @@ calculateDistance <- function(mmapprData) {
   )
 }
 
-.getFileReadChrList <- function(mmapprData) {suppressWarnings({
-  bams <- Rsamtools::BamFileList(c(mmapprData@param@wtFiles,
-                                   mmapprData@param@mutFiles))
+.getFileReadChrList <- function(param) {suppressWarnings({
+  # get data for gtf 
+  suppressMessages(gtfData <- fread(cmd=paste("zcat", param@gtf), 
+                                    showProgress = FALSE))
+  genes <- gtfData[V3 == "gene"
+                   ][, .(seqnames = V1, seqnames2 = V1, start = V4, end = V5)]
+  genes <- makeGRangesListFromDataFrame(genes, 
+                                        split.field = "seqnames2")
   
-  bamInfo <- Rsamtools::seqinfo(bams)
-  chrRanges <- as(bamInfo, "GRanges")
-  #cut to standard chromosomes
-  chrRanges <- GenomeInfoDb::keepStandardChromosomes(chrRanges,
-                                                     pruning.mode = 'coarse')
-  chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'chrM',
-                                           pruning.mode = 'coarse')
-  chrRanges <- GenomeInfoDb::dropSeqlevels(chrRanges, 'MT',
-                                           pruning.mode = 'coarse')
+  if (param@includeScaffolds != TRUE) {
+    genes <- keepStandardChromosomes(genes,
+                                                   pruning.mode = 'coarse')
+  } 
   
-  chrList <- list()
-  # store range for each chromosome as list item
-  for (i in suppressWarnings(
-    GenomeInfoDb::orderSeqlevels(
-      as.character(GenomeInfoDb::seqnames(chrRanges))))) {
-    
-    chrList[[toString(GenomeInfoDb::seqnames(chrRanges[i]))]] <-
-      chrRanges[i]
-  }
+  # remove mitochondiral chromosome b/c not mendelian inheritance
+  genes <- dropSeqlevels(genes, 'chrM',
+                                       pruning.mode = 'coarse')
+  genes <- dropSeqlevels(genes, 'MT',
+                                       pruning.mode = 'coarse')
   
-  
-  return(chrList)
+  return(genes)
 })}
 
 ###Get averages between files and divides by coverage
@@ -152,19 +157,23 @@ calculateDistance <- function(mmapprData) {
 # Can weight by cvg in each file or simple average frequencies
 .avgFiles <- function(chrDf, fileAggregation) {
   stopifnot(fileAggregation %in% c('simple', 'weighted'))
-  setkey(chrDf, CHROM, POS, REF, ALT)
+  setkey(chrDf, CHROM, POS)
   #throw away non-mean columns and return
   if (fileAggregation == 'weighted') {
-    chrDf <- chrDf[, .(AVE_CVG = mean(CVG), 
-                       AVE_REF_FREQ = sum((REF_FREQ*CVG))/sum(CVG), 
-                       AVE_ALT_FREQ = sum(ALT_FREQ*CVG)/sum(CVG)), 
-                     .(CHROM, POS, REF, ALT)]
+    chrDf <- chrDf[, .(AVE.CVG = mean(CVG), 
+                       AVE.A.FREQ = sum(A.FREQ*CVG)/sum(CVG), 
+                       AVE.C.FREQ = sum(C.FREQ*CVG)/sum(CVG),
+                       AVE.G.FREQ = sum(G.FREQ*CVG)/sum(CVG), 
+                       AVE.T.FREQ = sum(T.FREQ*CVG)/sum(CVG)), 
+                     .(CHROM, POS)]
   }
   else if (fileAggregation == 'simple') {
-    chrDf <- chrDf[, .(AVE_CVG = mean(CVG), 
-                       AVE_REF_FREQ = mean(REF_FREQ), 
-                       AVE_ALT_FREQ = mean(ALT_FREQ)), 
-                     .(CHROM, POS, REF, ALT)]
+    chrDf <- chrDf[, .(AVE.CVG = mean(CVG), 
+                       AVE.A.FREQ = mean(A.FREQ), 
+                       AVE.C.FREQ = mean(C.FREQ),
+                       AVE.G.FREQ = mean(G.FREQ), 
+                       AVE.T.FREQ = mean(T.FREQ)), 
+                     .(CHROM, POS)]
   }
   return(chrDf)
 }

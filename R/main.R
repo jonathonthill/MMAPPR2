@@ -18,11 +18,11 @@
 #'         & all(Sys.which(c('vep', 'samtools')) != '')) {
 #'
 #'     # Specify parameters:
-#'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-#'                                wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                species = "danio_rerio",
-#'                                outputFolder = tempOutputFolder())
+#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
 #'
 #'     # Run pipeline:
 #'     mmapprData <- mmappr(mmappr_param)
@@ -43,6 +43,7 @@
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
 #'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
 #'   \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
+
 mmappr <- function(mmapprParam) {
     startTime <- Sys.time()
     message("------------------------------------")
@@ -51,7 +52,7 @@ mmappr <- function(mmapprParam) {
 
     .checkDep('samtools')
 
-    md <- new("MmapprData", param=mmapprParam)
+    md <- new("MmapprData", param = mmapprParam)
     oF <- outputFolder(md@param)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
@@ -101,8 +102,8 @@ mmappr <- function(mmapprParam) {
 .messageAndLog <- function(msg, outputFolder) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
-    cat(msg, file=logFile, sep='\n', append=TRUE)
-    msg <- paste(msg, collapse='\n')
+    cat(msg, file = logFile, sep = '\n', append = TRUE)
+    msg <- paste(msg, collapse = '\n')
     message(msg)
 }
 
@@ -110,7 +111,7 @@ mmappr <- function(mmapprParam) {
 .log <- function(msg, outputFolder) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
-    cat(msg, file=logFile, sep='\n', append=TRUE)
+    cat(msg, file = logFile, sep = '\n', append = TRUE)
 }
 
 

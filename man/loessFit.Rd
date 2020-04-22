@@ -10,20 +10,20 @@ loessFit(mmapprData)
 \item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
 }
 \value{
-A \code{\linkS4class{MmapprData}} object with the \code{$loess} element
-  of the \code{distance} slot list filled.
+A \code{\linkS4class{MmapprData}} object with the \code{$loess} 
+  element of the \code{distance} slot list filled.
 }
 \description{
 Called after the \code{\link{calculateDistance}} step and before
 \code{\link{prePeak}}.
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly=TRUE)
+if (requireNamespace('MMAPPR2data', quietly = TRUE)
         & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-                                wtFiles = MMAPPR2data::exampleWTbam(),
+    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
-                                species = "danio_rerio",
+                                refFasta = MMAPPR2data::goldenFasta(),
+                                gtf = MMAPPR2data::exampleGTF(),
                                 outputFolder = tempOutputFolder())
 }
 \dontrun{

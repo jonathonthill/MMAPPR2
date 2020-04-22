@@ -8,15 +8,18 @@
 #'
 NULL
 
-#' @import methods
+#' @import BiocParallel
 #' @import data.table
-#' @importFrom magrittr %>%
+#' @import GenomeInfoDb
+#' @import Rsamtools
+#' @rawNamespace import(GenomicRanges, except = c(shift))
 #' @importFrom graphics abline mtext par plot polygon axis legend
 #' @importFrom grDevices dev.off dev.list pdf rgb graphics.off
+#' @importFrom ensemblVEP VEPFlags ensemblVEP flags
+#' @importFrom VariantTools TallyVariantsParam callVariants
+#' @importFrom VariantAnnotation altDepth totalDepth writeVcf
+#' @importFrom SummarizedExperiment assays
+#' @importFrom gmapR GmapGenome
 #' @importFrom stats approxfun density.default loess median var
 #' @importFrom utils capture.output object.size str write.table tail sessionInfo
-#' @importFrom gmapR GmapGenome
-#' @importFrom ensemblVEP VEPFlags
-#' @importFrom Rsamtools BamFileList mergeBam
-#' @importFrom VariantTools TallyVariantsParam callVariants
 NULL

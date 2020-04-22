@@ -2,151 +2,143 @@
 % Please edit documentation in R/s4_methods.R
 \name{MmapprParam-functions}
 \alias{MmapprParam-functions}
-\alias{refFasta}
-\alias{refFasta<-}
 \alias{wtFiles}
 \alias{wtFiles<-}
 \alias{mutFiles}
 \alias{mutFiles<-}
-\alias{species}
-\alias{species<-}
-\alias{vepFlags}
-\alias{vepFlags<-}
-\alias{refGenome}
-\alias{refGenome<-}
-\alias{homozygoteCutoff}
-\alias{homozygoteCutoff<-}
-\alias{distancePower}
-\alias{distancePower<-}
-\alias{peakIntervalWidth}
-\alias{peakIntervalWidth<-}
+\alias{refFasta}
+\alias{refFasta<-}
+\alias{gtf}
+\alias{gtf<-}
+\alias{outputFolder}
+\alias{outputFolder<-}
+\alias{includeScaffolds}
+\alias{includeScaffolds<-}
 \alias{minDepth}
 \alias{minDepth<-}
-\alias{maxSNPs}
-\alias{maxSNPs<-}
+\alias{homozygoteCutoff}
+\alias{homozygoteCutoff<-}
 \alias{minBaseQuality}
 \alias{minBaseQuality<-}
 \alias{minMapQuality}
 \alias{minMapQuality<-}
+\alias{fileAggregation}
+\alias{fileAggregation<-}
+\alias{distancePower}
+\alias{distancePower<-}
+\alias{peakIntervalWidth}
+\alias{peakIntervalWidth<-}
 \alias{loessOptResolution}
 \alias{loessOptResolution<-}
 \alias{loessOptCutFactor}
 \alias{loessOptCutFactor<-}
-\alias{naCutoff}
-\alias{naCutoff<-}
-\alias{outputFolder}
-\alias{outputFolder<-}
-\alias{fileAggregation}
-\alias{fileAggregation<-}
-\alias{refFasta,MmapprParam-method}
+\alias{vepFlags}
+\alias{vepFlags<-}
+\alias{vepImpact}
+\alias{vepImpact<-}
 \alias{wtFiles,MmapprParam-method}
 \alias{mutFiles,MmapprParam-method}
-\alias{species,MmapprParam-method}
-\alias{vepFlags,MmapprParam-method}
-\alias{refGenome,MmapprParam-method}
-\alias{homozygoteCutoff,MmapprParam-method}
-\alias{distancePower,MmapprParam-method}
-\alias{peakIntervalWidth,MmapprParam-method}
+\alias{refFasta,MmapprParam-method}
+\alias{gtf,MmapprParam-method}
+\alias{outputFolder,MmapprParam-method}
+\alias{includeScaffolds,MmapprParam-method}
 \alias{minDepth,MmapprParam-method}
+\alias{homozygoteCutoff,MmapprParam-method}
 \alias{minBaseQuality,MmapprParam-method}
 \alias{minMapQuality,MmapprParam-method}
+\alias{fileAggregation,MmapprParam-method}
+\alias{distancePower,MmapprParam-method}
+\alias{peakIntervalWidth,MmapprParam-method}
 \alias{loessOptResolution,MmapprParam-method}
 \alias{loessOptCutFactor,MmapprParam-method}
-\alias{naCutoff,MmapprParam-method}
-\alias{outputFolder,MmapprParam-method}
-\alias{fileAggregation,MmapprParam-method}
-\alias{vep_impact,MmapprParam-method}
-\alias{refFasta<-,MmapprParam-method}
+\alias{vepFlags,MmapprParam-method}
+\alias{vepImpact,MmapprParam-method}
 \alias{wtFiles<-,MmapprParam-method}
 \alias{mutFiles<-,MmapprParam-method}
-\alias{vepFlags<-,MmapprParam-method}
-\alias{refGenome<-,MmapprParam-method}
-\alias{species<-,MmapprParam-method}
-\alias{homozygoteCutoff<-,MmapprParam-method}
-\alias{distancePower<-,MmapprParam-method}
-\alias{peakIntervalWidth<-,MmapprParam-method}
-\alias{minDepth<-,MmapprParam-method}
-\alias{minBaseQuality<-,MmapprParam-method}
-\alias{loessOptResolution<-,MmapprParam-method}
-\alias{loessOptCutFactor<-,MmapprParam-method}
-\alias{naCutoff<-,MmapprParam-method}
+\alias{refFasta<-,MmapprParam-method}
+\alias{gtf<-,MmapprParam-method}
 \alias{outputFolder<-,MmapprParam-method}
+\alias{includeScaffolds<-,MmapprParam-method}
+\alias{minDepth<-,MmapprParam-method}
+\alias{homozygoteCutoff<-,MmapprParam-method}
+\alias{minBaseQuality<-,MmapprParam-method}
 \alias{minMapQuality<-,MmapprParam-method}
 \alias{fileAggregation<-,MmapprParam-method}
-\alias{vep_impact<-,MmapprParam-method}
+\alias{distancePower<-,MmapprParam-method}
+\alias{peakIntervalWidth<-,MmapprParam-method}
+\alias{loessOptResolution<-,MmapprParam-method}
+\alias{loessOptCutFactor<-,MmapprParam-method}
+\alias{vepFlags<-,MmapprParam-method}
+\alias{vepImpact<-,MmapprParam-method}
 \title{MmapprParam Getters and Setters}
 \usage{
-\S4method{refFasta}{MmapprParam}(obj)
-
 \S4method{wtFiles}{MmapprParam}(obj)
 
 \S4method{mutFiles}{MmapprParam}(obj)
 
-\S4method{species}{MmapprParam}(obj)
+\S4method{refFasta}{MmapprParam}(obj)
 
-\S4method{vepFlags}{MmapprParam}(obj)
+\S4method{gtf}{MmapprParam}(obj)
 
-\S4method{refGenome}{MmapprParam}(obj)
+\S4method{outputFolder}{MmapprParam}(obj)
 
-\S4method{homozygoteCutoff}{MmapprParam}(obj)
-
-\S4method{distancePower}{MmapprParam}(obj)
-
-\S4method{peakIntervalWidth}{MmapprParam}(obj)
+\S4method{includeScaffolds}{MmapprParam}(obj)
 
 \S4method{minDepth}{MmapprParam}(obj)
+
+\S4method{homozygoteCutoff}{MmapprParam}(obj)
 
 \S4method{minBaseQuality}{MmapprParam}(obj)
 
 \S4method{minMapQuality}{MmapprParam}(obj)
 
+\S4method{fileAggregation}{MmapprParam}(obj)
+
+\S4method{distancePower}{MmapprParam}(obj)
+
+\S4method{peakIntervalWidth}{MmapprParam}(obj)
+
 \S4method{loessOptResolution}{MmapprParam}(obj)
 
 \S4method{loessOptCutFactor}{MmapprParam}(obj)
 
-\S4method{naCutoff}{MmapprParam}(obj)
+\S4method{vepFlags}{MmapprParam}(obj)
 
-\S4method{outputFolder}{MmapprParam}(obj)
-
-\S4method{fileAggregation}{MmapprParam}(obj)
-
-\S4method{vep_impact}{MmapprParam}(obj)
-
-\S4method{refFasta}{MmapprParam}(obj) <- value
+\S4method{vepImpact}{MmapprParam}(obj)
 
 \S4method{wtFiles}{MmapprParam}(obj) <- value
 
 \S4method{mutFiles}{MmapprParam}(obj) <- value
 
-\S4method{vepFlags}{MmapprParam}(obj) <- value
+\S4method{refFasta}{MmapprParam}(obj) <- value
 
-\S4method{refGenome}{MmapprParam}(obj) <- value
+\S4method{gtf}{MmapprParam}(obj) <- value
 
-\S4method{species}{MmapprParam}(obj) <- value
+\S4method{outputFolder}{MmapprParam}(obj) <- value
 
-\S4method{homozygoteCutoff}{MmapprParam}(obj) <- value
-
-\S4method{distancePower}{MmapprParam}(obj) <- value
-
-\S4method{peakIntervalWidth}{MmapprParam}(obj) <- value
+\S4method{includeScaffolds}{MmapprParam}(obj) <- value
 
 \S4method{minDepth}{MmapprParam}(obj) <- value
 
+\S4method{homozygoteCutoff}{MmapprParam}(obj) <- value
+
 \S4method{minBaseQuality}{MmapprParam}(obj) <- value
-
-\S4method{loessOptResolution}{MmapprParam}(obj) <- value
-
-\S4method{loessOptCutFactor}{MmapprParam}(obj) <- value
-
-\S4method{naCutoff}{MmapprParam}(obj) <- value
-
-\S4method{outputFolder}{MmapprParam}(obj) <- value
 
 \S4method{minMapQuality}{MmapprParam}(obj) <- value
 
 \S4method{fileAggregation}{MmapprParam}(obj) <- value
 
-\S4method{vep_impact}{MmapprParam}(obj) <- value
+\S4method{distancePower}{MmapprParam}(obj) <- value
+
+\S4method{peakIntervalWidth}{MmapprParam}(obj) <- value
+
+\S4method{loessOptResolution}{MmapprParam}(obj) <- value
+
+\S4method{loessOptCutFactor}{MmapprParam}(obj) <- value
+
+\S4method{vepFlags}{MmapprParam}(obj) <- value
+
+\S4method{vepImpact}{MmapprParam}(obj) <- value
 }
 \arguments{
 \item{obj}{Desired \code{\link{MmapprParam}} object.}
@@ -160,12 +152,12 @@ The desired \code{\link{MmapprParam}} attribute.
 Access and assign slots of \code{\link{MmapprParam}} object.
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly=TRUE)
+if (requireNamespace('MMAPPR2data', quietly = TRUE)
         & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
-                         wtFiles = MMAPPR2data::exampleWTbam(),
+    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                          mutFiles = MMAPPR2data::exampleMutBam(),
-                         species = "danio_rerio")
+                         refFasta = MMAPPR2data::goldenFasta(),
+                         gtf = MMAPPR2data::gtf())
 
     outputFolder(mmappr_param) <- 'mmappr2_test_1'
     minBaseQuality(mmappr_param) <- 25
