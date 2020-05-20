@@ -123,9 +123,9 @@ MmapprParam <- function(wtFiles,
     
     # Need to prep gtf file if no index present
     if (!file.exists(paste0(gtf, ".tbi"))) {
-      if (grepl("\.gz$", gtf)) {
+      if (grepl("\\.gz$", gtf)) {
         system2("gunzip", gtf)
-        gtf <- gsub("\.gz$", "", gtf)
+        gtf <- gsub("\\.gz$", "", gtf)
       } 
       system(paste0("grep -v '#' ", gtf, 
                     " | sort -k1,1 -k4,4n -k5,5n -t '\t'",
