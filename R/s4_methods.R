@@ -123,15 +123,15 @@ MmapprParam <- function(wtFiles,
     
     # Need to prep gtf file if no index present
     if (!file.exists(paste0(gtf, ".tbi"))) {
-      if (grepl(".gz$", gtf)) {
+      if (grepl("\.gz$", gtf)) {
         system2("gunzip", gtf)
-        gtf <- gsub(".gz$", "", gtf)
+        gtf <- gsub("\.gz$", "", gtf)
       } 
       system(paste0("grep -v '#' ", gtf, 
                     " | sort -k1,1 -k4,4n -k5,5n -t '\t'",
                     "| bgzip -c > ", gtf, ".bgz"))
       gtf <- paste0(gtf, ".bgz") 
-      index = Rsamtools::indexTabix(paste0(gtf, ".bgz"), 
+      index = Rsamtools::indexTabix(gtf, 
                                     seq = 1, start = 4, end = 5, comment = "#")
     } else {
       .messageAndLog("Found GTF index, skipping index step.", outputFolder)
