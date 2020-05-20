@@ -83,11 +83,8 @@ tempOutputFolder <- function() {
   if(dir.exists(outputFolder)){
     message(sprintf("Output folder %s has already been created",
                     outputFolder))
-    answer <- " "
-    while(answer != "y" & answer != "n"){
-      answer <- readline(
-        "Would you like to overwrite previously created results folder (y/n)?\n")
-    }
+    answer <- readline(
+        "Would you like to overwrite previously created results folder (Y/n)?\n")
     if (answer == "n") {
       newOutputFolder <-
         readline("Please enter name for new output folder or press enter for default: ")
