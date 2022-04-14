@@ -2,35 +2,35 @@
 % Please edit documentation in R/candidates.R
 \name{generateCandidates}
 \alias{generateCandidates}
-\title{Generate potential causative mutations and consequences in peak regions}
+\title{Generate candidate mutations and consequences in peak regions}
 \usage{
-generateCandidates(mmapprData)
+Follows the \code{\link{peakRefinement}} step and produces a
+\code{\linkS4class{md}} object ready for
+\code{\link{outputmd}}.
 }
 \arguments{
-\item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
+\item{md}{The \code{\linkS4class{md}} object to be analyzed.}
 }
 \value{
-A \code{\linkS4class{MmapprData}} object with the \code{candidates}
+A \code{\linkS4class{md}} object with the \code{candidates}
   slot filled with a \code{\link[GenomicRanges]{GRanges}} object for each
   peak chromosome containing variants and predicted consequences from
   Ensembl's Variant Effect Predictor.
 }
 \description{
-Follows the \code{\link{peakRefinement}} step and produces a
-\code{\linkS4class{MmapprData}} object ready for
-\code{\link{outputMmapprData}}.
+Generate candidate mutations and consequences in peak regions
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly=TRUE)
-        & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+    mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
                                 refFasta = MMAPPR2data::goldenFasta(),
                                 gtf = MMAPPR2data::gtf(),
                                 outputFolder = tempOutputFolder())
 }
+
 \dontrun{
-md <- new('MmapprData', param = mmappr_param)
+md <- mmapprData(mmappr_param)
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
@@ -38,4 +38,5 @@ postPeakRefMD <- peakRefinement(postPrePeakMD)
 
 postCandidatesMD <- generateCandidates(postPeakRefMD)
 }
+
 }

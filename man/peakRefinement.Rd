@@ -4,7 +4,8 @@
 \alias{peakRefinement}
 \title{Characterize Euclidean distance peaks using resampling simulation}
 \usage{
-peakRefinement(mmapprData)
+Follows the \code{\link{prePeak}} step and precedes
+\code{\link{generateCandidates}}.
 }
 \arguments{
 \item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
@@ -14,24 +15,24 @@ A \code{\linkS4class{MmapprData}} object with the \code{peaks}
   slot filled and populated.
 }
 \description{
-Follows the \code{\link{prePeak}} step and precedes
-\code{\link{generateCandidates}}.
+Characterize Euclidean distance peaks using resampling simulation
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)
-        & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+    mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
                                 refFasta = MMAPPR2data::goldenFasta(),
                                 gtf = MMAPPR2data::gtf(),
                                 outputFolder = tempOutputFolder())
 }
+
 \dontrun{
-md <- new('MmapprData', param = mmappr_param)
+md <- mmapprData(mmappr_param)
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
 
 postPeakRefMD <- peakRefinement(postPrePeakMD)
 }
+
 }

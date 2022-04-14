@@ -5,3 +5,6 @@
 *Rproj
 mmappr_results*
 *pdf
+.gitignore
+.Rbuidignore
+.travis.yml

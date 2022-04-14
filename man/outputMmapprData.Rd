@@ -3,9 +3,6 @@
 \name{outputMmapprData}
 \alias{outputMmapprData}
 \title{Generate plots and tables from MMAPPR2 data}
-\usage{
-outputMmapprData(mmapprData)
-}
 \arguments{
 \item{mmapprData}{The \linkS4class{MmapprData} object to be output}
 }
@@ -18,16 +15,16 @@ A \linkS4class{MmapprData} object after writing output files
 Generate plots and tables from MMAPPR2 data
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)
-        & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+    mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
                                 refFasta = MMAPPR2data::goldenFasta(),
                                 gtf = MMAPPR2data::gtf(),
                                 outputFolder = tempOutputFolder())
 }
+
 \dontrun{
-md <- new('MmapprData', param = mmappr_param)
+md <- mmapprData(mmappr_param)
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)
@@ -36,4 +33,5 @@ postCandidatesMD <- generateCandidates(postPeakRefMD)
 
 outputMmapprData(postCandidatesMD)
 }
+
 }

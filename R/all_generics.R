@@ -13,8 +13,6 @@ setGeneric("distancePower", function(obj) standardGeneric("distancePower"))
 setGeneric("peakIntervalWidth", function(obj) standardGeneric("peakIntervalWidth"))
 setGeneric("loessOptResolution", function(obj) standardGeneric("loessOptResolution"))
 setGeneric("loessOptCutFactor", function(obj) standardGeneric("loessOptCutFactor"))
-setGeneric("vepFlags", function(obj) standardGeneric("vepFlags"))
-setGeneric("vepImpact", function(obj) standardGeneric("vepImpact"))
 
 setGeneric("wtFiles<-", function(obj, value) standardGeneric("wtFiles<-"))
 setGeneric("mutFiles<-", function(obj, value) standardGeneric("mutFiles<-"))
@@ -31,8 +29,6 @@ setGeneric("distancePower<-", function(obj, value) standardGeneric("distancePowe
 setGeneric("peakIntervalWidth<-", function(obj, value) standardGeneric("peakIntervalWidth<-"))
 setGeneric("loessOptResolution<-", function(obj, value) standardGeneric("loessOptResolution<-"))
 setGeneric("loessOptCutFactor<-", function(obj, value) standardGeneric("loessOptCutFactor<-"))
-setGeneric("vepFlags<-", function(obj, value) standardGeneric("vepFlags<-"))
-setGeneric("vepImpact<-", function(obj, value) standardGeneric("vepImpact<-"))
 
 setGeneric("param", function(obj) standardGeneric("param"))
 setGeneric("param<-", function(obj, value) standardGeneric("param<-"))

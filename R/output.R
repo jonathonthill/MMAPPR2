@@ -1,5 +1,7 @@
-#' Generate plots and tables from MMAPPR2 data
-#'
+#' @title Generate plots and tables from MMAPPR2 data
+#' 
+#' @name outputMmapprData
+#' 
 #' @param mmapprData The \linkS4class{MmapprData} object to be output
 #'
 #' @return A \linkS4class{MmapprData} object after writing output files
@@ -8,16 +10,16 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #' }
+#' 
 #' \dontrun{
-#' md <- new('MmapprData', param = mmappr_param)
+#' md <- mmapprData(mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
@@ -26,6 +28,8 @@
 #'
 #' outputMmapprData(postCandidatesMD)
 #' }
+#' 
+NULL
 
 
 outputMmapprData <- function(mmapprData) {
@@ -34,7 +38,7 @@ outputMmapprData <- function(mmapprData) {
   if (!dir.exists(outputFolder(param(mmapprData)))) {
     mmapprData <- .prepareOutputFolder(mmapprData)
   }
-  current_devs = dev.list() # get open graphcis devices to help cleanup
+  current_devs = dev.list() # get open graphics devices to help cleanup
   if (length(snpDistance(mmapprData)) > 0) {
     tryCatch({
       .plotGenomeDistance(mmapprData)
@@ -49,6 +53,7 @@ outputMmapprData <- function(mmapprData) {
     .writeCandidateTables(mmapprData@candidates,
                           outputFolder(param(mmapprData)))
   }
+  
   invisible(1)
 }
 
@@ -57,22 +62,23 @@ outputMmapprData <- function(mmapprData) {
   paste0("mmappr2_", format(Sys.time(), "%Y-%m-%d_%H:%M:%S"))
 
 
-#' Generate temporary output folder
-#'
-#' Conveniently creates a timestamp-named temporary directory
+#' @title Generate temporary output folder
+#' @name tempOutputFolder
+#' @usage Conveniently creates a timestamp-named temporary directory
 #'
 #' @return The path to the temporary directory
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
 #'     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
 #'                                 wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 species = "danio_rerio",
 #'                                 outputFolder = tempOutputFolder())
 #' }
+NULL
+
 
 tempOutputFolder <- function() {
   file.path(tempdir(), .defaultOutputFolder())
@@ -230,13 +236,17 @@ tempOutputFolder <- function() {
 
 
 .writeCandidateTables <- function(candList, outputFolder){
-  lapply(seq_along(candList), function(x, candList){
-    for (seqname in names(candList[[x]])) {
-      listData <- candList[[x]][[seqname]]
-      filename <- paste0(seqname, names(candList[x]), '.tsv')
-      write.table(as.data.frame(listData), 
-                  file = file.path(outputFolder, filename), 
-                  sep = '\t', quote = FALSE, row.names = FALSE)
-    }
-  }, candList)
+  for (seqname in names(candList$effects)) {
+    listData <- as.data.frame(candList$effects[[seqname]])
+    filename <- paste0("DetectedMutationsFor", seqname, '.tsv')
+    listData$PROTEINLOC <- sapply(listData$PROTEINLOC, function(x) {x[1]})
+    outdata <- listData[, c("seqnames", "start", "end", "width", "strand", "ref", "alt", "refDepth", "altDepth", "peakDensity", "GENEID", "TXID", "PROTEINLOC", "CONSEQUENCE", "REFAA", "VARAA")]
+    write.table(x = outdata, 
+                file = file.path(outputFolder, filename), 
+                sep = '\t', quote = FALSE, row.names = FALSE)
+    filename <- paste0("DifferentiallyExpressedGenesFor", seqname, '.tsv')
+    write.table(x = candList$diff[[seqname]], 
+                file = file.path(outputFolder, filename), 
+                sep = '\t', quote = FALSE, row.names = FALSE)
+  }
 }

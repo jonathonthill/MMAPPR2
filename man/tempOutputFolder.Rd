@@ -4,17 +4,16 @@
 \alias{tempOutputFolder}
 \title{Generate temporary output folder}
 \usage{
-tempOutputFolder()
+Conveniently creates a timestamp-named temporary directory
 }
 \value{
 The path to the temporary directory
 }
 \description{
-Conveniently creates a timestamp-named temporary directory
+Generate temporary output folder
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)
-        & all(Sys.which(c("samtools", "vep")) != "")) {
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
     mmappr_param <- MmapprParam(refFasta = MMAPPR2data::goldenFasta(),
                                 wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),

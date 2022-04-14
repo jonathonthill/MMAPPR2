@@ -4,7 +4,8 @@
 \alias{calculateDistance}
 \title{Read BAM files and generate Euclidean distance data}
 \usage{
-calculateDistance(mmapprData)
+First step in the MMAPPR2 pipeline. Precedes the \code{\link{loessFit}}
+step.
 }
 \arguments{
 \item{mmapprData}{The \code{\linkS4class{MmapprData}} object to be analyzed.}
@@ -14,19 +15,17 @@ A \code{\linkS4class{MmapprData}} object with the \code{distance}
   slot filled.
 }
 \description{
-First step in the MMAPPR2 pipeline. Precedes the \code{\link{loessFit}}
-step.
+Read BAM files and generate Euclidean distance data
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly=TRUE)
-        & all(Sys.which(c("samtools", "vep")) != "")) {
-    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+    mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
                                 refFasta = MMAPPR2data::goldenFasta(),
                                 gtf = MMAPPR2data::gtf(),
                                 outputFolder = tempOutputFolder())
 
-    md <- new('MmapprData', param = mmappr_param)
+    md <- mmapprData(mmappr_param)
     postCalcDistMD <- calculateDistance(md)
 }
 

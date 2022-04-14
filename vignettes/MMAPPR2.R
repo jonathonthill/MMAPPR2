@@ -16,15 +16,6 @@ close(samtoolsScript)
 origPath <- Sys.getenv('PATH')
 Sys.setenv(PATH = paste(origPath, '/tmp', sep = ':')) 
 
-## ----installVEP, eval=FALSE---------------------------------------------------
-#  git clone https://github.com/Ensembl/ensembl-vep.git
-#  cd ensembl-vep
-#  perl INSTALL.pl -a ac -s {my_species}
-
-## ---- eval = FALSE------------------------------------------------------------
-#  Sys.setenv(PATH=paste("/Path/to/Perlbrew", Sys.getenv("PATH"), sep=":"))
-
-## ----param--------------------------------------------------------------------
 BiocParallel::register(BiocParallel::MulticoreParam())  ## see below for explanation of BiocParallel
 library(MMAPPR2, quietly = TRUE)
 library(MMAPPR2data, quietly = TRUE)

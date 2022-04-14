@@ -1,6 +1,8 @@
-#' Read BAM files and generate Euclidean distance data
+#' @title Read BAM files and generate Euclidean distance data
 #'
-#' First step in the MMAPPR2 pipeline. Precedes the \code{\link{loessFit}}
+#' @name calculateDistance
+#'
+#' @usage First step in the MMAPPR2 pipeline. Precedes the \code{\link{loessFit}}
 #' step.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
@@ -10,25 +12,20 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #'
-#'     md <- new('MmapprData', param = mmappr_param)
+#'     md <- mmapprData(mmappr_param)
 #'     postCalcDistMD <- calculateDistance(md)
 #' }
 #' 
+NULL
 
 calculateDistance <- function(mmapprData) {
-  .indexBamFileList(wtFiles(param(mmapprData)), 
-                    oF = outputFolder(param(mmapprData)))
-  .indexBamFileList(mutFiles(param(mmapprData)), 
-                    oF = outputFolder(param(mmapprData)))
-  
   chrList <- suppressWarnings(.getFileReadChrList(param(mmapprData)))
   
   mmapprData@snpDistance <-
@@ -37,17 +34,29 @@ calculateDistance <- function(mmapprData) {
   return(mmapprData)
 }
 
-.indexBamFileList <- function(bfl, oF) {
-  for (i in seq_along(bfl)) {
-    bamFile <- bfl[[i]]
-    if (is.na(Rsamtools::index(bamFile))) {
-      .messageAndLog("No index found. Indexing Bam now.", oF)
-      indexBam(bamFile)
-    } else {
-      .messageAndLog("Index found. Skipping index step.", oF)
-    }
-  }
-}
+
+.getFileReadChrList <- function(param) {suppressWarnings({
+  # get data for gtf 
+  suppressMessages(gtfData <- fread(cmd=paste("gzcat", param@gtf), 
+                                    showProgress = FALSE))
+  genes <- gtfData[V3 == "gene"
+  ][, .(seqnames = V1, seqnames2 = V1, start = V4, end = V5)]
+  genes <- makeGRangesListFromDataFrame(genes, 
+                                        split.field = "seqnames2")
+  
+  if (param@includeScaffolds != TRUE) {
+    genes <- keepStandardChromosomes(genes,
+                                     pruning.mode = 'coarse')
+  } 
+  
+  # remove mitochondiral chromosome b/c not mendelian inheritance
+  genes <- dropSeqlevels(genes, 'chrM',
+                         pruning.mode = 'coarse')
+  genes <- dropSeqlevels(genes, 'MT',
+                         pruning.mode = 'coarse')
+  
+  return(genes)
+})}
 
 
 .calcDistForChr <- function(chrRange, param){
@@ -128,28 +137,40 @@ calculateDistance <- function(mmapprData) {
   )
 }
 
-.getFileReadChrList <- function(param) {suppressWarnings({
-  # get data for gtf 
-  suppressMessages(gtfData <- fread(cmd=paste("zcat", param@gtf), 
-                                    showProgress = FALSE))
-  genes <- gtfData[V3 == "gene"
-                   ][, .(seqnames = V1, seqnames2 = V1, start = V4, end = V5)]
-  genes <- makeGRangesListFromDataFrame(genes, 
-                                        split.field = "seqnames2")
+
+# Imports data from BAM files
+.getPileup <- function(file, param, chrRange) {
+  stopifnot(length(file) == 1)
   
-  if (param@includeScaffolds != TRUE) {
-    genes <- keepStandardChromosomes(genes,
-                                                   pruning.mode = 'coarse')
-  } 
+  scanParam <- ScanBamParam(simpleCigar = TRUE,   # should try with FALSE
+                            which = chrRange, 
+                            mapqFilter=param@minMapQuality)
   
-  # remove mitochondiral chromosome b/c not mendelian inheritance
-  genes <- dropSeqlevels(genes, 'chrM',
-                                       pruning.mode = 'coarse')
-  genes <- dropSeqlevels(genes, 'MT',
-                                       pruning.mode = 'coarse')
+  pParam <- PileupParam(max_depth = 1000,
+                        min_mapq = param@minMapQuality, 
+                        min_base_quality = param@minBaseQuality,
+                        distinguish_strands = FALSE, 
+                        include_deletions = FALSE,
+                        include_insertions = FALSE)
   
-  return(genes)
-})}
+  pData <- data.table(pileup(file, 
+                             scanBamParam = scanParam, 
+                             pileupParam = pParam))
+  
+  pData <- dcast(pData, seqnames + pos ~ nucleotide, 
+                 value.var = "count", 
+                 fun.aggregate = sum)
+  
+  setnames(pData, colnames(pData), 
+           c("CHROM", "POS", "A.FREQ", "C.FREQ", "G.FREQ", "T.FREQ"))
+  
+  pData[, CVG := A.FREQ + C.FREQ + G.FREQ + T.FREQ
+  ][, c("A.FREQ", "C.FREQ", "G.FREQ", "T.FREQ") := 
+      list(A.FREQ/CVG, C.FREQ/CVG, G.FREQ/CVG, T.FREQ/CVG)]
+  
+  return(pData)
+}
+
 
 ###Get averages between files and divides by coverage
 # function takes data.table with pos, nuc (ACGTcvg--with counts),

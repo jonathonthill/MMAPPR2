@@ -1,6 +1,8 @@
-#' Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
+#' @title Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 #'
-#' MMAPPR2 is designed to map the causative mutation in a forward genetics
+#' @name mmappr
+#'
+#' @usage MMAPPR2 is designed to map the causative mutation in a forward genetics
 #' screen. It analyzes aligned sequence files, calculates the per-base
 #' Euclidean distance between the mutant and wild-type pools, performs
 #' a Loess regression on that distance, and generates candidate variants
@@ -14,11 +16,10 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & all(Sys.which(c('vep', 'samtools')) != '')) {
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
 #'
 #'     # Specify parameters:
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
@@ -26,12 +27,12 @@
 #'
 #'     # Run pipeline:
 #'     mmapprData <- mmappr(mmappr_param)
-#'
 #' }
+#' 
 #' \dontrun{
 #' ### Alternately, you can navigate the pipeline step by step.
 #' ### This may be helpful for debugging.
-#' md <- new('MmapprData', param = mmappr_param)
+#' md <- MmapprData(mmapprParam)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
@@ -43,6 +44,8 @@
 #' @seealso \code{\link{calculateDistance}}, \code{\link{loessFit}},
 #'   \code{\link{prePeak}}, \code{\link{peakRefinement}},
 #'   \code{\link{generateCandidates}}, \code{\link{outputMmapprData}}
+#'   
+NULL
 
 mmappr <- function(mmapprParam) {
     startTime <- Sys.time()
@@ -52,7 +55,7 @@ mmappr <- function(mmapprParam) {
 
     .checkDep('samtools')
 
-    md <- new("MmapprData", param = mmapprParam)
+    md <- MmapprData(mmapprParam)
     oF <- outputFolder(md@param)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)

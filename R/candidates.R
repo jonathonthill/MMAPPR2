@@ -1,28 +1,30 @@
-#' Generate potential causative mutations and consequences in peak regions
+#' @title Generate candidate mutations and consequences in peak regions
 #'
-#' Follows the \code{\link{peakRefinement}} step and produces a
-#' \code{\linkS4class{MmapprData}} object ready for
-#' \code{\link{outputMmapprData}}.
+#' @name generateCandidates
 #'
-#' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
+#' @usage Follows the \code{\link{peakRefinement}} step and produces a
+#' \code{\linkS4class{md}} object ready for
+#' \code{\link{outputmd}}.
 #'
-#' @return A \code{\linkS4class{MmapprData}} object with the \code{candidates}
+#' @param md The \code{\linkS4class{md}} object to be analyzed.
+#'
+#' @return A \code{\linkS4class{md}} object with the \code{candidates}
 #'   slot filled with a \code{\link[GenomicRanges]{GRanges}} object for each
 #'   peak chromosome containing variants and predicted consequences from
 #'   Ensembl's Variant Effect Predictor.
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly=TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#' if (requireNamespace('MMAPPR2data', quietly=TRUE)) {
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #' }
+#' 
 #' \dontrun{
-#' md <- new('MmapprData', param = mmappr_param)
+#' md <- mmapprData(mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
@@ -30,37 +32,40 @@
 #'
 #' postCandidatesMD <- generateCandidates(postPeakRefMD)
 #' }
+#' 
+NULL
 
-generateCandidates <- function(mmapprData) {
+generateCandidates <- function(md) {
   #get GRanges representation of peak
-  peakGRanges <- lapply(mmapprData@peaks, .getPeakRange)
+  .messageAndLog("Getting Variants in Peak", 
+                 outputFolder(param(md)))
+  peakGRanges <- lapply(md@peaks, .getPeakRange)
   
   #call variants in peak
-  mmapprData@candidates$snps <- lapply(peakGRanges,
-                                       FUN=.getVariantsForRange,
-                                       param=mmapprData@param)
+  md@candidates$snps <- lapply(peakGRanges,
+                               FUN=.getVariantsForRange,
+                               param=md@param)
   
-  #run VEP
-  mmapprData@candidates$effects <- lapply(mmapprData@candidates$snps,
-                                          FUN=.runVEPForVariants,
-                                          param=mmapprData@param)
-  
-  #filter out low impact effects
-  mmapprData@candidates$effects <- lapply(mmapprData@candidates$effects, 
-                                          FUN=.filterVariants, 
-                                          impact = mmapprData@param@vepImpact)
+  #predict effects of variants
+  .messageAndLog("Predicting Variant Effects", 
+                 outputFolder(param(md)))
+  md@candidates$effects <- lapply(md@candidates$snps,
+                                  FUN=.predictEffects,
+                                  param=md@param)
   
   #add diff expressed genes
-  mmapprData@candidates$diff <- lapply(peakGRanges,
-                                       FUN=.addDiff,
-                                       param=mmapprData@param)
+  .messageAndLog("Identifying Differentially Expressed Genes in Peak", 
+                 outputFolder(param(md)))
+  md@candidates$diff <- lapply(peakGRanges,
+                               FUN=.addDiff,
+                               param=md@param)
   
   #density score and order variants
-  mmapprData@candidates <- lapply(mmapprData@candidates,
-                                  FUN=.scoreVariants,
-                                  mmapprData@peaks)
+  .messageAndLog("Ordering Candidates by Position", 
+                 outputFolder(param(md)))
+  md@candidates <- .scoreVariants(md@candidates, md@peaks)
   
-  return(mmapprData)
+  return(md)
 }
 
 
@@ -105,44 +110,24 @@ generateCandidates <- function(mmapprData) {
   else return(NULL)
 }
 
-
-.runVEPForVariants <- function(inputVariants, param){
-  vepFlags <- vepFlags(param)
-  stopifnot(is(vepFlags, "VEPFlags"))
-  stopifnot(is(inputVariants, 'VRanges'))
-  
-  vcf <- file.path(outputFolder(param), paste0(seqnames(inputVariants)[1], 'peak.vcf'))
-
-  tryCatch({
-    writeVcf(inputVariants, vcf)
-    resultGRanges <- ensemblVEP(vcf, vepFlags)
-  }, error=function(e) {
-    stop(e)
-  },finally={
-    # if (file.exists(vcf)) file.remove(vcf)
-  })
-  
-  return(resultGRanges)
+.predictEffects <- function(inputVariants, param){
+  suppressMessages(txdb <- makeTxDbFromGFF(gtf(param), 
+                                           chrominfo = seqinfo(inputVariants)))    # This prevents incompatibility between the seqinfo for the txdb and inputVariants objects
+  effects <- predictCoding(query = inputVariants,
+                           subject = txdb,
+                           seqSource = FaFile(refFasta(param)),
+                           varAllele = DNAStringSet(alt(inputVariants)))
 }
-
-
-.filterVariants <- function(candidateGRanges, impact) {
-  impactLevels <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
-  filter <- mcols(candidateGRanges)$IMPACT %in% impactLevels[1:impact]
-  filter[is.na(filter)] <- TRUE
-  return(candidateGRanges[filter])
-}
-
 
 .addDiff <- function(peakGRange, param) {
   #prep data
-  suppressMessages(genes <- fread(cmd=paste("zcat", param@gtf), 
+  suppressMessages(genes <- fread(cmd=paste("gzcat", gtf(param)), 
                                   showProgress = FALSE))
   genes <- genes[V3 == "gene"
-               ][, gene_id := gsub(".*gene_id \"(.*?)\";.*", "\\1", V9)
-               ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
-               ][, .(seqnames = V1, start = V4, end = V5, strand = V7, 
-                     gene_id, gene_name)]
+  ][, gene_id := gsub(".*gene_id \"(.*?)\";.*", "\\1", V9)
+  ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
+  ][, .(seqnames = V1, start = V4, end = V5, strand = V7, 
+        gene_id, gene_name)]
   genes <- makeGRangesFromDataFrame(genes, keep.extra.columns = TRUE)
   genes <- subsetByOverlaps(x=genes, ranges = peakGRange)
   
@@ -154,8 +139,8 @@ generateCandidates <- function(mmapprData) {
   num_wt <- length(param@wtFiles)
   countDF <- as.data.table(assays(counts)$counts)
   countDF[, ave_wt := rowMeans(countDF[, 1:(num_wt + 1)])    
-        ][, ave_mt := rowMeans(countDF[, (num_wt + 1):length(countDF)])
-        ][, log2FC := round(log2(ave_mt/ave_wt), 3)]
+  ][, ave_mt := rowMeans(countDF[, (num_wt + 1):length(countDF)])
+  ][, log2FC := round(log2(ave_mt/ave_wt), 3)]
   
   #merge counts with genes
   mcols(genes) <- cbind(mcols(genes), countDF)
@@ -167,34 +152,39 @@ generateCandidates <- function(mmapprData) {
 
 
 .scoreVariants <- function(candList, peaks) {
-  returnData = list()
-  for (seqname in names(candList)) {
-    #density calculation
-    densityFunction <- peaks[[seqname]]$densityFunction
-    stopifnot(!is.null(densityFunction))
-    positions <- BiocGenerics::start(candList[[seqname]]) +
-      ((BiocGenerics::width(candList[[seqname]]) - 1) / 2)
-    densityCol <- vapply(positions, densityFunction, FUN.VALUE=numeric(1))
-    mcols(candList[[seqname]])$peakDensity <- densityCol
-    
-    #re-order
-    returnData[[seqname]] <-
-      .orderVariants(candList[[seqname]], densityCol)
+  for (GRname in names(candList)) {
+    GR <- candList[[GRname]]
+    for (seqname in names(GR)) {
+      print(seqname)
+      #density calculation
+      densityFunc <- peaks[[seqname]]$densityFunction
+      stopifnot(!is.null(densityFunc))
+      positions <- BiocGenerics::start(GR[[seqname]]) +
+        ((BiocGenerics::width(GR[[seqname]]) - 1) / 2)
+      densityCol <- vapply(positions, densityFunc, FUN.VALUE=numeric(1))
+      mcols(candList[[GRname]][[seqname]])$peakDensity <- densityCol
+      
+      #re-order
+      candList[[GRname]][[seqname]] <-
+        .orderVariants(candList[[GRname]][[seqname]])
+    }
   }
-  return(returnData)
+  return(candList)
 }
 
 
-.orderVariants <- function(candidateGRanges, densityCol) {
+.orderVariants <- function(candidateGRanges) {
   if(!(class(candidateGRanges) %in% c("VRanges", "GRanges"))) { 
+    .messageAndLog("invalid data type for sorting. (orderVariants)", 
+                   outputFolder(param(md)))
     return(candidateGRanges)
   }
-  if(!is.null(candidateGRanges$IMPACT)) {
-    impactLevels <- c("MODIFIER", "LOW", "MODERATE", "HIGH")
-    orderVec <- order(match(candidateGRanges$IMPACT, impactLevels), 
-                      densityCol, decreasing=TRUE)
+  if(!is.null(candidateGRanges$CONSEQUENCE)) {
+    impactLevels <- c("synonymous", "nonsynonymous", "frameshift", "nonsense")
+    orderVec <- order(match(candidateGRanges$CONSEQUENCE, impactLevels), 
+                      candidateGRanges$peakDensity, decreasing=TRUE)
   } else {
-    orderVec <- order(densityCol, decreasing=TRUE)
+    orderVec <- order(candidateGRanges$peakDensity, decreasing=TRUE)
   }
   candidateGRanges <- candidateGRanges[orderVec]
   return(candidateGRanges)

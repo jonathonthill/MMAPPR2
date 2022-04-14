@@ -1,6 +1,9 @@
-#' Characterize Euclidean distance peaks using resampling simulation
+#' 
+#' @title Characterize Euclidean distance peaks using resampling simulation
 #'
-#' Follows the \code{\link{prePeak}} step and precedes
+#' @name peakRefinement
+#'
+#' @usage Follows the \code{\link{prePeak}} step and precedes
 #' \code{\link{generateCandidates}}.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
@@ -10,23 +13,27 @@
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #' }
+#' 
 #' \dontrun{
-#' md <- new('MmapprData', param = mmappr_param)
+#' md <- mmapprData(mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #' postPrePeakMD <- prePeak(postLoessMD)
 #'
 #' postPeakRefMD <- peakRefinement(postPrePeakMD)
 #' }
+#' 
 #' @import BiocParallel
+#' 
+NULL
+
 
 peakRefinement <- function(mmapprData){
     mmapprData@peaks <-
@@ -124,9 +131,11 @@ peakRefinement <- function(mmapprData){
 }
 
 
-#' Identify chromosomes containing peaks
+#' @title Identify chromosomes containing peaks
 #'
-#' Follows the \code{\link{loessFit}} step and precedes
+#' @name prePeak
+#'
+#' @usage Follows the \code{\link{loessFit}} step and precedes
 #' \code{\link{peakRefinement}}.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
@@ -136,21 +145,25 @@ peakRefinement <- function(mmapprData){
 #' @export
 #'
 #' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)
-#'         & all(Sys.which(c("samtools", "vep")) != "")) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #' }
+#' 
 #' \dontrun{
-#' md <- new('MmapprData', param = mmappr_param)
+#' md <- mmapprData(mmappr_param)
 #' postCalcDistMD <- calculateDistance(md)
 #' postLoessMD <- loessFit(postCalcDistMD)
 #'
 #' postPrePeakMD <- prePeak(postLoessMD)
 #' }
+#' 
+NULL
+
+
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
 
@@ -176,6 +189,5 @@ prePeak <- function(mmapprData) {
             mmapprData@peaks[[chrName]] <- list(seqname = chrName)
         }
     }
-
     return(mmapprData)
 }

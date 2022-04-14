@@ -4,7 +4,11 @@
 \alias{mmappr}
 \title{Mutation Mapping Analysis Pipeline for Pooled RNA-Seq}
 \usage{
-mmappr(mmapprParam)
+MMAPPR2 is designed to map the causative mutation in a forward genetics
+screen. It analyzes aligned sequence files, calculates the per-base
+Euclidean distance between the mutant and wild-type pools, performs
+a Loess regression on that distance, and generates candidate variants
+in regions of peak distance.
 }
 \arguments{
 \item{mmapprParam}{A \code{\linkS4class{MmapprParam}} object containing
@@ -15,18 +19,13 @@ A \code{\linkS4class{MmapprData}} object containing results
   and/or intermediate data.
 }
 \description{
-MMAPPR2 is designed to map the causative mutation in a forward genetics
-screen. It analyzes aligned sequence files, calculates the per-base
-Euclidean distance between the mutant and wild-type pools, performs
-a Loess regression on that distance, and generates candidate variants
-in regions of peak distance.
+Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
 }
 \examples{
-if (requireNamespace('MMAPPR2data', quietly = TRUE)
-        & all(Sys.which(c('vep', 'samtools')) != '')) {
+if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
 
     # Specify parameters:
-    mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+    mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
                                 mutFiles = MMAPPR2data::exampleMutBam(),
                                 refFasta = MMAPPR2data::goldenFasta(),
                                 gtf = MMAPPR2data::gtf(),
@@ -34,12 +33,12 @@ if (requireNamespace('MMAPPR2data', quietly = TRUE)
 
     # Run pipeline:
     mmapprData <- mmappr(mmappr_param)
-
 }
+
 \dontrun{
 ### Alternately, you can navigate the pipeline step by step.
 ### This may be helpful for debugging.
-md <- new('MmapprData', param = mmappr_param)
+md <- MmapprData(mmapprParam)
 postCalcDistMD <- calculateDistance(md)
 postLoessMD <- loessFit(postCalcDistMD)
 postPrePeakMD <- prePeak(postLoessMD)

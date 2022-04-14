@@ -14,7 +14,7 @@ Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the 
 Depends: R (>= 3.6.0)
 License: GPL-3
 Encoding: UTF-8
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.2
 VignetteBuilder: knitr
 Suggests: testthat,
     mockery,
@@ -23,7 +23,7 @@ Suggests: testthat,
     rmarkdown,
     BiocStyle,
     MMAPPR2data
-Imports: ensemblVEP (>= 1.20.0),
+Imports: 
     gmapR,
     Rsamtools,
     VariantAnnotation,
@@ -32,6 +32,7 @@ Imports: ensemblVEP (>= 1.20.0),
     BiocGenerics,
     GenomeInfoDb,
     GenomicRanges,
+    GenomicFeatures,
     IRanges,
     S4Vectors,
     VariantTools,
@@ -41,7 +42,7 @@ Imports: ensemblVEP (>= 1.20.0),
     stats,
     utils,
     data.table
-SystemRequirements: Ensembl VEP
+SystemRequirements:
 biocViews: RNASeq,
     PooledScreens,
     DNASeq,
@@ -50,3 +51,14 @@ URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3613585/,
     https://github.com/kjohnsen/MMAPPR2
 BugReports: https://github.com/kjohnsen/MMAPPR2/issues
 OS_type: unix
+Collate: 
+    'MMAPPR2.R'
+    'all_generics.R'
+    'candidates.R'
+    'distance.R'
+    'loess.R'
+    'main.R'
+    'param.R'
+    'mmapprData.R'
+    'output.R'
+    'peaks.R'
