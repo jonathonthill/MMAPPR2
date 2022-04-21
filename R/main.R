@@ -55,7 +55,7 @@ mmappr <- function(mmapprParam) {
 
     .checkDep('samtools')
 
-    md <- MmapprData(mmapprParam)
+    md <- mmapprData(mmapprParam)
     oF <- outputFolder(md@param)
     .messageAndLog(paste('Start time:', Sys.time()), oF)
     .messageAndLog(paste('Output folder:', file.path(getwd(), oF), '\n'), oF)
