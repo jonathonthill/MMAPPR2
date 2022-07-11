@@ -37,7 +37,7 @@ calculateDistance <- function(mmapprData) {
 
 .getFileReadChrList <- function(param) {suppressWarnings({
   # get data for gtf 
-  suppressMessages(gtfData <- fread(cmd=paste("gzcat", param@gtf), 
+  suppressMessages(gtfData <- fread(cmd=paste("gunzip -c", param@gtf), 
                                     showProgress = FALSE))
   genes <- gtfData[V3 == "gene"
   ][, .(seqnames = V1, seqnames2 = V1, start = V4, end = V5)]
