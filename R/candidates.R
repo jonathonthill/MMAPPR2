@@ -46,6 +46,17 @@ generateCandidates <- function(md) {
                                FUN=.getVariantsForRange,
                                param=md@param)
   
+  #remove NULL values from snps
+  allPeaks <- length(mmapprData@candidates$snps)
+  mmapprData@candidates$snps <- mmapprData@candidates$snps[!sapply(mmapprData@candidates$snps,is.null)]
+  noNullPeaks <- length(mmapprData@candidates$snps)
+  
+  if(allPeaks != noNullPeaks) {
+    peaksRemoved <- allPeaks - noNullPeaks
+    .messageAndLog("Warning: peaks without valid snps were called but then removed", oF)
+    .messageAndLog(paste("Number of peaks removed:" , peaksRemoved), oF)
+  }
+  
   #predict effects of variants
   .messageAndLog("Predicting Variant Effects", 
                  outputFolder(param(md)))
