@@ -47,9 +47,9 @@ generateCandidates <- function(md) {
                                param=md@param)
   
   #remove NULL values from snps
-  allPeaks <- length(mmapprData@candidates$snps)
-  mmapprData@candidates$snps <- mmapprData@candidates$snps[!sapply(mmapprData@candidates$snps,is.null)]
-  noNullPeaks <- length(mmapprData@candidates$snps)
+  allPeaks <- length(md@candidates$snps)
+  md@candidates$snps <- md@candidates$snps[!sapply(md@candidates$snps,is.null)]
+  noNullPeaks <- length(md@candidates$snps)
   
   if(allPeaks != noNullPeaks) {
     peaksRemoved <- allPeaks - noNullPeaks
