@@ -132,7 +132,7 @@ generateCandidates <- function(md) {
 
 .addDiff <- function(peakGRange, param) {
   #prep data
-  suppressMessages(genes <- fread(cmd=paste("gunzip", gtf(param))))
+  suppressMessages(genes <- fread(cmd=paste("zcat", gtf(param))))
   genes <- genes[V3 == "gene"
   ][, gene_id := gsub(".*gene_id \"(.*?)\";.*", "\\1", V9)
   ][, gene_name := gsub(".*gene_name \"(.*?)\";.*", "\\1", V9)
