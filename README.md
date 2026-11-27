@@ -35,7 +35,7 @@ chmod +x Miniforge3-Linux-x86_64.sh
 ./Miniforge3-Linux-x86_64.sh
 
 ## Create environment
-mamba create -n MMAPPR2 -c conda-forge -c bioconda \
+mamba create -n mmappr2 -c conda-forge -c bioconda \
   r-base=4.3 \
   r-biocmanager \
   r-devtools \
@@ -50,6 +50,7 @@ mamba create -n MMAPPR2 -c conda-forge -c bioconda \
   samtools \
   git \
   -y
+
 
 ## Activate environment
 mamba activate
