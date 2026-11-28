@@ -109,9 +109,11 @@ mmappr <- function(mmapprParam, palette = "default", colors = NULL) {
     .log('\nsessionInfo()', oF)
     .log(sessionInfo(), oF)
 
+    # Automatically reorder the log
+    .reorderLogFile(oF)
+
     return(md)
 }
-
 
 .messageAndLog <- function(msg, outputFolder) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
@@ -127,5 +129,60 @@ mmappr <- function(mmapprParam, palette = "default", colors = NULL) {
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file = logFile, sep = '\n', append = TRUE)
 }
+
+.reorderLogFile <- function(outputFolder) {
+
+    logFile <- file.path(outputFolder, "mmappr2.log")
+    if (!file.exists(logFile)) {
+        return(invisible(NULL))
+    }
+
+    lines <- readLines(logFile)
+
+    # Peak Summary
+    peak_start <- grep("^Peak Summary:", lines)
+    peak_block <- character()
+    peak_range <- integer(0)
+
+    if (length(peak_start) > 0L) {
+        dens_line <- grep("^Value of maximum density:", lines)
+        dens_line <- dens_line[dens_line >= peak_start[1L]]
+
+        if (length(dens_line) > 0L) {
+            peak_end   <- dens_line[1L]
+            peak_range <- peak_start[1L]:peak_end
+            peak_block <- lines[peak_range]
+        }
+    }
+
+    # End Time
+    end_start  <- grep("^End time:", lines)
+    tail_block <- character()
+    tail_range <- integer(0)
+
+    if (length(end_start) > 0L) {
+        tail_range <- end_start[1L]:length(lines)
+        tail_block <- lines[tail_range]
+    }
+
+    # Chronological Log
+    remove_idx <- unique(c(peak_range, tail_range))
+    remaining  <- lines[setdiff(seq_along(lines), remove_idx)]
+
+    # Build the reordered file
+    new_lines <- c(
+        "===== MMAPPR2 SUMMARY =====",
+        "",
+        if (length(peak_block)) c(peak_block, "") else character(0L),
+        if (length(tail_block)) c(tail_block, "") else character(0L),
+        "===== FULL LOG BELOW (chronological) =====",
+        remaining
+    )
+
+    # Overwrite the file so there aren't two logs created
+    writeLines(new_lines, logFile)
+    invisible(NULL)
+}
+
 
 
