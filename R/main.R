@@ -141,21 +141,29 @@ mmappr <- function(mmapprParam, palette = "default", colors = NULL) {
 
     lines <- readLines(logFile)
 
-    # Peak Summary
-    peak_start <- grep("^Peak Summary:", lines)
-    peak_block <- character()
+    # Peak Summary: generateCandidates() writes one header followed by a
+    # block of fields for each peak chromosome, separated by blank lines.
+    # Stop at the first unrelated log message, even if a peak is incomplete.
+    peak_start <- which(lines == "Peak Summary:")
+    peak_field <- grepl(paste0("^(seqname|refined interval|full-data LOESS apex|",
+                              "resampling-density apex|resampling success rate|",
+                              "resampling seed):"), lines)
+    blank_line <- !nzchar(trimws(lines))
     peak_range <- integer(0)
 
-    if (length(peak_start) > 0L) {
-        dens_line <- grep("^Value of maximum density:", lines)
-        dens_line <- dens_line[dens_line >= peak_start[1L]]
-
-        if (length(dens_line) > 0L) {
-            peak_end   <- dens_line[1L]
-            peak_range <- peak_start[1L]:peak_end
-            peak_block <- lines[peak_range]
+    for (start in peak_start) {
+        peak_end <- start
+        i <- start + 1L
+        while (i <= length(lines) && (peak_field[i] || blank_line[i])) {
+            if (peak_field[i]) peak_end <- i
+            i <- i + 1L
         }
+        # Leave an empty heading in the chronological log if no fields
+        # were written. Preserve the blank lines between chromosome blocks.
+        if (peak_end > start)
+            peak_range <- c(peak_range, seq.int(start, peak_end))
     }
+    peak_block <- lines[peak_range]
 
     # End Time
     end_start  <- grep("^End time:", lines)
