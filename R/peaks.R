@@ -2,8 +2,8 @@
 #' @title Characterize Euclidean distance peaks using resampling simulation
 #'
 #' @name peakRefinement
-#'
-#' @usage Follows the \code{\link{prePeak}} step and precedes
+#' @description
+#' Follows the \code{\link{prePeak}} step and precedes
 #' \code{\link{generateCandidates}}.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
@@ -36,158 +36,285 @@ NULL
 
 
 peakRefinement <- function(mmapprData){
-    mmapprData@peaks <-
-        bplapply(mmapprData@peaks,
-                 .peakRefinementChr,
-                 mmapprData = mmapprData)
-    return(mmapprData)
+    mmapprData@peaks <- BiocParallel::bplapply(
+        mmapprData@peaks,
+        .peakRefinementChr,
+        mmapprData = mmapprData
+    )
+    mmapprData
 }
+
+
+.peakApexPosition <- function(x, fitted) {
+    valid <- is.finite(x) & is.finite(fitted)
+    if (!any(valid)) return(NA_real_)
+    x <- as.numeric(x[valid])
+    fitted <- as.numeric(fitted[valid])
+    maxFit <- max(fitted)
+    # Flat-topped fits should not be biased toward the first/left-most point.
+    # The median coordinate is stable and symmetric across a plateau.
+    stats::median(x[fitted == maxFit])
+}
+
 
 .getSubsampleLoessMax <- function(rawData, loessSpan) {
-    tempData <- rawData[sample(seq_len(nrow(rawData)), 
-                               size = nrow(rawData)*.5),]
-    tempData <- tempData[order(tempData$pos),]
-    loessData <- suppressWarnings(
-        loess(euclideanDistance~pos, data = tempData,
-              span = loessSpan, family = c("symmetric")))
-    return(loessData$x[which.max(loessData$fitted)])
+    n <- nrow(rawData)
+    if (n < 5L) return(NA_real_)
+    sampleSize <- max(5L, floor(n * 0.5))
+    idx <- sample.int(n, size = sampleSize, replace = FALSE)
+    tempData <- rawData[idx, , drop = FALSE]
+    tempData <- tempData[order(tempData$pos), , drop = FALSE]
+
+    fit <- suppressWarnings(try(
+        stats::loess(euclideanDistance ~ pos,
+                     data = tempData,
+                     span = loessSpan,
+                     degree = 1,
+                     family = "symmetric"),
+        silent = TRUE
+    ))
+    # One bad half-sample should not abort all 1,000 resamples.
+    if (inherits(fit, "try-error") || !inherits(fit, "loess")) return(NA_real_)
+    .peakApexPosition(as.numeric(fit$x), fit$fitted)
 }
 
-.getPeakFromTopP <- function(data, topP) {
-    # Takes a dataframe of x and y and identfies the top
-    # values totaling `topP` or greater. It returns
-    # a peak defined by this region
-    stopifnot(ncol(data) == 2)
-    names(data) <- c('x', 'y')
-    # this arrange part is slow.
-    data <- dplyr::arrange(data, dplyr::desc(data$y))
 
-    rollingSum <- cumsum(data$y)
-    cutoffValue <- data$y[rollingSum >= topP][1]
-
-    data <- dplyr::filter(data, data$y >= cutoffValue)
-
-    minPos = min(data$x)
-    maxPos = max(data$x)
-    peakPos <- data$x[which.max(data$y)]
-
-    return(list(minPos = minPos, maxPos = maxPos, peakPos = peakPos))
+.densityPointMass <- function(x, y) {
+    stopifnot(length(x) == length(y), length(x) >= 1L)
+    if (length(x) == 1L) return(1)
+    dx <- diff(x)
+    if (any(!is.finite(dx)) || any(dx <= 0)) stop("Density x coordinates must be strictly increasing")
+    # Approximate the integration cell represented by each KDE grid point. This
+    # makes the mass calculation correct even if a future density grid is not
+    # perfectly equally spaced.
+    widths <- c(dx[1] / 2, (head(dx, -1L) + tail(dx, -1L)) / 2, tail(dx, 1L) / 2)
+    rawMass <- pmax(y, 0) * widths
+    if (!is.finite(sum(rawMass)) || sum(rawMass) <= 0) stop("Peak-density mass is empty")
+    rawMass / sum(rawMass)
 }
+
+
+.getPeakFromTopP <- function(data, topP, method = c("hpd_span", "shortest_contiguous")) {
+    stopifnot(ncol(data) == 2L, topP > 0, topP <= 1)
+    method <- match.arg(method)
+    names(data) <- c("x", "y")
+    data <- data[is.finite(data$x) & is.finite(data$y) & data$y >= 0, , drop = FALSE]
+    data <- data[order(data$x), , drop = FALSE]
+    if (nrow(data) == 0L || sum(data$y) <= 0) stop("Peak-density data are empty")
+
+    mass <- .densityPointMass(data$x, data$y)
+    peakPos <- .peakApexPosition(data$x, data$y)
+
+    if (method == "hpd_span") {
+        ranked <- order(data$y, decreasing = TRUE)
+        cumulative <- cumsum(mass[ranked])
+        firstEnough <- which(cumulative >= topP)[1]
+        cutoffDensity <- data$y[ranked[firstEnough]]
+        selected <- data$y >= cutoffDensity
+        return(list(minPos = min(data$x[selected]),
+                    maxPos = max(data$x[selected]),
+                    peakPos = peakPos))
+    }
+
+    cs <- c(0, cumsum(mass))
+    bestLeft <- 1L
+    bestRight <- nrow(data)
+    bestWidth <- Inf
+    for (left in seq_len(nrow(data))) {
+        target <- cs[left] + topP
+        right <- which(cs[-1L] >= target)[1]
+        if (is.na(right) || right < left) next
+        width <- data$x[right] - data$x[left]
+        if (width < bestWidth) {
+            bestWidth <- width
+            bestLeft <- left
+            bestRight <- right
+        }
+    }
+    list(minPos = data$x[bestLeft],
+         maxPos = data$x[bestRight],
+         peakPos = peakPos)
+}
+
+
+.derivedSeed <- function(baseSeed, seqname) {
+    # Deterministic per chromosome and stable across serial/parallel execution.
+    chars <- utf8ToInt(as.character(seqname))
+    offset <- if (length(chars)) sum(chars * seq_along(chars)) else 0
+    as.integer((as.double(baseSeed) + offset) %% (.Machine$integer.max - 1L) + 1L)
+}
+
 
 .peakRefinementChr <- function(inputList, mmapprData) {
-    stopifnot('seqname' %in% names(inputList))
+    stopifnot("seqname" %in% names(inputList))
     seqname <- inputList$seqname
 
+    loessObj <- mmapprData@snpDistance[[seqname]]$loess
+    loessSpan <- loessObj$pars$span
+    # loess stores predictors in a matrix-like `x` component on some R
+    # versions. Normalize the single genomic predictor to a plain numeric vector so
+    # downstream data.frame/subsetting behavior is unambiguous.
+    rawData <- data.frame(pos = as.numeric(loessObj$x),
+                          euclideanDistance = as.numeric(loessObj$y))
+    rawData <- rawData[is.finite(rawData$pos) & is.finite(rawData$euclideanDistance), , drop = FALSE]
+    if (nrow(rawData) < 10L) stop("Too few finite markers to refine peak on ", seqname)
 
-    loessSpan <- mmapprData@snpDistance[[seqname]]$loess$pars$span
-    pos <- mmapprData@snpDistance[[seqname]]$loess$x
-    euclideanDistance <- mmapprData@snpDistance[[seqname]]$loess$y
-    rawData <- data.frame(pos, euclideanDistance)
+    # Peak refinement used to depend on the ambient RNG state, so identical
+    # inputs could yield slightly different intervals. Use a deterministic seed
+    # derived from the user-recorded base seed and chromosome name.
+    seed <- .derivedSeed(randomSeed(mmapprData@param), seqname)
+    oldSeedExists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if (oldSeedExists) oldSeed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    on.exit({
+        if (oldSeedExists) assign(".Random.seed", oldSeed, envir = .GlobalEnv)
+        else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+            rm(".Random.seed", envir = .GlobalEnv)
+    }, add = TRUE)
+    set.seed(seed)
 
-    # get peak values of loess fits of 1000 subsamples
-    maxValues <- replicate(1000, .getSubsampleLoessMax(rawData = rawData,
-                                                       loessSpan = loessSpan))
+    nIter <- as.integer(peakResampleIterations(mmapprData@param))
+    maxValues <- replicate(nIter,
+                           .getSubsampleLoessMax(rawData = rawData,
+                                                loessSpan = loessSpan))
+    success <- is.finite(maxValues)
+    successRate <- mean(success)
+    maxValues <- maxValues[success]
+    if (length(maxValues) < max(5L, ceiling(0.5 * nIter)))
+        stop("Too many failed peak-resampling LOESS fits on ", seqname,
+             " (successful: ", length(maxValues), "/", nIter, ")")
 
-    densityData <- density.default(maxValues)
-    densityFunction <- approxfun(x = densityData$x, y = densityData$y)
+    # A degenerate distribution can occur when every resample chooses exactly the
+    # same marker. In that case density() cannot estimate bandwidth sensibly.
+    if (length(unique(maxValues)) == 1L) {
+        densityData <- list(x = maxValues[[1]], y = 1)
+        peak <- list(minPos = maxValues[[1]], maxPos = maxValues[[1]],
+                     peakPos = maxValues[[1]])
+        densityFunction <- function(x) as.numeric(x == maxValues[[1]])
+    } else {
+        densityData <- stats::density(maxValues)
+        densityDf <- data.frame(x = densityData$x, y = densityData$y)
 
-    xMin <- min(densityData$x)
-    xMax <- max(densityData$x)
+        # KDE support can extend beyond the chromosome. Clip it before using
+        # the density to define a physical genomic interval.
+        fa_si <- .faSeqinfo(mmapprData@param@refGenome)
+        chrLen <- GenomeInfoDb::seqlengths(fa_si)[seqname]
+        if (length(chrLen) == 1L && is.finite(chrLen)) {
+            densityDf <- densityDf[densityDf$x >= 1 & densityDf$x <= chrLen, , drop = FALSE]
+        }
+        if (nrow(densityDf) == 0L) stop("No valid KDE support remained on ", seqname)
 
-    densityRank <- data.frame(seq(xMin, xMax))
-    names(densityRank) <- "pos"
-    densityRank <- dplyr::mutate(densityRank,
-                      'densityValue' = densityFunction(seq(xMin,xMax)))
+        peak <- .getPeakFromTopP(densityDf, peakIntervalWidth(mmapprData@param),
+                                 method = peakIntervalMethod(mmapprData@param))
+        densityData$x <- densityDf$x
+        densityData$y <- densityDf$y
+        densityFunction <- stats::approxfun(x = densityDf$x, y = densityDf$y,
+                                            yleft = 0, yright = 0, rule = 1)
+    }
 
-    peak <- .getPeakFromTopP(densityRank, mmapprData@param@peakIntervalWidth)
+    # Keep integer, valid coordinates for downstream GRanges queries.
+    fa_si <- .faSeqinfo(mmapprData@param@refGenome)
+    chrLen <- GenomeInfoDb::seqlengths(fa_si)[seqname]
+    lower <- max(1L, floor(peak$minPos))
+    upper <- ceiling(peak$maxPos)
+    if (length(chrLen) == 1L && is.finite(chrLen)) upper <- min(upper, as.integer(chrLen))
 
-    outputList <- list()
-    outputList$seqname <- seqname
-    outputList$start <- peak$minPos
-    outputList$end <- peak$maxPos
-    outputList$densityFunction <- densityFunction
-    outputList$peakPosition <- peak$peakPos
-    outputList$densityData <- densityData
+    loessX <- as.numeric(loessObj$x)
+    loessPeak <- .peakApexPosition(loessX, loessObj$fitted)
 
-    return(outputList)
-}
-
-
-.stDevForChr <- function(chr) {
-    tryCatch({
-        return(var(chr$loess$fitted)/length(chr$loess$fitted))
-    }, error = function(e) {
-        return(0)
-    })
-}
-
-
-.meanForChr <- function(chr) {
-    tryCatch({
-        return(mean(chr$loess$fitted))
-    }, error = function(e) {
-        return(NA)
-    })
+    # This data model still represents one refined locus per chromosome.
+    # Proper polygenic / multiple-same-chromosome support requires changing the
+    # peaks structure and downstream output, not simply choosing a second maximum.
+    list(seqname = seqname,
+         start = lower,
+         end = upper,
+         densityFunction = densityFunction,
+         peakPosition = peak$peakPos,       # resampling-density apex; preserves the old field meaning
+         densityPeakPosition = peak$peakPos,
+         loessPeakPosition = loessPeak,
+         densityData = densityData,
+         resampleSuccessRate = successRate,
+         resampleSeed = seed,
+         cutoff = inputList$cutoff,
+         cutoffCenter = inputList$cutoffCenter,
+         cutoffSpread = inputList$cutoffSpread,
+         cutoffMethod = inputList$cutoffMethod,
+         intervalMethod = peakIntervalMethod(mmapprData@param))
 }
 
 
 #' @title Identify chromosomes containing peaks
 #'
 #' @name prePeak
-#'
-#' @usage Follows the \code{\link{loessFit}} step and precedes
+#' @description
+#' Follows the \code{\link{loessFit}} step and precedes
 #' \code{\link{peakRefinement}}.
 #'
 #' @param mmapprData The \code{\linkS4class{MmapprData}} object to be analyzed.
 #'
 #' @return A \linkS4class{MmapprData} object with the \code{peaks}
-#'   slot initalized.
+#'   slot initialized.
 #' @export
-#'
-#' @examples
-#' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
-#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
-#'                                 refFasta = MMAPPR2data::goldenFasta(),
-#'                                 gtf = MMAPPR2data::gtf(),
-#'                                 outputFolder = tempOutputFolder())
-#' }
-#' 
-#' \dontrun{
-#' md <- mmapprData(mmappr_param)
-#' postCalcDistMD <- calculateDistance(md)
-#' postLoessMD <- loessFit(postCalcDistMD)
-#'
-#' postPrePeakMD <- prePeak(postLoessMD)
-#' }
-#' 
 NULL
+
+
+.calculatePeakCutoff <- function(snpDistance, method = c("legacy_current", "global_sd"), k = 3) {
+    method <- match.arg(method)
+    valid <- lapply(snpDistance, function(chr) {
+        if (!is.list(chr) || !inherits(chr$loess, "loess")) return(numeric())
+        chr$loess$fitted[is.finite(chr$loess$fitted)]
+    })
+    valid <- valid[vapply(valid, length, integer(1)) > 0L]
+    if (length(valid) == 0L) stop("No finite LOESS values are available for peak thresholding")
+
+    if (method == "legacy_current") {
+        centers <- vapply(valid, mean, numeric(1))
+        varianceTerms <- vapply(valid, function(x) if (length(x) > 1L) stats::var(x) / length(x) else 0, numeric(1))
+        center <- mean(centers)
+        spread <- sqrt(sum(varianceTerms))
+    } else {
+        # Optional statistically clearer alternative: a robust global
+        # center with the ordinary SD of all fitted marker values. This is still
+        # a heuristic threshold, not a calibrated false-positive probability.
+        allFitted <- unlist(valid, use.names = FALSE)
+        if (length(allFitted) < 2L) stop("Insufficient finite LOESS values for global-SD thresholding")
+        center <- stats::median(allFitted)
+        spread <- stats::sd(allFitted)
+    }
+    list(cutoff = center + k * spread, center = center, spread = spread, method = method)
+}
 
 
 prePeak <- function(mmapprData) {
     mmapprData@peaks <- list()
+    cutoffInfo <- .calculatePeakCutoff(
+        mmapprData@snpDistance,
+        method = peakCutoffMethod(mmapprData@param),
+        k = peakCutoffSd(mmapprData@param)
+    )
 
-    #need to calculate standard dev of all chromosomes for cutoff
-    combinedStDev <- vapply(mmapprData@snpDistance, .stDevForChr, numeric(1))
-    combinedStDev <- sum(combinedStDev)^(1/2)
-
-    distancemean <- vapply(mmapprData@snpDistance, .meanForChr, numeric(1))
-    # mean of list of chr means
-    distancemean <- mean(distancemean, na.rm = TRUE)
-    cutoff <- 3*combinedStDev + distancemean
-
-    #get which peaks have values above cutoff, initialize them in mmapprData
-    for(i in seq_along(mmapprData@snpDistance)){
-        if(!is(mmapprData@snpDistance[[i]], 'list')) next
-        if(!is(mmapprData@snpDistance[[i]]$loess, 'loess')) next
-
-        loessForChr <- mmapprData@snpDistance[[i]]$loess
-        if (length(loessForChr$x) < 50) next
-        containsPeak <- any(loessForChr$fitted > cutoff)
+    for (i in seq_along(mmapprData@snpDistance)) {
+        chr <- mmapprData@snpDistance[[i]]
+        if (!is.list(chr) || !inherits(chr$loess, "loess")) next
+        loessForChr <- chr$loess
+        if (length(loessForChr$x) < 50L) next
+        # NA fitted values no longer make any() return NA and break if().
+        containsPeak <- any(loessForChr$fitted > cutoffInfo$cutoff, na.rm = TRUE)
         chrName <- names(mmapprData@snpDistance)[[i]]
         if (containsPeak) {
-            mmapprData@peaks[[chrName]] <- list(seqname = chrName)
+            mmapprData@peaks[[chrName]] <- list(
+                seqname = chrName,
+                cutoff = cutoffInfo$cutoff,
+                cutoffCenter = cutoffInfo$center,
+                cutoffSpread = cutoffInfo$spread,
+                cutoffMethod = cutoffInfo$method
+            )
         }
     }
-    return(mmapprData)
+
+    .messageAndLog(sprintf("Peak cutoff (%s): center %.6g + %.3g*spread %.6g = %.6g",
+                           cutoffInfo$method, cutoffInfo$center,
+                           peakCutoffSd(mmapprData@param), cutoffInfo$spread,
+                           cutoffInfo$cutoff),
+                   outputFolder(mmapprData@param))
+    mmapprData
 }

@@ -1,0 +1,202 @@
+---
+title: "MMAPPR2 workflow"
+author: "Kyle Johnsen, Nathaniel Jenkins, and Jonathon Hill"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{MMAPPR2 workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Scope
+
+This vignette describes the current MMAPPR2 workflow and its public analysis controls.
+MMAPPR2 uses Bioconductor APIs for BAM/FASTA access and local coding-effect annotation;
+external GMAP, command-line `samtools mpileup`, Ensembl VEP, `species`, and `VEPFlags`
+are not required by the current workflow.
+
+MMAPPR2 maps a phenotype from pooled F2 RNA-seq in two conceptual phases:
+
+1. compare mutant and phenotypically WT pools at covered A/C/G/T positions to locate a
+   linkage region;
+2. inspect mutant sequence changes inside the refined region, attach WT-pool evidence,
+   and annotate coding consequences.
+
+# Inputs
+
+The constructor expects:
+
+- one or more WT-pool BAM files;
+- one or more mutant-pool BAM files;
+- the reference FASTA used for alignment;
+- a GTF annotation corresponding to that reference.
+
+BAM and FASTA indexes are created when missing. The input GTF is read through
+Bioconductor and is **not** destructively uncompressed or shell-processed.
+
+```{r setup, eval=FALSE}
+param <- mmapprParam(
+  wtFiles = c("wt_pool.bam"),
+  mutFiles = c("mutant_pool.bam"),
+  refFasta = "reference.fa",
+  gtf = "annotation.gtf",
+  outputFolder = "mmappr2_results"
+)
+```
+
+# Important defaults and explicit controls
+
+```{r parameters, eval=FALSE}
+param <- mmapprParam(
+  wtFiles = "wt_pool.bam",
+  mutFiles = "mutant_pool.bam",
+  refFasta = "reference.fa",
+  gtf = "annotation.gtf",
+  minDepth = 20,
+  minBaseQuality = 20,
+  minMapQuality = 20,
+  maxPileupDepth = 1000,
+  candidateMinDepth = 1,
+  candidateMinAltDepth = 2,
+  candidateMinAltFreq = 0.80,
+  # These WT-specific hard filters are optional by default. WT evidence is
+  # still reported for every candidate but does not change the default candidate ordering.
+  candidateMaxWtAltFreq = 1.00,
+  candidateMinDeltaAF = 0.00,
+  # Keep the fast one-shot pileup when it fits; otherwise chunk adaptively.
+  candidatePoolMode = "auto",
+  candidateChunkSize = 0,
+  peakCutoffSd = 3,
+  # Default: use the compatibility cutoff; "global_sd" selects the genome-wide-SD alternative.
+  peakCutoffMethod = "legacy_current",
+  peakIntervalWidth = 0.80,
+  # Conservative default: span all selected high-density modes.
+  peakIntervalMethod = "hpd_span",
+  peakResampleIterations = 1000,
+  randomSeed = 1,
+  pairedEnd = FALSE,
+  ignoreStrand = FALSE,
+  expressionPseudocount = 0.01,
+  # Export the evaluated AICc span curve for each fitted chromosome.
+  exportAiccPlots = FALSE
+)
+```
+
+
+Candidate pileup uses `candidatePoolMode="auto"` by default. The auto mode keeps the
+fast single-pileup path when the refined interval is comfortably sized for available
+memory, including container/cgroup limits on Linux, and switches to bounded genomic
+chunks only when useful. In bounded-memory mode, BAMs are pooled incrementally so all
+per-BAM pileup tables do not need to coexist in memory; WT support for candidate loci
+uses the same strategy. `candidateChunkSize=0` selects an adaptive chunk width; a
+positive value supplies an explicit maximum chunk width. `candidatePoolMode="memory"`
+prefers a one-shot pileup, while `"chunked"` always uses bounded chunks. If an actual
+allocation failure occurs on the fast mutant path, MMAPPR2 retries with smaller chunks
+and uses temporary RDS files under R's `tempdir()` for already-filtered chunk results.
+Those files are uniquely named and removed automatically.
+
+When `exportAiccPlots=TRUE`, `outputMmapprData()` writes `aicc_plots.pdf` from the AICc
+evaluations already stored by `loessFit()`; the export step does not rerun model fitting.
+
+The two peak-method parameters are intentionally explicit because changing them changes
+the statistical interpretation of a run. `peakCutoffMethod="legacy_current"` preserves
+the compatibility cutoff calculation; `"global_sd"` instead uses the genome-wide
+median of fitted values plus `peakCutoffSd` times their ordinary standard deviation.
+Likewise, `peakIntervalMethod="hpd_span"` spans all KDE grid locations selected by the
+high-density mass rule, whereas `"shortest_contiguous"` chooses one shortest contiguous
+interval and can intentionally exclude a secondary mode.
+
+For paired-end RNA-seq, set `pairedEnd=TRUE` so the descriptive expression summary
+counts fragments appropriately. `ignoreStrand=FALSE` uses strand-aware
+`summarizeOverlaps()` counting. The descriptive expression log2 fold change adds a
+small pseudocount of 0.01 to both pool means by default, preventing Inf/NaN values
+when a mean count is zero. Set `expressionPseudocount=0` to request the raw ratio.
+This output is **not** a formal DESeq2/edgeR differential-expression test.
+
+# Run the pipeline
+
+```{r run, eval=FALSE}
+md <- mmappr(param)
+```
+
+For learning or debugging, run the stages separately:
+
+```{r stages, eval=FALSE}
+md <- mmapprData(param)
+md <- calculateDistance(md)  # pooled A/C/G/T frequencies and ED^p
+md <- loessFit(md)           # chromosome-wise robust LOESS
+md <- prePeak(md)            # genome-wide peak threshold
+md <- peakRefinement(md)     # reproducible half-marker resampling
+md <- generateCandidates(md) # mutant SNVs + WT evidence + coding effects
+outputMmapprData(md)
+```
+
+# Candidate-stage output
+
+The current lightweight candidate caller is still SNV-focused. For each candidate it
+records mutant depth/allele frequency and WT depth/allele frequency. A variant whose
+ALT allele is high-frequency in both pools is marked `sharedBackgroundLike` as reporting
+metadata. By default this flag does **not** change the candidate order.
+If either WT-specific hard filter is enabled, candidates without finite WT evidence for
+that filter do not pass it; the permissive defaults avoid that low-coverage exclusion.
+
+MMAPPR2 writes:
+
+- `AllCandidateVariantsFor<seq>.tsv`: all retained SNV candidates, including noncoding
+  candidates and WT-vs-mutant evidence;
+- `DetectedMutationsFor<seq>.tsv`: coding consequences from `predictCoding()` (established filename preserved);
+- `DifferentiallyExpressedGenesFor<seq>.tsv`: the historical filename for the descriptive raw-count fold-change screen;
+- `genome_plots.pdf`, `peak_plots.pdf`, `mmappr2.log`, and `mmappr_data.RDS`;
+- `aicc_plots.pdf` when `exportAiccPlots=TRUE` and finite AICc search results are available.
+
+# Figure styling and regeneration from RDS
+
+The standard pipeline still saves candidate TSV tables and `mmappr_data.RDS`
+**alongside** its genome/peak PDFs. Enable the optional AICc diagnostic PDF
+with `exportAiccPlots=TRUE` in `mmapprParam()`. Figure colors can be chosen for
+the automatic export without affecting tabular results:
+
+```{r styled-run, eval=FALSE}
+md <- mmappr(param, palette = "colorblind",
+             colors = c(peakFill = "#E69F00AA", density = "#0072B2"))
+```
+
+After the analysis completes, you can load *only* the saved results to produce
+figures again. This function does not read BAMs or FASTA, recalculate results,
+modify the RDS, or rewrite TSV tables:
+
+```{r replot, eval=FALSE}
+plotMmapprData("analysis_results/mmappr_data.RDS")
+plotMmapprData("analysis_results/mmappr_data.RDS",
+               outputDir = "publication_figures",
+               plots = c("genome", "peaks", "aicc"),
+               palette = "grayscale",
+               colors = c(fitted = "#222222", peakFill = "#AAAAAA"))
+```
+
+Default replot output is a new `replots` subdirectory beside the RDS (or inside
+the original analysis directory when passing a `MmapprData` object). The
+original `exportAiccPlots` setting does not affect RDS replotting; the saved
+span search history is enough. `overwrite=FALSE` protects existing PDFs, and
+`overwrite=TRUE` replaces only selected figure files; it never deletes TSVs.
+If analysis was interrupted, unavailable plot types are skipped with warnings.
+
+Choose `palette="default"`, `"colorblind"`, or `"grayscale"`. Optional `colors`
+overrides use named roles: `fitted`, `genomeRaw`, `peakRaw`, `peakFill`, `density`,
+`cutoff`, `boundary`, `aiccCurve`, `aiccSelected`. R color names and 6- or 8-digit
+hexadecimal codes are accepted.
+
+# Current methodological limits
+
+Some analyses require a larger, separately validated methodological extension. In particular:
+
+- exact indel/haplotype-aware candidate calling is not implemented;
+- the peak data model still represents one dominant refined locus per chromosome;
+- the >80% mutant-ALT default still reflects a simple recessive/high-fixation model,
+  although it is now configurable;
+- RNA-seq still has uneven genic coverage, allele-specific-expression effects, and
+  reference-alignment bias;
+- noncoding and structural effects are retained as sequence candidates where observable,
+  but only coding SNV effects receive `predictCoding()` annotations;
+- the expression summary is descriptive rather than inferential.
+

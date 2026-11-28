@@ -1,63 +1,39 @@
 Package: MMAPPR2
 Title: Mutation Mapping Analysis Pipeline for Pooled RNA-Seq
-Version: 0.99.24
+Version: 0.99.24.9011
 Authors@R: c(
-    person("Kyle", "Johnsen", email="kjohnsen@byu.edu", role=c("aut")),
-    person('Nathaniel', 'Jenkins', role=c('aut')),
-    person('Jonathon', 'Hill', email='jhill@byu.edu', role=c('cre')))
-Description: MMAPPR2 maps mutations resulting from pooled RNA-seq data from the F2
-    cross of forward genetic screens. Its predecessor is described in a paper published
-    in Genome Research (Hill et al. 2013). MMAPPR2 accepts aligned BAM files as well as
-    a reference genome as input, identifies loci of high sequence disparity between the
-    control and mutant RNA sequences, predicts variant effects using Ensembl's Variant
-    Effect Predictor, and outputs a ranked list of candidate mutations.
-Depends: R (>= 3.6.0)
+    person("Kyle", "Johnsen", email = "kjohnsen@byu.edu", role = "aut"),
+    person("Nathaniel", "Jenkins", role = "aut"),
+    person("Jonathon", "Hill", email = "jhill@byu.edu", role = "cre"))
+Description: Maps candidate causal loci from pooled F2 RNA-seq in forward
+    genetic screens. The pipeline compares mutant and phenotypically wild-type
+    pools using per-position nucleotide-frequency Euclidean distance, smooths
+    the linkage signal with LOESS, refines linked intervals by marker
+    resampling, calls high-frequency candidate SNVs in mutant reads, reports
+    wild-type allele support, predicts coding consequences locally, and writes
+    diagnostic plots and candidate tables. The implementation includes robust
+    input validation, reproducible peak refinement, RNA-seq-aware pileup
+    handling, and regression-tested analysis helpers.
+Depends: R (>= 4.4.0)
 License: GPL-3
 Encoding: UTF-8
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
-Suggests: testthat,
-    mockery,
-    roxygen2,
-    knitr,
-    rmarkdown,
-    BiocStyle,
-    MMAPPR2data
-Imports: 
-    Rsamtools,
-    VariantAnnotation,
-    BiocParallel,
-    Biobase,
-    BiocGenerics,
-    GenomeInfoDb,
-    GenomicRanges,
-    GenomicFeatures,
-    IRanges,
-    S4Vectors,
-    VariantTools,
-    methods,
-    grDevices,
-    graphics,
-    stats,
-    utils,
-    data.table
-SystemRequirements:
-biocViews: RNASeq,
-    PooledScreens,
-    DNASeq,
-    VariantDetection
-URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3613585/,
-    https://github.com/kjohnsen/MMAPPR2
-BugReports: https://github.com/kjohnsen/MMAPPR2/issues
-OS_type: unix
-Collate: 
-    'MMAPPR2.R'
-    'all_generics.R'
-    'candidates.R'
-    'distance.R'
-    'loess.R'
-    'main.R'
-    'param.R'
-    'mmapprData.R'
-    'output.R'
-    'peaks.R'
+Config/testthat/edition: 3
+Suggests: testthat, roxygen2, knitr, rmarkdown, BiocStyle, MMAPPR2data
+Imports: Rsamtools, VariantAnnotation, BiocParallel, BiocGenerics,
+        GenomeInfoDb, GenomicRanges, GenomicFeatures, txdbmaker,
+        GenomicAlignments, IRanges, S4Vectors, SummarizedExperiment,
+        Biostrings, methods, grDevices, graphics, stats, utils,
+        data.table, DBI, rtracklayer
+biocViews: RNASeq, PooledScreens, DNASeq, VariantDetection
+URL: https://github.com/jonathonthill/MMAPPR2
+BugReports: https://github.com/jonathonthill/MMAPPR2/issues
+Collate: 'MMAPPR2.R' 'all_generics.R' 'param.R' 'preflight.R'
+        'mmapprData.R' 'distance.R' 'loess.R' 'peaks.R' 'candidates.R'
+        'output.R' 'main.R'
+NeedsCompilation: no
+Author: Kyle Johnsen [aut],
+  Nathaniel Jenkins [aut],
+  Jonathon Hill [cre]
+Maintainer: Jonathon Hill <jhill@byu.edu>

@@ -1,3 +1,33 @@
+CHANGES IN VERSION 0.99.24.9011
+--------------------------------
+
++ Replotting checks incomplete chromosome data consistently with the PDF
+  renderer. Malformed AICc entries no longer prevent valid chromosomes from
+  being plotted, and missing/non-numeric selected-span metadata is ignored.
+  Added regression tests for partial data and PDF overwrite rollback.
+  Removed a superseded patch file whose changes were already integrated.
+
+CHANGES IN VERSION 0.99.24.9010
+--------------------------------
+
++ Added `plotMmapprData()` to recreate selectable figure PDFs from a saved
+  MmapprData RDS without rerunning the pipeline or writing TSV files. Old
+  analysis RDS objects remain compatible, and missing figure data are handled
+  explicitly. Replot destinations and overwrite behavior are independent of
+  the original analysis output directory.
+
++ Added `palette` (`default`, `colorblind`, `grayscale`) and named `colors`
+  overrides for both automatic and RDS-based figure exports. The normal
+  pipeline still writes all candidate tables and saves its RDS file.
+
++ Candidate memory detection treats an exhausted container/cgroup limit conservatively rather than falling back to the host memory value, and the adaptive planner reserves additional headroom for temporary pileup/aggregation copies.
+
++ Candidate SNV pileup now uses an adaptive memory strategy. Modest intervals on machines with sufficient available memory retain the fast one-shot in-memory path; large intervals or constrained systems are processed in bounded genomic chunks. Bounded-memory chunks pool BAMs incrementally, WT candidate support uses the same adaptive strategy, and temporary-disk staging is used as an emergency fallback after a mutant-pileup allocation failure. `candidatePoolMode` and `candidateChunkSize` expose the strategy when explicit control is needed.
+
++ AICc span-search diagnostics retained by `loessFit()` can now be exported to `aicc_plots.pdf` by setting `exportAiccPlots=TRUE`. Exporting does not rerun the LOESS search.
+
++ Descriptive expression log2 fold change now uses a 0.01 pseudocount by default; set `expressionPseudocount=0` to request the raw ratio.
+
 CHANGES IN VERSION 0.99.0
 -------------------------
 

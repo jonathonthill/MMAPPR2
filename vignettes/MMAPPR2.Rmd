@@ -1,201 +1,202 @@
 ---
-title: "An Introduction to MMAPPR2"
-author:
-- name: Kyle Johnsen
-  affiliation: Brigham Young University, Provo, UT
-package: MMAPPR2
-output: 
-  BiocStyle::html_document:
-    toc_float: true
-  BiocStyle::pdf_document: default
-abstract: |
-  Instructions on mapping mutations from forward genetic screens using MMAPPR2.
-vignette: |
-  %\VignetteIndexEntry{An Introduction to MMAPPR2}
+title: "MMAPPR2 workflow"
+author: "Kyle Johnsen, Nathaniel Jenkins, and Jonathon Hill"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{MMAPPR2 workflow}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}  
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{bash, echo = FALSE}
-# Cooking show code to account for cases when samtools is not installed
-echo '#!/bin/bash' > /tmp/samtools
-chmod 755 /tmp/samtools
+# Scope
+
+This vignette describes the current MMAPPR2 workflow and its public analysis controls.
+MMAPPR2 uses Bioconductor APIs for BAM/FASTA access and local coding-effect annotation;
+external GMAP, command-line `samtools mpileup`, Ensembl VEP, `species`, and `VEPFlags`
+are not required by the current workflow.
+
+MMAPPR2 maps a phenotype from pooled F2 RNA-seq in two conceptual phases:
+
+1. compare mutant and phenotypically WT pools at covered A/C/G/T positions to locate a
+   linkage region;
+2. inspect mutant sequence changes inside the refined region, attach WT-pool evidence,
+   and annotate coding consequences.
+
+# Inputs
+
+The constructor expects:
+
+- one or more WT-pool BAM files;
+- one or more mutant-pool BAM files;
+- the reference FASTA used for alignment;
+- a GTF annotation corresponding to that reference.
+
+BAM and FASTA indexes are created when missing. The input GTF is read through
+Bioconductor and is **not** destructively uncompressed or shell-processed.
+
+```{r setup, eval=FALSE}
+param <- mmapprParam(
+  wtFiles = c("wt_pool.bam"),
+  mutFiles = c("mutant_pool.bam"),
+  refFasta = "reference.fa",
+  gtf = "annotation.gtf",
+  outputFolder = "mmappr2_results"
+)
 ```
 
-```{r, echo = FALSE}
-dataDir <- system.file('extdata', package = 'MMAPPR2data')
-WTpileupFile <- file.path(dataDir, 'exwt.plp')
-MTpileupFile <- file.path(dataDir, 'exmut.plp')
-samtoolsScript <- file('/tmp/samtools', "a")
-writeLines(c(
-  'if [[ ${@:$#} == *"wt.bam"* ]];',
-  'then',
-  paste('cat', WTpileupFile),
-  'else',
-  paste('cat', MTpileupFile),
-  'fi'
-  ), samtoolsScript)
-close(samtoolsScript)
+# Important defaults and explicit controls
 
-origPath <- Sys.getenv('PATH')
-Sys.setenv(PATH = paste(origPath, '/tmp', sep = ':')) 
-```
-
-
-# Getting Started
-
-## Data
-You'll need BAM file(s) for your wild-type pool, BAM file(s) for your mutant pool, and the
-reference genome for your species in fasta format. We recommend that each pool contain at least 
-20 individuals to ensure a good number of recombinations to measure.
-
-## Installing Dependencies
-MMAPPR2 depends on two system tools to function: Samtools and VEP. Both must be installed and in the PATH to be found by the appropriate functions. 
-
-### Installing Samtools
-Instructions to install samtools can be found at https://github.com/samtools/samtools and installation instructions are in the INSTALL file included with samtools. 
-
-### Installing VEP
-You'll need Ensembl VEP, which you can install like this, replacing `my_species` with
-your species (e.g., `danio_rerio`):
-
-```{r installVEP, eval=FALSE}
-git clone https://github.com/Ensembl/ensembl-vep.git
-cd ensembl-vep
-perl INSTALL.pl -a ac -s {my_species}
-```
-
-This installs the most recent VEP and allows you to create a cache for your desired species, which is what MMAPPR2 expects by default.
-If you depart from the installation shown here, or if things don't go smoothly, see [Ensembl's instructions](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#installer)
-and make sure any differences are accounted for in the
-[`VEPFlags`](#configure-vepflags-object) object.
-
-*Note:* If you have any trouble installing VEP, using
-[their Docker image](http://www.ensembl.org/info/docs/tools/vep/script/vep_download.html#docker)
-may save you a lot of hassle.
-
-*Note:* We have found that R sometimes has issues finding VEP, especially when perlbrew is used. If you encounter errors at the path to your perl installation to the .Rprofile file. For example:
-
-```{r, eval = FALSE}
-Sys.setenv(PATH=paste("/Path/to/Perlbrew", Sys.getenv("PATH"), sep=":"))
-```
-
-# Basic Use
-
-## Setting Parameters
-
-For our example, we will use just the golden gene from the GRCz11 zebrafish reference genome.
-
-Here we also configure the VEPFlags object to use our example fasta and GTF files.
-[See below for more info.](#configure-vepflags-object)
-
- **Make sure your reference genome is the same you'll use with VEP! This will be the most recent assembly available on Ensembl unless you customize it. You should use the same genome in aligning your sequencing data as well.**
-
-```{r param}
-BiocParallel::register(BiocParallel::MulticoreParam())  ## see below for explanation of BiocParallel
-library(MMAPPR2, quietly = TRUE)
-library(MMAPPR2data, quietly = TRUE)
-
-param <- MmapprParam(refFasta = goldenFasta(),
-                     wtFiles = exampleWTbam(),
-                     mutFiles = exampleMutBam(),
-                     species = 'danio_rerio',
-                     outputFolder = tempOutputFolder(),
-                     minDepth = 10)  ## optional
-```
-
-## Running MMAPPR2
-With parameters set, running the pipeline should be as simple as the following:
-```{r mmappr}
-mmapprData <- mmappr(param)
-```
-
-The MMAPPR2 pipeline can also be run a step at a time:
-```{r mmappr-steps}
-md <- new('MmapprData', param = param) ## calculateDistance() takes a MmapprData object
-postCalcDistMD <- calculateDistance(md)
-postLoessMD <- loessFit(postCalcDistMD)
-postPrePeakMD <- prePeak(postLoessMD)
-postPeakRefMD <- peakRefinement(postPrePeakMD)
-postCandidatesMD <- generateCandidates(postPeakRefMD)
-outputMmapprData(postCandidatesMD)
-```
-
-If the pipeline fails midway, the `MmapprData` object is saved, which you can then load
-and use for inspection and debugging:
-```{r recover-md}
-## Contents of output folder:
-cat(paste(system2('ls', outputFolder(param(mmapprData)), stdout = TRUE)), sep = '\n')
-
-mdFile <- file.path(outputFolder(param(mmapprData)), 'mmappr_data.RDS')
-md <- readRDS(mdFile)
-md
-```
-
-## Results
-If everything goes well you should be able to track down your mutation using the `candidates` slot of your `MmapprData`
-object or by looking at files in the output folder:
-```{r results}
-head(candidates(mmapprData)$`18`, n=2)
-
-outputTsv <- file.path(outputFolder(param(mmapprData)), '18.tsv')
-cat(paste(system2('head', outputTsv, stdout = TRUE)), sep = '\n')
+```{r parameters, eval=FALSE}
+param <- mmapprParam(
+  wtFiles = "wt_pool.bam",
+  mutFiles = "mutant_pool.bam",
+  refFasta = "reference.fa",
+  gtf = "annotation.gtf",
+  minDepth = 20,
+  minBaseQuality = 20,
+  minMapQuality = 20,
+  maxPileupDepth = 1000,
+  candidateMinDepth = 1,
+  candidateMinAltDepth = 2,
+  candidateMinAltFreq = 0.80,
+  # These WT-specific hard filters are optional by default. WT evidence is
+  # still reported for every candidate but does not change the default candidate ordering.
+  candidateMaxWtAltFreq = 1.00,
+  candidateMinDeltaAF = 0.00,
+  # Keep the fast one-shot pileup when it fits; otherwise chunk adaptively.
+  candidatePoolMode = "auto",
+  candidateChunkSize = 0,
+  peakCutoffSd = 3,
+  # Default: use the compatibility cutoff; "global_sd" selects the genome-wide-SD alternative.
+  peakCutoffMethod = "legacy_current",
+  peakIntervalWidth = 0.80,
+  # Conservative default: span all selected high-density modes.
+  peakIntervalMethod = "hpd_span",
+  peakResampleIterations = 1000,
+  randomSeed = 1,
+  pairedEnd = FALSE,
+  ignoreStrand = FALSE,
+  expressionPseudocount = 0.01,
+  # Export the evaluated AICc span curve for each fitted chromosome.
+  exportAiccPlots = FALSE
+)
 ```
 
 
-# Advanced Configuration
+Candidate pileup uses `candidatePoolMode="auto"` by default. The auto mode keeps the
+fast single-pileup path when the refined interval is comfortably sized for available
+memory, including container/cgroup limits on Linux, and switches to bounded genomic
+chunks only when useful. In bounded-memory mode, BAMs are pooled incrementally so all
+per-BAM pileup tables do not need to coexist in memory; WT support for candidate loci
+uses the same strategy. `candidateChunkSize=0` selects an adaptive chunk width; a
+positive value supplies an explicit maximum chunk width. `candidatePoolMode="memory"`
+prefers a one-shot pileup, while `"chunked"` always uses bounded chunks. If an actual
+allocation failure occurs on the fast mutant path, MMAPPR2 retries with smaller chunks
+and uses temporary RDS files under R's `tempdir()` for already-filtered chunk results.
+Those files are uniquely named and removed automatically.
 
-## Configure VEPFlags Object
-MMAPPR2 uses the `r BiocStyle::Biocpkg("ensemblVEP")` Bioconductor package to predict the effect of variants in the peak region. 
-To customize this process, you'll need to configure a `VEPFlags` object. Look at [Ensembl's website for script options](http://uswest.ensembl.org/info/docs/tools/vep/script/vep_options.html). You can configure the `VEPFlags` object like this:
-```{r vepFlags}
-library(ensemblVEP, quietly = TRUE)
-vepFlags <- VEPFlags(flags = list(
-    ### DEFAULT SETTINGS
-    format = 'vcf',  # <-- this is necessary
-    vcf = FALSE,  # <-- as well as this
-    species = 'danio_rerio',
-    database = FALSE,
-    cache = TRUE,
-    filter_common = FALSE,
-    coding_only = TRUE  # assuming RNA-seq data
-    ### YOU MAY FIND THESE INTERESTING:
-    # everything = TRUE  # enables many optional analyses, such as Polyphen and SIFT
-    # per_gene = TRUE  # will output only the most severe variant per gene
-    # pick = TRUE  # will output only one consequence per variant
-))
+When `exportAiccPlots=TRUE`, `outputMmapprData()` writes `aicc_plots.pdf` from the AICc
+evaluations already stored by `loessFit()`; the export step does not rerun model fitting.
+
+The two peak-method parameters are intentionally explicit because changing them changes
+the statistical interpretation of a run. `peakCutoffMethod="legacy_current"` preserves
+the compatibility cutoff calculation; `"global_sd"` instead uses the genome-wide
+median of fitted values plus `peakCutoffSd` times their ordinary standard deviation.
+Likewise, `peakIntervalMethod="hpd_span"` spans all KDE grid locations selected by the
+high-density mass rule, whereas `"shortest_contiguous"` chooses one shortest contiguous
+interval and can intentionally exclude a secondary mode.
+
+For paired-end RNA-seq, set `pairedEnd=TRUE` so the descriptive expression summary
+counts fragments appropriately. `ignoreStrand=FALSE` uses strand-aware
+`summarizeOverlaps()` counting. The descriptive expression log2 fold change adds a
+small pseudocount of 0.01 to both pool means by default, preventing Inf/NaN values
+when a mean count is zero. Set `expressionPseudocount=0` to request the raw ratio.
+This output is **not** a formal DESeq2/edgeR differential-expression test.
+
+# Run the pipeline
+
+```{r run, eval=FALSE}
+md <- mmappr(param)
 ```
 
-## BiocParallel Configuration
-MMAPPR2 simply uses the default `bpparam` registered. You can change this (for example, if `r BiocStyle::Biocpkg("BiocParallel")` isn't working correctly) with the `BiocParallel::register` command. For example:
-```{r bpparam}
-library(BiocParallel, quietly = TRUE)
-register(SerialParam())
-register(MulticoreParam(progressbar=TRUE))
-registered()
+For learning or debugging, run the stages separately:
+
+```{r stages, eval=FALSE}
+md <- mmapprData(param)
+md <- calculateDistance(md)  # pooled A/C/G/T frequencies and ED^p
+md <- loessFit(md)           # chromosome-wise robust LOESS
+md <- prePeak(md)            # genome-wide peak threshold
+md <- peakRefinement(md)     # reproducible half-marker resampling
+md <- generateCandidates(md) # mutant SNVs + WT evidence + coding effects
+outputMmapprData(md)
 ```
 
-The last param registered becomes the default.
+# Candidate-stage output
 
-## Reference Genome
-The variant calling step requires a `BiocStyle::Biocpkg("gmapR")` `GmapGenome`, which is normally automatically generated from the `refFasta` parameter. If for some reason you want to generate your own, the process is like this:
+The current lightweight candidate caller is still SNV-focused. For each candidate it
+records mutant depth/allele frequency and WT depth/allele frequency. A variant whose
+ALT allele is high-frequency in both pools is marked `sharedBackgroundLike` as reporting
+metadata. By default this flag does **not** change the candidate order.
+If either WT-specific hard filter is enabled, candidates without finite WT evidence for
+that filter do not pass it; the permissive defaults avoid that low-coverage exclusion.
 
-```{r refGenome, eval=FALSE}
-refGenome <- gmapR::GmapGenome(goldenFasta(), name='slc24a5', create=TRUE)
+MMAPPR2 writes:
+
+- `AllCandidateVariantsFor<seq>.tsv`: all retained SNV candidates, including noncoding
+  candidates and WT-vs-mutant evidence;
+- `DetectedMutationsFor<seq>.tsv`: coding consequences from `predictCoding()` (established filename preserved);
+- `DifferentiallyExpressedGenesFor<seq>.tsv`: the historical filename for the descriptive raw-count fold-change screen;
+- `genome_plots.pdf`, `peak_plots.pdf`, `mmappr2.log`, and `mmappr_data.RDS`;
+- `aicc_plots.pdf` when `exportAiccPlots=TRUE` and finite AICc search results are available.
+
+# Figure styling and regeneration from RDS
+
+The standard pipeline still saves candidate TSV tables and `mmappr_data.RDS`
+**alongside** its genome/peak PDFs. Enable the optional AICc diagnostic PDF
+with `exportAiccPlots=TRUE` in `mmapprParam()`. Figure colors can be chosen for
+the automatic export without affecting tabular results:
+
+```{r styled-run, eval=FALSE}
+md <- mmappr(param, palette = "colorblind",
+             colors = c(peakFill = "#E69F00AA", density = "#0072B2"))
 ```
 
+After the analysis completes, you can load *only* the saved results to produce
+figures again. This function does not read BAMs or FASTA, recalculate results,
+modify the RDS, or rewrite TSV tables:
 
-
-## Whole-genome Sequencing (WGS)
-MMAPPR2, like its predecessor, was designed for and tested using RNA-Seq data. However, the principles at work should still apply for WGS data.
-
-
------------------
-# Session Info
-```{r sessionInfo}
-sessionInfo()
+```{r replot, eval=FALSE}
+plotMmapprData("analysis_results/mmappr_data.RDS")
+plotMmapprData("analysis_results/mmappr_data.RDS",
+               outputDir = "publication_figures",
+               plots = c("genome", "peaks", "aicc"),
+               palette = "grayscale",
+               colors = c(fitted = "#222222", peakFill = "#AAAAAA"))
 ```
 
-```{r, echo = FALSE}
-Sys.setenv(PATH=origPath)
-```
+Default replot output is a new `replots` subdirectory beside the RDS (or inside
+the original analysis directory when passing a `MmapprData` object). The
+original `exportAiccPlots` setting does not affect RDS replotting; the saved
+span search history is enough. `overwrite=FALSE` protects existing PDFs, and
+`overwrite=TRUE` replaces only selected figure files; it never deletes TSVs.
+If analysis was interrupted, unavailable plot types are skipped with warnings.
+
+Choose `palette="default"`, `"colorblind"`, or `"grayscale"`. Optional `colors`
+overrides use named roles: `fitted`, `genomeRaw`, `peakRaw`, `peakFill`, `density`,
+`cutoff`, `boundary`, `aiccCurve`, `aiccSelected`. R color names and 6- or 8-digit
+hexadecimal codes are accepted.
+
+# Current methodological limits
+
+Some analyses require a larger, separately validated methodological extension. In particular:
+
+- exact indel/haplotype-aware candidate calling is not implemented;
+- the peak data model still represents one dominant refined locus per chromosome;
+- the >80% mutant-ALT default still reflects a simple recessive/high-fixation model,
+  although it is now configurable;
+- RNA-seq still has uneven genic coverage, allele-specific-expression effects, and
+  reference-alignment bias;
+- noncoding and structural effects are retained as sequence candidates where observable,
+  but only coding SNV effects receive `predictCoding()` annotations;
+- the expression summary is descriptive rather than inferential.
+

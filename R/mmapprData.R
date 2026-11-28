@@ -1,8 +1,8 @@
 #' @title MmapprData Class
 #' 
 #' @name MmapprData-Class
-#' 
-#' @usage Stores data from each step of the MMAPPR2 pipeline.
+#' @description
+#' Stores data from each step of the MMAPPR2 pipeline.
 #'
 #' @slot param \code{\linkS4class{MmapprParam}} object storing parameters
 #'   used in analysis.
@@ -16,12 +16,12 @@
 #'   \code{\link{prePeak}} and populated with density function after
 #'   \code{\link{peakRefinement}}.
 #' @slot candidates List containing \code{\link[GenomicRanges]{GRanges}} objects
-#'   with snps, VEP predicted effects, and differential expression data
+#'   with candidate variants, locally predicted coding effects, and descriptive expression data
 #'   for each peak, all resulting from \code{\link{generateCandidates}} 
 #'   function.
 #'
 #' @aliases MmapprData
-#' @seealso \code{\link{mmappr}}, \link{MmapprData-getters}
+#' @seealso \code{\link{mmappr}}, \link{MmapprData-functions}
 #' @include param.R
 #' 
 NULL
@@ -38,8 +38,8 @@ setClass("MmapprData",
 #' @title MmapprData Constructor
 #' 
 #' @name mmapprData
-#'
-#' @usage Creates a \code{MmapprData} class Object. This object stores data from each
+#' @description
+#' Creates a \code{MmapprData} class Object. This object stores data from each
 #' step of the MMAPPR2 pipeline.
 #'
 #' @param param \code{\linkS4class{MmapprParam}} object storing parameters
@@ -51,14 +51,13 @@ setClass("MmapprData",
 #' @seealso \code{\linkS4class{MmapprData}} \code{\linkS4class{MmapprParam}}
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#' mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
-#'                             mutFiles = MMAPPR2data::exampleMutBam(),
-#'                             refFasta = MMAPPR2data::goldenFasta(),
-#'                             gtf = MMAPPR2data::gtf(),
-#'                             outputFolder = tempOutputFolder())
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'                                 mutFiles = MMAPPR2data::exampleMutBam(),
+#'                                 refFasta = MMAPPR2data::goldenFasta(),
+#'                                 gtf = MMAPPR2data::gtf(),
+#'                                 outputFolder = tempOutputFolder())
+#'     mmapprData(mmappr_param)
 #' }
-#' 
-#' mmapprData(mmappr_param)
 #' 
 NULL
 
@@ -69,8 +68,8 @@ mmapprData <- function(param) {
 
 
 #' @title MmapprData Getters and Setters
-#'
-#' @usage Access slots of \code{\linkS4class{MmapprData}} object. The only slot with 
+#' @description
+#' Access slots of \code{\linkS4class{MmapprData}} object. The only slot with 
 #' a setter is "param," as the others must be generated using one of the 
 #' functions in the pipeline.
 #'
@@ -79,18 +78,18 @@ mmapprData <- function(param) {
 #' @return Desired attribute.
 #'
 #' @name MmapprData-functions
-#' @aliases param distance peaks candidates
+#' @aliases param snpDistance peaks candidates
 #' @seealso \code{\linkS4class{MmapprData}}
 #'
 #' @examples
 #' if (requireNamespace('MMAPPR2data', quietly = TRUE)) {
-#'     mmappr_param <- MmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
+#'     mmappr_param <- mmapprParam(wtFiles = MMAPPR2data::exampleWTbam(),
 #'                                 mutFiles = MMAPPR2data::exampleMutBam(),
 #'                                 refFasta = MMAPPR2data::goldenFasta(),
 #'                                 gtf = MMAPPR2data::gtf(),
 #'                                 outputFolder = tempOutputFolder())
 #'
-#'     md <- MmapprData(mmappr_param)
+#'     md <- mmapprData(mmappr_param)
 #'
 #'     param(md)
 #'     snpDistance(md)
@@ -117,8 +116,20 @@ setMethod("candidates", "MmapprData", function(obj) obj@candidates)
 #' @export
 setMethod("param<-", "MmapprData",
           function(obj, value) {
+            if (!is(value, "MmapprParam")) stop("param must be a MmapprParam object")
+            # Every derived slot depends on the analysis parameters.
+            # Replacing param while retaining old distances/peaks/candidates creates
+            # a silently inconsistent object, so invalidate downstream results.
+            hadResults <- length(obj@snpDistance) > 0L || length(obj@peaks) > 0L ||
+                          length(obj@candidates) > 0L
             obj@param <- value
-            obj 
+            if (hadResults) {
+              warning("Replacing param invalidates existing derived results; snpDistance, peaks, and candidates were cleared")
+              obj@snpDistance <- list()
+              obj@peaks <- list()
+              obj@candidates <- list()
+            }
+            obj
           })
 
 
@@ -128,11 +139,11 @@ setMethod("show", "MmapprData", function(object) {
   cat("param:\n")
   .customPrint(object@param, margin)
   
-  cat("distance:\n")
+  cat("snpDistance:\n")
   classes <- vapply(object@snpDistance, class, character(1))
   successes <- classes == "list"
   cat(margin, sprintf(
-    "Contains Euclidian distance data for %i sequence(s)\n",
+    "Contains Euclidean distance data for %i sequence(s)\n",
     sum(successes)), sep = "")
   loessFits <- 0
   try({loessFits <- sum(vapply(object@snpDistance[successes],
@@ -168,35 +179,3 @@ setMethod("show", "MmapprData", function(object) {
 })
 
 
-# Imports data from BAM files
-.getPileup <- function(file, param, chrRange) {
-  stopifnot(length(file) == 1)
-  
-  scanParam <- ScanBamParam(simpleCigar = TRUE,   # should try with FALSE
-                            which = chrRange, 
-                            mapqFilter=param@minMapQuality)
-  
-  pParam <- PileupParam(max_depth = 1000,
-                        min_mapq = param@minMapQuality, 
-                        min_base_quality = param@minBaseQuality,
-                        distinguish_strands = FALSE, 
-                        include_deletions = FALSE,
-                        include_insertions = FALSE)
-  
-  pData <- data.table(pileup(file, 
-                             scanBamParam = scanParam, 
-                             pileupParam = pParam))
-  
-  pData <- dcast(pData, seqnames + pos ~ nucleotide, 
-                 value.var = "count", 
-                 fun.aggregate = sum)
-  
-  setnames(pData, colnames(pData), 
-           c("CHROM", "POS", "A.FREQ", "C.FREQ", "G.FREQ", "T.FREQ"))
-  
-  pData[, CVG := A.FREQ + C.FREQ + G.FREQ + T.FREQ
-  ][, c("A.FREQ", "C.FREQ", "G.FREQ", "T.FREQ") := 
-      list(A.FREQ/CVG, C.FREQ/CVG, G.FREQ/CVG, T.FREQ/CVG)]
-  
-  return(pData)
-}
