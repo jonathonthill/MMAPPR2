@@ -115,6 +115,7 @@ mmappr <- function(mmapprParam, palette = "default", colors = NULL) {
     return(md)
 }
 
+
 .messageAndLog <- function(msg, outputFolder) {
     logFile <- file.path(outputFolder, 'mmappr2.log')
     if (!is.character(msg)) msg <- capture.output(msg)
@@ -129,6 +130,7 @@ mmappr <- function(mmapprParam, palette = "default", colors = NULL) {
     if (!is.character(msg)) msg <- capture.output(msg)
     cat(msg, file = logFile, sep = '\n', append = TRUE)
 }
+
 
 .reorderLogFile <- function(outputFolder) {
 
